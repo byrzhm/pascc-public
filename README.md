@@ -27,10 +27,10 @@
         </a>
     </td>
     <td>
-        <a href="https://github.com/byrzhm">
+        <a href="https://github.com/micropuma">
         <figure>
-        <img src="https://github.com/byrzhm.png" alt="朱宏明" width="100" height="100">
-        <figcaption style="text-align: center;">朱宏明</figcaption>
+        <img src="https://github.com/micropuma.png" alt="窦力扬" width="100" height="100">
+        <figcaption style="text-align: center;">窦力扬</figcaption>
         </figure>
         </a>
     </td>
