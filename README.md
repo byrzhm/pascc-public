@@ -61,4 +61,14 @@
         </a>
     </td>
   </tr>
+    <tr>
+    <td>
+        <a href="https://github.com/LeaveryF">
+        <figure>
+        <img src="https://github.com/LeaveryF.png" alt="伏培燚" width="100" height="100">
+        <figcaption style="text-align: center;">伏培燚</figcaption>
+        </figure>
+        </a>
+    </td>
+  </tr>
 </table>
