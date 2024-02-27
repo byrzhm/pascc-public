@@ -1,0 +1,177 @@
+# public, protected, private 修饰符对齐
+# AccessModifierOffset: 2
+
+# 长函数调用时，参数对齐, 括号形式
+# someLongFunction(
+#     argument1, argument2
+# )
+#
+AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: None
+
+# 连续的赋值语句对齐
+AlignConsecutiveAssignments: 
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: false
+  AlignCompound: true
+  PadOperators: true
+
+#AlignConsecutiveBitFields: false
+AlignConsecutiveDeclarations: None
+AlignConsecutiveMacros: None
+AlignEscapedNewlines: Right
+
+# Align
+# x = aaaaaaaa +
+#     bbbbbbbb
+#
+#   when BreakBeforeBinaryOperators is set
+#
+# x = aaaaaaaa +
+#     bbbbbbbb
+#
+# AlignAfterOperator
+# x = aaaaaaaa
+#   + bbbbbbbb
+#AlignOperands: AlignAfterOperator
+
+AlignTrailingComments: 
+  Kind: Always
+  OverEmptyLines: 2
+
+# true:
+# callFunction(
+    # a, b, c, d);
+#
+# false:
+# callFunction(a,
+             # b,
+             # c,
+             # d);
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+#AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: false
+
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+
+# 在template声明时，是否换行
+# template <typename T>
+# T foo() {
+# }
+# template <typename T>
+# T foo(int aaaaaaaaaaaaaaaaaaaaa,
+#       int bbbbbbbbbbbbbbbbbbbbb) {
+# }
+AlwaysBreakTemplateDeclarations: Yes
+
+BinPackArguments: false
+BinPackParameters: false
+#BitFieldColonSpacing: Both
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: MultiLine
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: false # extern "C" {
+  BeforeCatch: false # } catch {
+  BeforeElse: false # } else {
+  #BeforeLambdaBody: false
+  #BeforeWhile: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# true:
+# veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription
+#     ? firstValue
+#     : SecondValueVeryVeryVeryVeryLong;
+# 
+# false:
+# veryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryLongDescription ?
+#     firstValue :
+#     SecondValueVeryVeryVeryVeryLong;
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeComma
+BreakStringLiterals: false
+
+ColumnLimit: 0 # 0: no limit
+CompactNamespaces: false
+ConstructorInitializerIndentWidth: 2
+Cpp11BracedListStyle: true
+
+
+
+FixNamespaceComments: true # 加上丢失的namespace注释
+IncludeBlocks: Preserve
+#IndentCaseBlocks: false
+IndentCaseLabels: true
+IndentGotoLabels: false
+
+# #if FOO
+#   #if BAR
+#     #include <foo>
+#   #endif
+# #endif
+IndentPPDirectives: BeforeHash
+# IndentAccessModifiers: true
+IndentWidth: 2
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 3
+NamespaceIndentation: None
+
+# Left:
+# int* a;
+# Right:
+# int *a;
+# Middle:
+# int * a;
+PointerAlignment: Right
+
+# QualifierOrder
+
+ReferenceAlignment: Right
+
+# 按照列数限制, 将注释进行换行
+ReflowComments: false
+
+SortIncludes: CaseSensitive
+SortUsingDeclarations: true
+
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCaseColon: false
+SpaceBeforeCtorInitializerColon: false
+SpaceBeforeInheritanceColon: false
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceBeforeSquareBrackets: false
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles: Leave
+SpacesInCStyleCastParentheses: false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+Standard: c++20
+TabWidth: 2
+UseTab: Never
