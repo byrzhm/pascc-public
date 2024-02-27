@@ -1,0 +1,12 @@
+{
+    "[cpp]": {
+        "editor.tabSize": 2,
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true,
+        // requires source control
+        "editor.formatOnSaveMode": "modificationsIfAvailable",
+    },
+    "clangd.arguments": [
+        "--header-insertion=never"
+    ],
+}
