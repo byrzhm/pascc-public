@@ -45,10 +45,10 @@
         </a>
     </td>
     <td>
-        <a href="https://github.com/byrzhm">
+        <a href="https://github.com/duoaidaoc">
         <figure>
-        <img src="https://github.com/byrzhm.png" alt="朱宏明" width="100" height="100">
-        <figcaption style="text-align: center;">朱宏明</figcaption>
+        <img src="https://github.com/duoaidaoc.png" alt="夏博焕" width="100" height="100">
+        <figcaption style="text-align: center;">夏博焕</figcaption>
         </figure>
         </a>
     </td>
