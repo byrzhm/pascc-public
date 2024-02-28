@@ -1,0 +1,25 @@
+---
+Checks: '
+  cppcoreguidelines-*,
+  google-*,
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  portability-*,
+  readability-*,
+  -readability-identifier-length,
+  -modernize-avoid-c-arrays,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-pro-type-const-cast,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  '
+
+WarningsAsErrors: ''
+
+CheckOptions:
+  - { key: readability-identifier-naming.ClassCase,           value: CamelCase  }
+  - { key: readability-identifier-naming.EnumCase,            value: CamelCase  }
+  - { key: readability-identifier-naming.GlobalConstantCase,  value: UPPER_CASE }
+  - { key: readability-identifier-naming.MemberCase,          value: lower_case }
+  - { key: readability-identifier-naming.MemberSuffix,        value: _          }
