@@ -10,44 +10,151 @@
 
 \begin{document}
 
+\textcolor{red}{Program}:
+
 \begin{alignat*}{2}
 &\text{program}\quad&&=\quad\text{program-heading}\quad\ ';'\quad \text{program-block}\quad\ '.'\\
 &\text{program-heading}\quad&&=\quad\ '\text{program}'\quad \text{identifier}\quad {['('\quad\text{program-parameter-list}\quad\ ')']}_\text{opt}\\
 &\text{program-parameter-list}\quad&&=\quad\text{identifier-list}\\
-&\text{identifier-list}\quad&&=\quad\text{identifier}\quad{[','\quad\text{identifier}]}^*\\
 &\text{program-block}\quad&&=\quad\text{block}\\
-&\textcolor{red}{block}\quad&&=\quad\text{constant-definition-part}_\text{opt}\quad\text{type-definition-part}_\text{opt}\\
-&&&\quad\text{variable-declaration-part}_\text{opt}\quad\text{procedure-and-function-declaration-part}_\text{opt}\\
+\end{alignat*}
+
+\textcolor{red}{Block}:
+
+\begin{alignat*}{2}
+&\text{block}\quad&&=\quad\text{constant-definition-part}_\text{opt}\quad\text{type-definition-part}_\text{opt}\\
+&&&\quad\text{variable-declaration-part}_\text{opt}\\
+&&&\quad\text{procedure-and-function-declaration-part}_\text{opt}\\
 &&&\quad\text{statement-part}\\
+\end{alignat*}
+
+\textcolor{red}{Constant definition part}:
+
+\begin{alignat*}{2}
 &\text{constant-definition-part}\quad&&=\quad\ '\text{const}'\quad\text{const-definition}\quad\ ';'\quad {[\text{const-definition}\quad\ ';']}^* \\
 &\text{const-definition}\quad&&=\quad\text{identifier}\quad\ '=' \quad\text{constant}\\
 &\text{constant}\quad&&=\quad\text{sign}_\text{opt}\quad(\text{unsigned-number}\quad |\quad \text{constant-identifier})\\
 &&&|\quad\text{character-string}\\
 &\text{constant-identifier}\quad&&=\quad\text{identifier}\\
-&\text{type-definition-part}\quad&&=\quad\dots\\
+\end{alignat*}
+
+\textcolor{red}{Type definition part}:
+
+\begin{alignat*}{2}
+&\text{type-definition-part}\quad&&=\quad\ '\text{type}'\quad\text{type-definition}\quad\ ';'\quad {[\text{type-definition}\quad\ ';']}^*\\
+&\text{type-definition}\quad&&=\quad\text{identifier}\quad\ '='\quad\text{type-denoter}\\
+\end{alignat*}
+
+\textcolor{blue}{About type}:
+
+\begin{alignat*}{2}
+&\text{type-denoter}\quad&&=\quad\text{type-identifier}\quad|\quad\text{array-type}\\
+&\text{type-identifier}\quad&&=\quad\text{identifier}\\
+&\text{array-type}\quad&&=\quad\ '\text{array}'\quad\text{index-type-list}\quad\ '\text{of}'\quad\text{component-type}\\
+&\text{index-type-list}\quad&&=\quad\text{index-type}\quad{[','\quad\text{index-type}]}^*\\
+&\text{index-type}\quad&&=\quad\text{type-identifier}\\
+&\text{component-type}\quad&&=\quad\text{type-denoter}\\
+\end{alignat*}
+
+\textcolor{red}{Variable declaration part}:
+
+\begin{alignat*}{2}
 &\text{variable-declaration-part}\quad&&=\quad\ '\text{var}'\quad\text{variable-declaration}\quad\ ';'\quad {[\text{variable-declaration}\quad\ ';']}^* \\
 &\text{variable-declaration}\quad&&=\quad\text{identifier-list}\quad\ ':' \quad\text{type-denoter}\\
-&\text{type-denoter}\quad&&=\quad\dots\\
+\end{alignat*}
+
+\newpage
+
+\textcolor{red}{Procedure and function declaration part}:
+
+\begin{alignat*}{2}
 &\text{procedure-and-function-declaration-part}\quad&&=\quad\ {[(\text{procedure-declaration}\quad|\quad\text{function-declaration})\quad\ ';']}^+\\
 &\text{procedure-declaration}\quad&&=\quad\text{procedure-heading}\quad\ ';'\quad\text{procedure-block}\\
 &\text{procedure-heading}\quad&&=\quad\ '\text{procedure}'\quad\text{identifier}\quad{[\text{formal-parameter-list}]}_\text{opt}\\
 &\text{procedure-block}\quad&&=\quad\text{block}\\
 &\text{function-declaration}\quad&&=\quad\text{function-heading}\quad\ ';'\quad\text{function-block}\\
-&\text{function-heading}\quad&&=\quad\ '\text{function}'\quad\text{identifier}\quad{[\text{formal-parameter-list}]}_\text{opt}\quad\ ':'\quad \text{result-type}\\
+&\text{function-heading}\quad&&=\quad\ '\text{function}'\quad\text{identifier}\quad{[\text{formal-parameter-list}]}_\text{opt}\quad\\
+&&&':'\quad \text{result-type}\\
 &\text{function-block}\quad&&=\quad\text{block}\\
+&\text{result-type}\quad&&=\quad\text{type-identifier}\\
+&\text{formal-parameter-list}\quad&&=\quad'('\quad\text{formal-parameter-section}\\
+&&&{[';' \quad\text{formal-parameter-section}]}^*\quad')'\\
+&\text{formal-parameter-section}\quad&&=\quad\text{value-parameter-specification}\\
+&&&|\quad\text{variable-parameter-specification}\\
+&\text{value-parameter-specification}\quad&&=\quad\text{identifier-list}\quad\ ':'\quad\text{type-identifier}\\
+&\text{variable-parameter-specification}\quad&&=\quad'\text{var}'\quad\text{identifier-list}\quad\ ':'\quad\text{type-identifier}\\
+\end{alignat*}
+
+\textcolor{red}{Statement part}:
+
+\begin{alignat*}{2}
 &\text{statement-part}\quad&&=\quad\text{compound-statement}\\
 &\text{compound-statement}\quad&&=\quad\ '\text{begin}' \quad\text{statement-sequence}\quad\ '\text{end}'\\
 &\text{statement-sequence}\quad&&=\quad\text{statement}\quad\ {[';'\quad\text{statement}]^*}\\
+\end{alignat*}
+
+\textcolor{blue}{About statement}:
+
+\begin{alignat*}{2}
 &\text{statement}\quad&&=\quad\text{simple-statement}\quad |\quad \text{structured-statement}\\
 &\text{simple-statement}\quad&&=\quad\text{empty-statement}\quad |\quad \text{assignment-statement}\\
 &&&|\quad \text{procedure-statement}\\
 &\text{empty-statement}\quad&&=\quad\epsilon\\
 &\text{assignment-statement}\quad&&=\quad(\text{variable-access}\quad|\quad\text{function-identifier})\quad\ ':='\quad\text{expression}\\
-&\text{procedure-statement}\quad&&=\quad\dots\\
+&\text{procedure-statement}\quad&&=\quad\text{procedure-identifier}\quad(\text{actual-parameter-list}_\text{opt}\\
+&&& |\quad\ \text{read-parameter-list}\quad|\quad\ \text{write-parameter-list})\\
 &\text{structured-statement}\quad&&=\quad\text{compound-statement}\quad|\quad\text{conditional-statement}\\
 &&&|\quad\text{repetitive-statement}\\
-&\text{conditional-statement}\quad&&=\quad\dots\\
-&\text{repetitive-statement}\quad&&=\quad\dots
+&\text{conditional-statement}\quad&&=\quad\text{if-statement}\\
+&\text{repetitive-statement}\quad&&=\quad\text{while-statement}\quad|\quad\text{for-statement}\\
+&\text{if-statement}\quad&&=\quad\ '\text{if}'\quad\text{Boolean-expression}\quad\ '\text{then}'\quad\text{statement}\quad\text{else-part}_\text{opt}\\
+&\text{else-part}\quad&&=\quad\ '\text{else}'\quad\text{statement}\\
+&\text{while-statement}\quad&&=\quad\ '\text{while}'\quad\text{Boolean-expression}\quad\ '\text{do}'\quad\text{statement}\\
+&\text{for-statement}\quad&&=\quad\ '\text{for}'\quad\text{control-variable}\quad\ ':='\quad\text{initial-value}\quad('\text{to}'\quad|\quad'\text{downto}')\\
+&&&\text{final-value}\quad\ '\text{do}'\quad\text{statement}\\
 \end{alignat*}
+
+\begin{alignat*}{2}
+&\text{variable-access}\quad&&=\quad\text{entire-variable}\quad|\quad\text{component-variable}\\
+&\text{entire-variable}\quad&&=\quad\text{variable-identifier}\\
+&\text{variable-identifier}\quad&&=\quad\text{identifier}\\
+&\text{component-variable}\quad&&=\quad\text{indexed-variable}\\
+&\text{indexed-variable}\quad&&=\quad\text{array-variable}\\
+&&&'['\quad\text{index-expression} \quad{[','\quad\text{index-expression}]}^*\quad']'\\
+&\text{array-variable}\quad&&=\quad\text{variable-access}\\
+&\text{index-expression}\quad&&=\quad\text{expression}\\
+&\text{function-identifier}\quad&&=\quad\text{identifier}\\
+&\text{procedure-identifier}\quad&&=\quad\text{identifier}\\
+&\text{actual-parameter-list}\quad&&=\quad'('\quad\text{actual-parameter}\quad{[','\quad\text{actual-parameter}]}^*\quad')'\\
+&\text{actual-parameter}\quad&&=\quad\text{expression}\quad|\quad\text{variable-access}\\
+&\text{read-parameter-list}\quad&&=\quad'('\quad\text{variable-access}\quad{[','\quad\text{variable-access}]}^*\quad')'\\
+&\text{write-parameter-list}\quad&&=\quad'('\quad\text{write-parameter}\quad{[','\quad\text{write-parameter}]}^*\quad')'\\
+&\text{write-parameter}\quad&&=\quad\text{expression}\\
+&\text{control-variable}\quad&&=\quad\text{entire-variable}\\
+&\text{initial-value}\quad&&=\quad\text{expression}\\
+&\text{final-value}\quad&&=\quad\text{expression}\\
+&\text{Boolean-expression}\quad&&=\quad\text{expression}\\
+\end{alignat*}
+
+\textcolor{red}{Expression}
+
+\begin{alignat*}{2}
+&\text{expression}\quad&&=\quad\text{simple-expression}\quad{[\text{relational-operator}\quad\text{simple-expression}]}_\text{opt}\\
+&\text{simple-expression}\quad&&=\quad\text{sign}_\text{opt}\quad\text{term}\quad{[\text{adding-operator}\quad\text{term}]}^*\\
+&\text{term}\quad&&=\quad\text{factor}\quad{[\text{multiplying-operator}\quad\text{factor}]}^*\\
+&\text{factor}\quad&&=\quad\text{variable-access}\quad|\quad\text{unsigned-constant}\quad|\quad\text{function-designator}\\
+&&&|\quad'('\quad\text{expression}\quad')'\quad|\quad'\text{not}'\quad\text{factor}\\
+&\text{function-designator}\quad&&=\quad\text{function-identifier}\quad\text{actual-parameter-list}_\text{opt}\\
+\end{alignat*}
+
+\textcolor{red}{Other}
+
+\begin{alignat*}{2}
+&\text{identifier-list}\quad&&=\quad\text{identifier}\quad{[','\quad\text{identifier}]}^*\\
+&\text{relational-operator}\quad&&=\quad'<'\quad|\quad'='\quad|\quad'>'\quad|\quad'<='\quad|\quad'>='\quad|\quad'<>'\\
+&\text{adding-operator}\quad&&=\quad'+'\quad|\quad'-'\quad|\quad'\text{or}'\\
+&\text{multiplying-operator}\quad&&=\quad'*'\quad|\quad'/\quad|\quad'\text{div}'\quad|\quad'\text{mod}'\quad|\quad'\text{and}'\\
+\end{alignat*}
+
 
 \end{document}
