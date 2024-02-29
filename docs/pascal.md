@@ -27,7 +27,7 @@ $$
 &&&| \text{'function'} | \text{'goto'} | \text{'if'} | \text{'in'} | \text{'label'} | \text{'mod'} \\
 &&&| \text{'nil'} | \text{'not'} | \text{'of'} | \text{'or'} | \text{'packed'} | \text{'procedure'} \\
 &&&| \text{'program'} | \text{'record'} | \text{'repeat'} | \text{'set'} | \text{'then'} \\
-&&&| \text{'to'} | \text{'type'} | \text{'until'} | \text{'var'} | \text{'while'} | \text{'with'} \\
+&&&| \text{'to'} | \text{'type'} | \text{'until'} | \text{'var'} | \text{'while'} | \text{'with'}
 \end{alignat*}
 $$
 
@@ -55,7 +55,7 @@ $$
 &\text{unsigned-integer} &&= \text{digit-sequence} \\
 &\text{fractional-part} &&= \text{digit-sequence} \\
 &\text{scale-factor} &&= \text{sign}_\text{opt}\quad\text{digit-sequence} \\
-&\text{digit-sequence} &&= \text{digit}^+ \\
+&\text{digit-sequence} &&= \text{digit}^+
 \end{alignat*}
 $$
 
@@ -140,7 +140,7 @@ $$
 &\text{structured-statement}\quad&&=\quad\text{compound-statement}\quad|\quad\text{conditional-statement}\\
 &&&|\quad\text{repetitive-statement}\\
 &\text{conditional-statement}\quad&&=\quad\dots\\
-&\text{repetitive-statement}\quad&&=\quad\dots\\
+&\text{repetitive-statement}\quad&&=\quad\dots
 \end{alignat*}
 $$
 
