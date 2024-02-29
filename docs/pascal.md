@@ -2,6 +2,7 @@
 
 - [wiki](https://en.wikipedia.org/wiki/Pascal_(programming_language))
 - [standard](https://web.archive.org/web/20160127044422/http://pascal-central.com/docs/iso7185.pdf)
+- [compiler explore](https://godbolt.org/)
 
 ## Lexical tokens
 
@@ -9,11 +10,8 @@
 
 $$
 \begin{alignat*}{2}
-
 &\text{letter} &&= 'a' | 'b' | \dots | 'z' | 'A' | 'B' |\dots | 'Z' \\
-
 &\text{digit} &&= '0' | '1' | \dots | '9'
-
 \end{alignat*}
 $$
 
