@@ -1,0 +1,16 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\begin{document}
+
+\begin{alignat*}{2}
+&\text{character-string} &&= '''\ \text{string-element}^+\ '''\\
+&\text{string-element} &&= \text{apostrophe-image}\ |\ \text{string-character}\\
+&\text{apostrophe-image} &&= ''''\\
+&\text{string-character} &&= \text{one-of-a-set-of-implementation-defined-characters}
+\end{alignat*}
+
+\end{document}

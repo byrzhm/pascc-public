@@ -1,0 +1,23 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\begin{document}
+
+\begin{alignat*}{2}
+&\text{signed-number} &&= \text{signed-integer | signed-real} \\
+&\text{signed-real} &&= \text{sign}_{\text{opt}} \quad \text{unsigned-real} \\
+&\text{signed-integer} &&= \text{sign}_{\text{opt}} \quad \text{unsigned-integer} \\
+&\text{unsigned-number} &&= \text{unsigned-integer | unsigned-real} \\
+&\text{sign} &&= '+' | '-' \\
+&\text{unsigned-real} &&= \text{digit-sequence}\ '.'\ \text{fractional-part}\ {['e'\ \text{scale-factor}]}_\text{opt}\\
+&&& |\ \text{digit-sequence}\ 'e'\ \text{scale-factor} \\
+&\text{unsigned-integer} &&= \text{digit-sequence} \\
+&\text{fractional-part} &&= \text{digit-sequence} \\
+&\text{scale-factor} &&= \text{sign}_\text{opt}\quad\text{digit-sequence} \\
+&\text{digit-sequence} &&= \text{digit}^+
+\end{alignat*}
+
+\end{document}

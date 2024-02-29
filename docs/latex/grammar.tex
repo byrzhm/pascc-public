@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{geometry}
+
+\geometry{margin=2cm}
+
+\begin{document}
+
+\begin{alignat*}{2}
+&\text{program}\quad&&=\quad\text{program-heading}\quad\ ';'\quad \text{program-block}\quad\ '.'\\
+&\text{program-heading}\quad&&=\quad\ '\text{program}'\quad \text{identifier}\quad {['('\quad\text{program-parameter-list}\quad\ ')']}_\text{opt}\\
+&\text{program-parameter-list}\quad&&=\quad\text{identifier-list}\\
+&\text{identifier-list}\quad&&=\quad\text{identifier}\quad{[','\quad\text{identifier}]}^*\\
+&\text{program-block}\quad&&=\quad\text{block}\\
+&\textcolor{red}{block}\quad&&=\quad\text{constant-definition-part}_\text{opt}\quad\text{type-definition-part}_\text{opt}\\
+&&&\quad\text{variable-declaration-part}_\text{opt}\quad\text{procedure-and-function-declaration-part}_\text{opt}\\
+&&&\quad\text{statement-part}\\
+&\text{constant-definition-part}\quad&&=\quad\ '\text{const}'\quad\text{const-definition}\quad\ ';'\quad {[\text{const-definition}\quad\ ';']}^* \\
+&\text{const-definition}\quad&&=\quad\text{identifier}\quad\ '=' \quad\text{constant}\\
+&\text{constant}\quad&&=\quad\text{sign}_\text{opt}\quad(\text{unsigned-number}\quad |\quad \text{constant-identifier})\\
+&&&|\quad\text{character-string}\\
+&\text{constant-identifier}\quad&&=\quad\text{identifier}\\
+&\text{type-definition-part}\quad&&=\quad\dots\\
+&\text{variable-declaration-part}\quad&&=\quad\ '\text{var}'\quad\text{variable-declaration}\quad\ ';'\quad {[\text{variable-declaration}\quad\ ';']}^* \\
+&\text{variable-declaration}\quad&&=\quad\text{identifier-list}\quad\ ':' \quad\text{type-denoter}\\
+&\text{type-denoter}\quad&&=\quad\dots\\
+&\text{procedure-and-function-declaration-part}\quad&&=\quad\ {[(\text{procedure-declaration}\quad|\quad\text{function-declaration})\quad\ ';']}^+\\
+&\text{procedure-declaration}\quad&&=\quad\text{procedure-heading}\quad\ ';'\quad\text{procedure-block}\\
+&\text{procedure-heading}\quad&&=\quad\ '\text{procedure}'\quad\text{identifier}\quad{[\text{formal-parameter-list}]}_\text{opt}\\
+&\text{procedure-block}\quad&&=\quad\text{block}\\
+&\text{function-declaration}\quad&&=\quad\text{function-heading}\quad\ ';'\quad\text{function-block}\\
+&\text{function-heading}\quad&&=\quad\ '\text{function}'\quad\text{identifier}\quad{[\text{formal-parameter-list}]}_\text{opt}\quad\ ':'\quad \text{result-type}\\
+&\text{function-block}\quad&&=\quad\text{block}\\
+&\text{statement-part}\quad&&=\quad\text{compound-statement}\\
+&\text{compound-statement}\quad&&=\quad\ '\text{begin}' \quad\text{statement-sequence}\quad\ '\text{end}'\\
+&\text{statement-sequence}\quad&&=\quad\text{statement}\quad\ {[';'\quad\text{statement}]^*}\\
+&\text{statement}\quad&&=\quad\text{simple-statement}\quad |\quad \text{structured-statement}\\
+&\text{simple-statement}\quad&&=\quad\text{empty-statement}\quad |\quad \text{assignment-statement}\\
+&&&|\quad \text{procedure-statement}\\
+&\text{empty-statement}\quad&&=\quad\epsilon\\
+&\text{assignment-statement}\quad&&=\quad(\text{variable-access}\quad|\quad\text{function-identifier})\quad\ ':='\quad\text{expression}\\
+&\text{procedure-statement}\quad&&=\quad\dots\\
+&\text{structured-statement}\quad&&=\quad\text{compound-statement}\quad|\quad\text{conditional-statement}\\
+&&&|\quad\text{repetitive-statement}\\
+&\text{conditional-statement}\quad&&=\quad\dots\\
+&\text{repetitive-statement}\quad&&=\quad\dots
+\end{alignat*}
+
+\end{document}
