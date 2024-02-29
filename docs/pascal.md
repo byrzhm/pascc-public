@@ -18,8 +18,8 @@ $$
 ### Special symbols
 
 $$
-\begin{alignat*}{3}
-&\text{special-symbol} &&= '+'\ |\ '-'\ |\ '*'\ |\ '/'\ |\ '='\ |\ '<'\ |\ `>'\ |\ '['\ |\ ']'\\
+\begin{alignat*}{2}
+&\text{special-symbol} &&= '+'\ |\ '-'\ |\ '*'\ |\ '/'\ |\ '='\ |\ '<'\ |\ '>'\ |\ '['\ |\ ']'\\
 &&&|\ '.'\ |\ ','\ |\ ':'\ |\ ';'\ |\ '\uparrow'\ |\ '('\ |\ ')' \\
 &&&|\ '<>'\ |\ '<='\ |\ '>='\ |\ ':='\ |\ '..'\ |\ \text{word-symbol} \\
 &\text{word-symbol} &&= \text{'and'} | \text{'array'} | \text{'begin'} | \text{'case'} | \text{'const'} | \text{'div'} \\
