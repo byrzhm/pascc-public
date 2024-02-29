@@ -60,10 +60,21 @@ considered to be token separators.
 
 ## Grammar
 
-![grammar](image/grammar.png)
+![grammar1](image/grammar1.png)
+![grammar2](image/grammar2.png)
+![grammar3](image/grammar3.png)
 
 与ISO标准的区别:
 
-- Record
-- Label
-- With-statement
+- Record 未实现
+- Label 未实现
+- With-statement 未实现
+- Case-statement 未实现
+- Repeat-statement 未实现
+- field-designator 未实现
+- Pointer 未实现
+
+
+添加的功能:
+
+- break
