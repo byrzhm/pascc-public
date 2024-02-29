@@ -17,20 +17,7 @@ $$
 
 ### Special symbols
 
-$$
-\begin{alignat*}{2}
-&\text{special-symbol} &&= '+'\ |\ '-'\ |\ '*'\ |\ '/'\ |\ '='\ |\ '<'\ |\ '>'\ |\ '['\ |\ ']'\\
-&&&|\ '.'\ |\ ','\ |\ ':'\ |\ ';'\ |\ '\uparrow'\ |\ '('\ |\ ')' \\
-&&&|\ '<>'\ |\ '<='\ |\ '>='\ |\ ':='\ |\ '..'\ |\ \text{word-symbol} \\
-&\text{word-symbol} &&= \text{'and'} | \text{'array'} | \text{'begin'} | \text{'case'} | \text{'const'} | \text{'div'} \\
-&&&| \text{'do'} | \text{'downto'} | \text{'else'} | \text{'end'} | \text{'file'} | \text{'for'} \\
-&&&| \text{'function'} | \text{'goto'} | \text{'if'} | \text{'in'} | \text{'label'} | \text{'mod'} \\
-&&&| \text{'nil'} | \text{'not'} | \text{'of'} | \text{'or'} | \text{'packed'} | \text{'procedure'} \\
-&&&| \text{'program'} | \text{'record'} | \text{'repeat'} | \text{'set'} | \text{'then'} \\
-&&&| \text{'to'} | \text{'type'} | \text{'until'} | \text{'var'} | \text{'while'} | \text{'with'}
-\end{alignat*}
-$$
-
+![special-symbols](image/special-symbols.png)
 
 ### Identifiers
 
