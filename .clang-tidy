@@ -13,6 +13,8 @@ Checks: '
   -cppcoreguidelines-pro-type-const-cast,
   -cppcoreguidelines-avoid-magic-numbers,
   -readability-magic-numbers,
+  -cppcoreguidelines-special-member-functions,
+  -bugprone-easily-swappable-parameters
   '
 
 WarningsAsErrors: ''
