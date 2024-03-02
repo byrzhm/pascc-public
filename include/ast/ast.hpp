@@ -3,7 +3,11 @@
 #include <string>
 #include <utility>
 
+namespace pascc {
+
 class Visitor;
+
+namespace ast {
 
 /**
  * @brief 
@@ -826,30 +830,35 @@ private:
   ProgramBlock block_;  ///< The program block.
 };
 
+}  // namespace ast
+
 class Visitor
 {
 public:
   virtual ~Visitor()                             = default;
 
-  virtual void visit(BinaryExpr &node)           = 0;
-  virtual void visit(NotExpr &node)              = 0;
-  virtual void visit(NegExpr &node)              = 0;
-  virtual void visit(UnsignedConstant &node)     = 0;
-  virtual void visit(FuncCall &node)             = 0;
-  virtual void visit(EntireVariableAccess &node) = 0;
+  virtual void visit(ast::BinaryExpr &node)           = 0;
+  virtual void visit(ast::NotExpr &node)              = 0;
+  virtual void visit(ast::NegExpr &node)              = 0;
+  virtual void visit(ast::UnsignedConstant &node)     = 0;
+  virtual void visit(ast::FuncCall &node)             = 0;
+  virtual void visit(ast::EntireVariableAccess &node) = 0;
 
-  virtual void visit(IfStmt &node)               = 0;
-  virtual void visit(WhileStmt &node)            = 0;
-  virtual void visit(ForLoopStmt &node)          = 0;
-  virtual void visit(NormalAssignStmt &node)     = 0;
-  virtual void visit(FuncRetAssignStmt &node)    = 0;
-  virtual void visit(ReadStmt &node)             = 0;
-  virtual void visit(WriteStmt &node)            = 0;
-  virtual void visit(ReadlnStmt &node)           = 0;
-  virtual void visit(WritelnStmt &node)          = 0;
-  virtual void visit(CompoundStmt &node)         = 0;
-  virtual void visit(StmtBlock &node)            = 0;
+  virtual void visit(ast::IfStmt &node)               = 0;
+  virtual void visit(ast::WhileStmt &node)            = 0;
+  virtual void visit(ast::ForLoopStmt &node)          = 0;
+  virtual void visit(ast::NormalAssignStmt &node)     = 0;
+  virtual void visit(ast::FuncRetAssignStmt &node)    = 0;
+  virtual void visit(ast::ReadStmt &node)             = 0;
+  virtual void visit(ast::WriteStmt &node)            = 0;
+  virtual void visit(ast::ReadlnStmt &node)           = 0;
+  virtual void visit(ast::WritelnStmt &node)          = 0;
+  virtual void visit(ast::CompoundStmt &node)         = 0;
+  virtual void visit(ast::StmtBlock &node)            = 0;
 
-  virtual void visit(ProgramHead &node)          = 0;
-  virtual void visit(Program &node)              = 0;
+  virtual void visit(ast::ProgramHead &node)          = 0;
+  virtual void visit(ast::Program &node)              = 0;
 };
+
+
+}  // namespace pascc
