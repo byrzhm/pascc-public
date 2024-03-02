@@ -1,0 +1,3 @@
+# Disable all checks for third-party code.
+
+Checks: '-*,'
