@@ -59,6 +59,5 @@ include_directories(${PASCC_INCLUDE_DIR} ${PASCC_UNITTEST_INCLUDE_DIR} ${PASCC_3
 
 add_subdirectory(3rdparty)
 add_subdirectory(src)
-add_subdirectory(test)
 add_subdirectory(unittest)
 add_subdirectory(app)
