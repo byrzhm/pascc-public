@@ -11,9 +11,10 @@ class Visitor;
 namespace ast {
 
 /**
- * @brief 
- * This class represents a node in the Abstract Syntax Tree (AST).
- * It provides common functionality and properties for all AST nodes.
+ * @brief Represents a node in the Abstract Syntax Tree (AST).
+ * 
+ * The `ASTNode` class serves as the base class for all nodes in the AST.
+ * It provides common functionality and properties that are shared by all nodes.
  */
 class ASTNode
 {
@@ -38,36 +39,66 @@ public:
   virtual void accept(Visitor &v) = 0;
 
   /**
-   * @brief Returns the line number where the node is located in the source code.
+   * @brief Returns the line number of the first token associated with this node.
    * 
-   * @return The line number of the node.
+   * @return The line number of the first token.
    */
-  [[nodiscard]] auto lineno() const -> int { return lineno_; }
+  [[nodiscard]] auto firstLineno() const -> int { return first_lineno_; }
 
   /**
-   * @brief Sets the line number where the node is located in the source code.
+   * @brief Returns the column number of the first token associated with this node.
    * 
-   * @param lineno The line number to set.
+   * @return The column number of the first token.
    */
-  void setLineNumber(int lineno) { lineno_ = lineno; }
+  [[nodiscard]] auto firstColno() const -> int { return first_colno_; }
 
   /**
-   * @brief Returns the column number where the node is located in the source code.
+   * @brief Returns the line number of the last token associated with this node.
    * 
-   * @return The column number of the node.
+   * @return The line number of the last token.
    */
-  [[nodiscard]] auto colno() const -> int { return colno_; }
+  [[nodiscard]] auto lastLineno() const -> int { return last_lineno_; }
 
   /**
-   * @brief Sets the column number where the node is located in the source code.
+   * @brief Returns the column number of the last token associated with this node.
    * 
-   * @param colno The column number to set.
+   * @return The column number of the last token.
    */
-  void setColumnNumber(int colno) { colno_ = colno; }
+  [[nodiscard]] auto lastColno() const -> int { return last_colno_; }
+
+  /**
+   * @brief Sets the line number of the first token associated with this node.
+   * 
+   * @param first_lineno The line number of the first token.
+   */
+  void setFirstLineno(int first_lineno) { first_lineno_ = first_lineno; }
+
+  /**
+   * @brief Sets the column number of the first token associated with this node.
+   * 
+   * @param first_colno The column number of the first token.
+   */
+  void setFirstColno(int first_colno) { first_colno_ = first_colno; }
+
+  /**
+   * @brief Sets the line number of the last token associated with this node.
+   * 
+   * @param last_lineno The line number of the last token.
+   */
+  void setLastLineno(int last_lineno) { last_lineno_ = last_lineno; }
+
+  /**
+   * @brief Sets the column number of the last token associated with this node.
+   * 
+   * @param last_colno The column number of the last token.
+   */
+  void setLastColno(int last_colno) { last_colno_ = last_colno; }
 
 private:
-  int lineno_{};
-  int colno_{};
+  int first_lineno_{};
+  int first_colno_{};
+  int last_lineno_{};
+  int last_colno_{};
 };
 
 /**
