@@ -10,11 +10,16 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
     string(REPLACE ".cpp" "" pascc_test_name ${pascc_test_filename})
     add_executable(${pascc_test_name} ${pascc_test_source})
     gtest_discover_tests(${pascc_test_name})
-    target_link_libraries(${pascc_test_name} gtest_main pascc_lib)
+    target_link_libraries(
+        ${pascc_test_name} 
+        gtest_main 
+        # pascc_lib
+    )
+
     set_target_properties(
         ${pascc_test_name}
         PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/unittest"
+        RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/unittest"
         COMMAND ${pascc_test_name}
     )
 endforeach()
