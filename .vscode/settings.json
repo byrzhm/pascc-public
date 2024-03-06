@@ -9,4 +9,5 @@
     "clangd.arguments": [
         "--header-insertion=never"
     ],
+    "code-runner.runInTerminal": true,
 }
