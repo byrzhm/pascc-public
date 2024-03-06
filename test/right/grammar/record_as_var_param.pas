@@ -1,26 +1,24 @@
 program RecordRefParamExample;
 
 type
-    Student = record
-        name: string;
-        age: integer;
-        grade: real;
+    Point = record
+        x, y: integer;
     end;
 
 var
-    student1: Student;
+    p: Point;
 
-procedure UpdateStudentGrade(var s: Student; newGrade: real);
+procedure Transform(var p: Point);
 begin
-    s.grade := newGrade;
+    p.x := -p.x;
+    p.y := -p.y;
 end;
 
 begin
-    student1.name := 'John Doe';
-    student1.age := 20;
-    student1.grade := 85.5;
+    p.x := 10;
+    p.y := 20;
 
-    writeln('Old Grade: ', student1.grade);
-    UpdateStudentGrade(student1, 90.5);
-    writeln('New Grade: ', student1.grade);
+    writeln('Old Point: ', p.x, ', ', p.y);
+    Transform(p);
+    writeln('New Point: ', p.x, ', ', p.y);
 end.
