@@ -15,7 +15,9 @@ include(CTest)
 
 enable_testing()
 
-# external dependencies
+#########################################################
+################# external dependencies #################
+#########################################################
 
 # On macOS, search Homebrew for keg-only versions of Bison and Flex. Xcode does
 # not provide new enough versions for us to use.
@@ -52,6 +54,10 @@ message(STATUS "FLEX_LIBRARIES: ${FLEX_LIBRARIES}")
 message(STATUS "FLEX_INCLUDE_DIRS: ${FLEX_INCLUDE_DIRS}")
 message(STATUS "BISON_EXECUTABLE: ${BISON_EXECUTABLE}")
 message(STATUS "BISON_VERSION: ${BISON_VERSION}")
+
+#########################################################
+#################   about compiler      #################
+#########################################################
 
 # Sanitizer
 if (NOT DEFINED PASCC_SANITIZER)
@@ -94,3 +100,4 @@ add_subdirectory(3rdparty)
 add_subdirectory(src)
 add_subdirectory(unittest)
 add_subdirectory(app)
+add_subdirectory(test)
