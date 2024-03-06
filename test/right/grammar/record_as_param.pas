@@ -1,25 +1,19 @@
 program RecordParamExample;
 type
-    Student = record
-        name: string;
-        age: integer;
-        grade: real;
+    Point = record
+        x, y: Integer;
     end;
 
-procedure PrintStudentInfo(s: Student);
+var
+    p: Point;
+
+procedure PrintPoint(p: Point);
 begin
-    writeln('Student Name: ', s.name);
-    writeln('Student Age: ', s.age);
-    writeln('Student Grade: ', s.grade);
+    writeln(p.x, ' ', p.y);
 end;
 
-var
-    student1: Student;
-
 begin
-    student1.name := 'John Doe';
-    student1.age := 20;
-    student1.grade := 85.5;
-
-    PrintStudentInfo(student1);
+    p.x := 10;
+    p.y := 20;
+    PrintPoint(p);
 end.
