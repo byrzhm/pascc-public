@@ -62,6 +62,7 @@
 program:
   program_head program_body {
     $$ = std::make_unique<Program>(std::move(*$1), std::move(*$2));
+    drv.program_ = std::move($$);
   }
   ;
 
@@ -72,7 +73,7 @@ program_head:
   ;
 
 program_body:
-  statement_block {
+  statement_block PERIOD {
     $$ = std::make_unique<ProgramBlock>(std::move(*$1));
   }
   ;

@@ -24,9 +24,6 @@ target_compile_options(pascc_parse
     -Wno-unused-but-set-variable
 )
 
-# 在生成文件目录中添加 clang-tidy 文件, 来取消所有检查
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.clang-tidy "Checks: '-*'")
-
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:pascc_parse>
     PARENT_SCOPE)

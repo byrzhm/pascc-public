@@ -10,6 +10,8 @@ namespace pascc::parse {
 
 class ParserDriver
 {
+  friend class Parser;
+
 public:
   ParserDriver() = default;
 
@@ -30,11 +32,15 @@ public:
 
   auto parse() -> int;
 
+  auto program() -> std::unique_ptr<Program> { return std::move(program_); }
+
 private:
   class location loc_;
   std::string filename_;
   bool trace_scanning_ = false;
   bool trace_parsing_  = false;
+
+  std::unique_ptr<Program> program_;
 };
 
 }  // namespace pascc::parse
