@@ -13,7 +13,7 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
     target_link_libraries(
         ${pascc_test_name} 
         gtest_main 
-        # pascc_lib
+        pascc_lib
     )
 
     set_target_properties(
