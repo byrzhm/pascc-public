@@ -104,3 +104,9 @@
 ```plaintext
 %param { ParserDriver &drv }
 ```
+
+## flex
+
+### flex resources
+
+[Options-Affecting-Scanner-Behavior](https://westes.github.io/flex/manual/Options-Affecting-Scanner-Behavior.html#Options-Affecting-Scanner-Behavior)
