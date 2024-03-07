@@ -1,4 +1,32 @@
+#include <iostream>
+
 #include "codegen/codegen.hpp"
+
+namespace {
+
+constexpr int INDENT_SIZE = 2;
+
+class IndentGuard
+{
+public:
+  IndentGuard(int *indent, int indent_size)
+    : indent_(indent)
+    , indent_size_(indent_size)
+  {
+    *indent += indent_size_;
+  }
+
+  ~IndentGuard()
+  {
+    *indent_ -= indent_size_;
+  }
+
+private:
+  int *indent_ = nullptr;
+  int indent_size_;
+};
+
+}  // namespace
 
 namespace pascc::codegen {
 
@@ -9,8 +37,15 @@ static auto indent(int n) -> std::string
 
 auto CodegenVisitor::println(const std::string &str) -> void
 {
-  fout_ << indent(indent_) << str << "\n";
+  print(str + "\n");
 }
+
+auto CodegenVisitor::print(const std::string &str) -> void
+{
+  (file_output_ ? fout_ : std::cout) << indent(indent_) << str;
+}
+
+// ! Expr 再等等
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Expr &node)
 {
@@ -47,6 +82,8 @@ void CodegenVisitor::visit([[maybe_unused]] ast::EntireVariableAccess &node)
   throw std::runtime_error("Not implemented");
 }
 
+// ! 控制语句再等等
+
 void CodegenVisitor::visit([[maybe_unused]] ast::Stmt &node)
 {
   throw std::runtime_error("Not implemented");
@@ -67,6 +104,8 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
   throw std::runtime_error("Not implemented");
 }
 
+// ! 赋值比较恶心，先等 AST 实现
+
 void CodegenVisitor::visit([[maybe_unused]] ast::NormalAssignStmt &node)
 {
   throw std::runtime_error("Not implemented");
@@ -77,32 +116,43 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncRetAssignStmt &node)
   throw std::runtime_error("Not implemented");
 }
 
+// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
+// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ReadStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
+// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::WriteStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
+// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ReadlnStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
-// TODO(who): writeln arguments and remove [[maybe_unused]]
+// TODO(fpy&dly): writeln arguments and remove [[maybe_unused]]
 void CodegenVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
 {
+  // print("printf(");
+  // for (...)
+  // 1st actual
+  // 2nd actual
+  // ...
+  // print(")\n");
   println(R"(printf("\n");)");
 }
 
+// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::CompoundStmt &node)
 {
   throw std::runtime_error("Not implemented");
@@ -113,15 +163,17 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
   throw std::runtime_error("Not implemented");
 }
 
+// DON'T MODIFY
 void CodegenVisitor::visit(ast::StmtBlock &node)
 {
-  indent_ += 2;
-  for (const auto &stmt : node.stmts()) {
+  IndentGuard ig(&indent_, INDENT_SIZE);
+  for (const auto &stmt : node.stmts())
+  {
     stmt->accept(*this);
   }
-  indent_ -= 2;
 }
 
+// TODO(fpy&dly): const-def-part type-def-part var-decl-part subprog-decl-part
 void CodegenVisitor::visit(ast::ProgramBlock &node)
 {
   println("int main() {");
@@ -129,10 +181,11 @@ void CodegenVisitor::visit(ast::ProgramBlock &node)
   println("}");
 }
 
+// ? param list
 void CodegenVisitor::visit(ast::ProgramHead &node)
 {
   println("/**");
-  println(" * Program Head" + node.programName());
+  println(" * Program name: " + node.programName());
   println(" */");
   println("#include <stdio.h>");
 }

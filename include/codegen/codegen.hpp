@@ -10,8 +10,12 @@ class CodegenVisitor: public Visitor
 {
 public:
   explicit CodegenVisitor(const std::string &filepath)
-    : fout_(filepath)
-  {}
+  {
+    if (!filepath.empty()) {
+      file_output_ = true;
+      fout_.open(filepath);
+    }
+  }
 
   void visit(ast::Expr &node) override;
   void visit(ast::BinaryExpr &node) override;
@@ -43,7 +47,9 @@ public:
 
 private:
   auto println(const std::string &str) -> void;
+  auto print(const std::string &str) -> void;
 
+  bool file_output_ = false;
   std::ofstream fout_;
   int indent_ = 0;
 };
