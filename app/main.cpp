@@ -1,7 +1,12 @@
-#include <iostream>
+#include "driver/driver.hpp"
 
-int main()
+using pascc::driver::Driver;
+
+auto main() -> int
 {
-  std::cout << "Hello, World!" << '\n';
+  Driver::Get()
+      .parse("test.pas")
+      .check()
+      .codegen();
   return 0;
 }
