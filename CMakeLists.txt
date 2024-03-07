@@ -96,6 +96,10 @@ include_directories(
     ${PASCC_3RDPARTY_INCLUDE_DIR}
     ${CMAKE_BINARY_DIR}/src/parse)
 
+
+# 在生成文件目录中添加 clang-tidy 文件, 来取消所有检查
+file(WRITE ${PROJECT_BINARY_DIR}/.clang-tidy "Checks: '-*'")
+
 add_subdirectory(3rdparty)
 add_subdirectory(src)
 add_subdirectory(unittest)
