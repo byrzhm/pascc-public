@@ -230,10 +230,10 @@ class TestExtend(unittest.TestCase):
             int y;
         } point;
         point createpoint(int x, int y) {
-            point p;
-            p.x = x;
-            p.y = y;
-            return p;
+            point __createpoint;
+            __createpoint.x = x;
+            __createpoint.y = y;
+            return __createpoint;
         }
         int main() {
             p = createpoint(10, 20);
