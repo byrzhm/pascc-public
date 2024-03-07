@@ -12,11 +12,21 @@ FLEX_TARGET(PASCC_LEXER lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp)
 # 生成文件: parser.hpp
 ADD_FLEX_BISON_DEPENDENCY(PASCC_LEXER PASCC_PARSER)
 
-add_library(pascc_parse ${BISON_PASCC_PARSER_OUTPUTS} ${FLEX_PASCC_LEXER_OUTPUTS})
+add_library(pascc_parse
+    OBJECT
+    parser_driver.cpp
+    ${BISON_PASCC_PARSER_OUTPUTS}
+    ${FLEX_PASCC_LEXER_OUTPUTS}
+)
+
+target_compile_options(pascc_parse
+    PRIVATE
+    -Wno-unused-but-set-variable
+)
+
+# 在生成文件目录中添加 clang-tidy 文件, 来取消所有检查
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.clang-tidy "Checks: '-*'")
 
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:pascc_parse>
     PARENT_SCOPE)
-
-# 在生成文件目录中添加 clang-tidy 文件, 来取消所有检查
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.clang-tidy "Checks: '-*'")

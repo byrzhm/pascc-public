@@ -1,7 +1,9 @@
 %{
 #include <string>
 #include <cstdlib>
-// #include ...
+#include "parse/parser_driver.hpp"
+#include "parser.hpp"
+using namespace pascc::parse;
 %}
 
 %option noyywrap
@@ -9,11 +11,10 @@
 %option noinput 
 %option batch
 %option debug
+%option case-insensitive
 
 BLANK             [ \t\r]
-DIGIT             [0-9]
 ID                [A-Za-z_][A-Za-z0-9_]*
-INT_LIT           {DIGIT}+
 
 %{
   // Code run each time a pattern is matched.
@@ -22,53 +23,53 @@ INT_LIT           {DIGIT}+
 %%
 %{
   // A handy shortcut to the location held by the driver.
-  yy::location& loc = drv.get_location();
+  location& loc = drv.location();
   // Code run each time yylex is called.
-  loc.step ();
+  loc.step();
 %}
 
 {BLANK}+         loc.step();
-\n+              loc.lines (yyleng); loc.step();
+\n+              loc.lines(yyleng); loc.step();
 
-int              return yy::YYParser::make_INT(loc);
-return           return yy::YYParser::make_RETURN(loc);
-{ID}             return yy::YYParser::make_ID(yytext, loc);
-{INT_LIT}        return yy::YYParser::make_INT_LIT(atoi(yytext), loc);
+BEGIN            return Parser::make_BEGIN(loc);
+END              return Parser::make_END(loc);
+PROGRAM          return Parser::make_PROGRAM(loc);
+WRITELN          return Parser::make_WRITELN(loc);
+{ID}             return Parser::make_ID(yytext, loc);
 
-"{"              return yy::YYParser::make_LBRACE(loc);
-"}"              return yy::YYParser::make_RBRACE(loc);
-"("              return yy::YYParser::make_LPAREN(loc);
-")"              return yy::YYParser::make_RPAREN(loc);
-;                return yy::YYParser::make_SEMICOLON(loc);
+"("              return Parser::make_LPAREN(loc);
+")"              return Parser::make_RPAREN(loc);
+";"              return Parser::make_SEMICOLON(loc);
+"."              return Parser::make_PERIOD(loc);
 
 .                {
-                    throw yy::YYParser::syntax_error (loc, "illegal character: " + std::string(yytext));
+                    throw Parser::syntax_error(loc, "illegal character: " + std::string(yytext));
                  }
 
-<<EOF>>          return yy::YYParser::make_EOF(loc);
+<<EOF>>          return Parser::make_EOF(loc);
 
 %%
 
-namespace yy {
+namespace pascc::parse {
   
 void
-YYDriver::scan_begin ()
+ParserDriver::scan_begin()
 {
   yy_flex_debug = trace_scanning_;
-  if (filename_.empty () || filename_ == "-") {
+  if (filename_.empty() || filename_ == "-") {
     yyin = stdin;
   }
-  else if (!(yyin = fopen(filename_.c_str (), "r")))
+  else if (!(yyin = fopen(filename_.c_str(), "r")))
   {
-    std::cerr << "cannot open " << filename_ << ": " << strerror (errno) << '\n';
-    exit (EXIT_FAILURE);
+    std::cerr << "cannot open " << filename_ << ": " << strerror(errno) << '\n';
+    exit(EXIT_FAILURE);
   }
 }
 
 void
-YYDriver::scan_end ()
+ParserDriver::scan_end()
 {
   fclose(yyin);
 }
 
-} // namespace yy
+} // namespace pascc::parse

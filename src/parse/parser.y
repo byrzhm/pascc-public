@@ -1,94 +1,109 @@
 %skeleton "lalr1.cc"
 %require "3.8"
-%defines
-%define api.parser.class {YYParser}
-
-%code requires { /* 这会写入头文件中 */
-  #include "ast/ast.h"
-  using namespace cai;
-  namespace yy {
-    class YYDriver;
-  }
-}
-
-%param { YYDriver& drv }
-
+%header
 
 %define api.token.raw
 %define api.token.constructor
+%define api.token.prefix {TOK_}
 %define api.value.type variant
+%define api.parser.class {Parser}
+%define api.namespace {pascc::parse}
+
 %define parse.assert
-
-%locations
-
 %define parse.trace
 %define parse.error detailed
 %define parse.lac full
 
-%expect 0
+%locations
 
-%code{
-  #include "parse/yy_driver.h"
+%code requires {
+  #include "ast/ast.hpp"
+  namespace pascc::parse {
+    class ParserDriver;
+  } // namespace pascc::parse
+  using namespace pascc::ast;
 }
 
-%define api.token.prefix {TOK_}
+%code{
+  #include "parse/parser_driver.hpp"
+  using namespace pascc::parse;
+}
+
+%param { ParserDriver& drv }
+
+%expect 0
 
 %token EOF 0
 
 %token
+  PROGRAM   "program"
+  BEGIN     "begin"
+  END       "end"
+  WRITELN   "writeln"
+  SEMICOLON ";"
+  PERIOD    "."
   LPAREN    "("
   RPAREN    ")"
-  LBRACE    "{"
-  RBRACE    "}"
-  SEMICOLON ";"
 ;
 
-%token
-  RETURN "return"
-  INT    "int"
-;
-
-%token <int> INT_LIT
-%token <std::string>  ID
-
+%token <std::string> ID "identifier"
 
 %nterm <std::unique_ptr<Program>> program
-%nterm <std::unique_ptr<FunctionDeclaration>> func_decl
-%nterm <std::unique_ptr<Statement>> stmt
-%nterm <std::unique_ptr<Expression>> expr
+%nterm <std::unique_ptr<ProgramHead>> program_head
+%nterm <std::unique_ptr<ProgramBlock>> program_body
+%nterm <std::unique_ptr<StmtBlock>> statement_block
+%nterm <std::unique_ptr<Stmt>> statement
+%nterm <std::unique_ptr<ProcCallStmt>> procedure_statement
 
 %start program
 
 %%
 
 program:
-    func_decl {
-      $$ = std::make_unique<Program>(std::move($1));
-      drv.set_program(std::move($$));
-    }
-    ;
+  program_head program_body {
+    $$ = std::make_unique<Program>(std::move(*$1), std::move(*$2));
+  }
+  ;
 
-func_decl:
-    INT ID LPAREN RPAREN LBRACE stmt RBRACE {
-      $$ = std::make_unique<FunctionDeclaration>($2, std::move($6));
-    }
-    ;
+program_head:
+  PROGRAM ID SEMICOLON {
+    $$ = std::make_unique<ProgramHead>(std::move($2));
+  }
+  ;
 
-stmt:
-    RETURN expr SEMICOLON {
-      $$ = std::make_unique<ReturnStatement>(std::move($2));
-    }
-    ;
+program_body:
+  statement_block {
+    $$ = std::make_unique<ProgramBlock>(std::move(*$1));
+  }
+  ;
 
-expr:
-    INT_LIT {
-      $$ = std::make_unique<IntegerLiteral>($1);
-    }
-    ;
+statement_block:
+  BEGIN statement END {
+    std::vector<std::unique_ptr<Stmt>> stmts;
+    stmts.emplace_back(std::move($2));
+    $$ = std::make_unique<StmtBlock>(std::move(stmts));
+  }
+  ;
+
+statement:
+  procedure_statement {
+    $$ = std::move($1);
+  }
+  ;
+
+procedure_statement:
+  WRITELN LPAREN RPAREN {
+    $$ = std::make_unique<WritelnStmt>();
+  }
+  ;
 
 %%
 
-void yy::YYParser::error(const location_type &l, const std::string &m)
+namespace pascc::parse {
+
+void Parser::error(const location_type &loc, const std::string &msg)
 {
-  std::cerr << l << ": " << m << '\n';
+  std::cerr << loc << ": " << msg << '\n';
+}
+
 }
