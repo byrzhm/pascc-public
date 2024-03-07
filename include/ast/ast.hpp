@@ -178,18 +178,25 @@ private:
   std::unique_ptr<Expr> rhs_;
 };
 
+enum class UnaryOp
+{
+  Not,  ///< not
+  Neg   ///< -
+};
+
 /**
- * Represents a logical NOT expression.
+ * Represents a unary expression.
  */
-class NotExpr: public Expr
+class UnaryExpr: public Expr
 {
 public:
   /**
    * Constructs a `NotExpr` object with the given expression.
    * @param expr The expression to be negated.
    */
-  explicit NotExpr(std::unique_ptr<Expr> expr)
-    : expr_(std::move(expr))
+  UnaryExpr(UnaryOp op, std::unique_ptr<Expr> expr)
+    : op_(op)
+    , expr_(std::move(expr))
   {}
 
   /**
@@ -198,42 +205,20 @@ public:
    */
   void accept(Visitor &v) override;
 
-private:
-  std::unique_ptr<Expr> expr_;
-};
-
-/**
- * Represents a negation expression.
- * 
- * This class inherits from the Expr class and represents a negation expression.
- * It holds a unique pointer to an Expr object that represents the expression
- * being negated.
- */
-class NegExpr: public Expr
-{
-public:
   /**
-   * Constructs a NegExpr object with the given expression.
-   * 
-   * @param expr A unique pointer to an Expr object representing the expression
-   *             being negated.
+   * Returns the unary operator.
+   * @return The unary operator.
    */
-  explicit NegExpr(std::unique_ptr<Expr> expr)
-    : expr_(std::move(expr))
-  {}
+  [[nodiscard]] auto op() const -> UnaryOp { return op_; }
 
   /**
-   * Accepts a visitor and calls the appropriate visit method.
-   * 
-   * This method is used to implement the visitor pattern. It accepts a visitor
-   * object and calls the appropriate visit method based on the type of the
-   * expression being negated.
-   * 
-   * @param v The visitor object to accept.
+   * Returns the expression to be negated.
+   * @return The expression to be negated.
    */
-  void accept(Visitor &v) override;
+  [[nodiscard]] auto expr() const -> const Expr & { return *expr_; }
 
 private:
+  UnaryOp op_;
   std::unique_ptr<Expr> expr_;
 };
 
@@ -264,6 +249,13 @@ public:
    * @param v The visitor object to accept.
    */
   void accept(Visitor &v) override;
+
+  /**
+   * @brief Returns the value of the unsigned constant.
+   * 
+   * @return The value of the unsigned constant.
+   */
+  [[nodiscard]] auto value() const -> unsigned { return value_; }
 
 private:
   unsigned value_; /**< The value of the unsigned constant. */
@@ -419,7 +411,7 @@ private:
  * This class is derived from the Stmt class and represents a for loop statement in the AST.
  * It contains information about the control variable, initial value, condition, body, and direction (to or downto).
  */
-class ForLoopStmt: public Stmt
+class ForStmt: public Stmt
 {
 public:
   /**
@@ -431,7 +423,7 @@ public:
    * @param body The body statement.
    * @param to Specifies the direction of the loop (true for 'to', false for 'downto').
    */
-  ForLoopStmt(std::unique_ptr<Expr> ctrl_var, std::unique_ptr<Expr> init_val, std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body, bool to)
+  ForStmt(std::unique_ptr<Expr> ctrl_var, std::unique_ptr<Expr> init_val, std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body, bool to)
     : ctrl_var_(std::move(ctrl_var))
     , init_val_(std::move(init_val))
     , cond_(std::move(cond))
@@ -596,6 +588,12 @@ private:
 class ProcCallStmt: public Stmt
 {
 public:
+  ProcCallStmt() = delete;
+
+  explicit ProcCallStmt(std::string procid)
+    : procid_(std::move(procid))
+  {}
+
   ProcCallStmt(std::string procid, std::vector<std::unique_ptr<Expr>> actuals)
     : procid_(std::move(procid))
     , actuals_(std::move(actuals))
@@ -656,6 +654,10 @@ public:
 class WritelnStmt: public ProcCallStmt
 {
 public:
+  WritelnStmt()
+    : ProcCallStmt("writeln")
+  {}
+
   void accept(Visitor &v) override;
 };
 
@@ -744,6 +746,15 @@ private:
 class Block: public ASTNode
 {
 public:
+  /**
+   * @brief Constructs a Block object with the given statement block.
+   * 
+   * @param stmt_block The statement block within the block.
+   */
+  explicit Block(StmtBlock stmt_block)
+    : stmt_block_(std::move(stmt_block))
+  {}
+
   void accept(Visitor &v) override;
 
   /**
@@ -766,6 +777,10 @@ private:
 class ProgramBlock: public Block
 {
 public:
+  explicit ProgramBlock(StmtBlock stmt_block)
+    : Block(std::move(stmt_block))
+  {}
+
   void accept(Visitor &v) override;
 };
 
@@ -779,6 +794,15 @@ public:
 class ProgramHead: public ASTNode
 {
 public:
+  /**
+   * @brief Constructs a ProgramHead object with the given program name.
+   * 
+   * @param program_name The name of the program.
+   */
+  explicit ProgramHead(std::string program_name)
+    : program_name_(std::move(program_name))
+  {}
+
   /**
    * @brief Constructs a ProgramHead object with the given program name and identifier list.
    * 
@@ -867,20 +891,20 @@ private:
 class Visitor
 {
 public:
-  virtual ~Visitor()                             = default;
+  virtual ~Visitor()                                  = default;
 
   virtual void visit(ast::BinaryExpr &node)           = 0;
-  virtual void visit(ast::NotExpr &node)              = 0;
-  virtual void visit(ast::NegExpr &node)              = 0;
+  virtual void visit(ast::UnaryExpr &node)            = 0;
   virtual void visit(ast::UnsignedConstant &node)     = 0;
   virtual void visit(ast::FuncCall &node)             = 0;
   virtual void visit(ast::EntireVariableAccess &node) = 0;
 
   virtual void visit(ast::IfStmt &node)               = 0;
   virtual void visit(ast::WhileStmt &node)            = 0;
-  virtual void visit(ast::ForLoopStmt &node)          = 0;
+  virtual void visit(ast::ForStmt &node)              = 0;
   virtual void visit(ast::NormalAssignStmt &node)     = 0;
   virtual void visit(ast::FuncRetAssignStmt &node)    = 0;
+  virtual void visit(ast::ProcCallStmt &node)         = 0;
   virtual void visit(ast::ReadStmt &node)             = 0;
   virtual void visit(ast::WriteStmt &node)            = 0;
   virtual void visit(ast::ReadlnStmt &node)           = 0;
@@ -888,6 +912,7 @@ public:
   virtual void visit(ast::CompoundStmt &node)         = 0;
   virtual void visit(ast::StmtBlock &node)            = 0;
 
+  virtual void visit(ast::ProgramBlock &node)         = 0;
   virtual void visit(ast::ProgramHead &node)          = 0;
   virtual void visit(ast::Program &node)              = 0;
 };
