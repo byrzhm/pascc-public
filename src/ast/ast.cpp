@@ -2,6 +2,11 @@
 
 namespace pascc::ast {
 
+void Expr::accept(Visitor &visitor)
+{
+  visitor.visit(*this);
+}
+
 void BinaryExpr::accept(Visitor &visitor)
 {
   visitor.visit(*this);
@@ -22,7 +27,17 @@ void FuncCall::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
+void VariableAccess::accept(Visitor &visitor)
+{
+  visitor.visit(*this);
+}
+
 void EntireVariableAccess::accept(Visitor &visitor)
+{
+  visitor.visit(*this);
+}
+
+void Stmt::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }
@@ -48,6 +63,11 @@ void ProcCallStmt::accept(Visitor &visitor)
 }
 
 void WritelnStmt::accept(Visitor &visitor)
+{
+  visitor.visit(*this);
+}
+
+void Block::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }

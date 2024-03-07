@@ -12,87 +12,21 @@ namespace ast {
 
 /**
  * @brief Represents a node in the Abstract Syntax Tree (AST).
- * 
- * The `ASTNode` class serves as the base class for all nodes in the AST.
- * It provides common functionality and properties that are shared by all nodes.
  */
 class ASTNode
 {
 public:
-  /**
-   * @brief Virtual destructor for the ASTNode class.
-   * 
-   * This destructor is declared as virtual to ensure that the correct destructor
-   * is called when deleting an object through a pointer to the base class.
-   */
-  virtual ~ASTNode() = default;
+  virtual ~ASTNode()              = default;
 
-  /**
-   * @brief Accepts a visitor object and invokes the appropriate visit method.
-   * 
-   * This pure virtual function is used to implement the Visitor pattern.
-   * It allows a visitor object to traverse the AST and perform operations on each node.
-   * The specific visit method to be called is determined by the dynamic type of the node.
-   * 
-   * @param v The visitor object to accept.
-   */
   virtual void accept(Visitor &v) = 0;
 
-  /**
-   * @brief Returns the line number of the first token associated with this node.
-   * 
-   * @return The line number of the first token.
-   */
-  [[nodiscard]] auto firstLineno() const -> int { return first_lineno_; }
+  [[nodiscard]] auto firstLineno() -> int & { return first_lineno_; }
 
-  /**
-   * @brief Returns the column number of the first token associated with this node.
-   * 
-   * @return The column number of the first token.
-   */
-  [[nodiscard]] auto firstColno() const -> int { return first_colno_; }
+  [[nodiscard]] auto firstColno() -> int & { return first_colno_; }
 
-  /**
-   * @brief Returns the line number of the last token associated with this node.
-   * 
-   * @return The line number of the last token.
-   */
-  [[nodiscard]] auto lastLineno() const -> int { return last_lineno_; }
+  [[nodiscard]] auto lastLineno() -> int & { return last_lineno_; }
 
-  /**
-   * @brief Returns the column number of the last token associated with this node.
-   * 
-   * @return The column number of the last token.
-   */
-  [[nodiscard]] auto lastColno() const -> int { return last_colno_; }
-
-  /**
-   * @brief Sets the line number of the first token associated with this node.
-   * 
-   * @param first_lineno The line number of the first token.
-   */
-  void setFirstLineno(int first_lineno) { first_lineno_ = first_lineno; }
-
-  /**
-   * @brief Sets the column number of the first token associated with this node.
-   * 
-   * @param first_colno The column number of the first token.
-   */
-  void setFirstColno(int first_colno) { first_colno_ = first_colno; }
-
-  /**
-   * @brief Sets the line number of the last token associated with this node.
-   * 
-   * @param last_lineno The line number of the last token.
-   */
-  void setLastLineno(int last_lineno) { last_lineno_ = last_lineno; }
-
-  /**
-   * @brief Sets the column number of the last token associated with this node.
-   * 
-   * @param last_colno The column number of the last token.
-   */
-  void setLastColno(int last_colno) { last_colno_ = last_colno; }
+  [[nodiscard]] auto lastColno() -> int & { return last_colno_; }
 
 private:
   int first_lineno_{};
@@ -757,12 +691,9 @@ public:
 
   void accept(Visitor &v) override;
 
-  /**
-   * @brief Get the statement block within the block.
-   * 
-   * @return const StmtBlock& A reference to the statement block within the block.
-   */
   [[nodiscard]] auto stmtBlock() const -> const StmtBlock & { return stmt_block_; }
+
+  [[nodiscard]] auto stmtBlock() -> StmtBlock & { return stmt_block_; }
 
 private:
   StmtBlock stmt_block_;
@@ -867,19 +798,14 @@ public:
    */
   void accept(Visitor &v) override;
 
-  /**
-   * @brief Returns the program head.
-   * 
-   * @return The program head.
-   */
   [[nodiscard]] auto head() const -> const ProgramHead & { return head_; }
 
-  /**
-   * @brief Returns the program block.
-   * 
-   * @return The program block.
-   */
+  [[nodiscard]] auto head() -> ProgramHead & { return head_; }
+
   [[nodiscard]] auto block() const -> const ProgramBlock & { return block_; }
+
+  [[nodiscard]] auto block() -> ProgramBlock & { return block_; }
+
 
 private:
   ProgramHead head_;    ///< The program head.
@@ -893,12 +819,15 @@ class Visitor
 public:
   virtual ~Visitor()                                  = default;
 
+  virtual void visit(ast::Expr &node)                 = 0;
   virtual void visit(ast::BinaryExpr &node)           = 0;
   virtual void visit(ast::UnaryExpr &node)            = 0;
   virtual void visit(ast::UnsignedConstant &node)     = 0;
   virtual void visit(ast::FuncCall &node)             = 0;
+  virtual void visit(ast::VariableAccess &node)       = 0;
   virtual void visit(ast::EntireVariableAccess &node) = 0;
 
+  virtual void visit(ast::Stmt &node)                 = 0;
   virtual void visit(ast::IfStmt &node)               = 0;
   virtual void visit(ast::WhileStmt &node)            = 0;
   virtual void visit(ast::ForStmt &node)              = 0;
@@ -910,6 +839,8 @@ public:
   virtual void visit(ast::ReadlnStmt &node)           = 0;
   virtual void visit(ast::WritelnStmt &node)          = 0;
   virtual void visit(ast::CompoundStmt &node)         = 0;
+
+  virtual void visit(ast::Block &node)                = 0;
   virtual void visit(ast::StmtBlock &node)            = 0;
 
   virtual void visit(ast::ProgramBlock &node)         = 0;
