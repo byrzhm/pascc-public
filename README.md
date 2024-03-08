@@ -3,9 +3,23 @@
 ## 快速配置
 
 ``` shell
-sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git
+sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git fp-compiler
 git submodule update --init --recursive
 ```
+
+``` shell
+# 配置 git user.name 和 user.email
+git config user.name "youername" # --global
+git config user.email "youremail" # --global
+```
+
+vscode 安装插件:
+
+- clangd
+- c/c++ extension pack
+- cmake tools
+- git graph
+- code-runner
 
 ## 小组成员
 
