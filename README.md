@@ -1,5 +1,12 @@
 # pascc
 
+## 快速配置
+
+``` shell
+sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git
+git submodule update --init --recursive
+```
+
 ## 小组成员
 
 <!--
