@@ -97,7 +97,11 @@ begin
   end;
 end;
 
+var x : integer;
+
 begin
+  x := 1;
+  writeln('x = ', x);
   // 初始化棋盘
   InitializeBoard;
   // 求解四皇后问题
