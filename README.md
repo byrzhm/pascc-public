@@ -20,6 +20,8 @@ vscode 安装插件:
 - cmake tools
 - git graph
 - code-runner
+- better comments
+- doxygen documentation generator
 
 ## 小组成员
 
