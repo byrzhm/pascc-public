@@ -11,6 +11,7 @@ git submodule update --init --recursive
 # 配置 git user.name 和 user.email
 git config user.name "youername" # --global
 git config user.email "youremail" # --global
+git config pull.rebase false
 ```
 
 vscode 安装插件:
