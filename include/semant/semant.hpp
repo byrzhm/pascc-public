@@ -8,6 +8,8 @@ namespace pascc::semant {
 class SemantVisitor: public Visitor
 {
 public:
+  SemantVisitor() = default;
+
   void visit(ast::Expr &node) override;
   void visit(ast::BinaryExpr &node) override;
   void visit(ast::UnaryExpr &node) override;
@@ -35,6 +37,8 @@ public:
   void visit(ast::ProgramBlock &node) override;
   void visit(ast::ProgramHead &node) override;
   void visit(ast::Program &node) override;
+
+  auto isOk() -> bool;
 
 private:
   SemantContext context_;

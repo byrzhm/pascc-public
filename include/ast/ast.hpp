@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+#include "location.hh"
+
 namespace pascc {
 
 class Visitor;
@@ -21,19 +23,10 @@ public:
 
   virtual void accept(Visitor &v) = 0;
 
-  [[nodiscard]] auto firstLineno() -> int & { return first_lineno_; }
-
-  [[nodiscard]] auto firstColno() -> int & { return first_colno_; }
-
-  [[nodiscard]] auto lastLineno() -> int & { return last_lineno_; }
-
-  [[nodiscard]] auto lastColno() -> int & { return last_colno_; }
+  auto location() -> parse::location & { return loc_; }
 
 private:
-  int first_lineno_{};
-  int first_colno_{};
-  int last_lineno_{};
-  int last_colno_{};
+  parse::location loc_;
 };
 
 /**
