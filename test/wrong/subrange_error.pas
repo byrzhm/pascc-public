@@ -1,4 +1,4 @@
-program subrange_error;
+program SubrangeErrorExample;
 
 var
   arr: array[100..1] of integer;

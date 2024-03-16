@@ -1,4 +1,4 @@
-program OutOfBound;
+program OutOfBoundExample;
 
 var
   arr: array[1..6] of integer;
