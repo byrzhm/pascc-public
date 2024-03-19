@@ -93,6 +93,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::StmtBlock &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramBlock &node)
 {
+  SemantVisitor::visit(node.stmtBlock());
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)
@@ -101,6 +102,9 @@ void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::Program &node)
 {
+  //Program -> ProgramHead ';' ProgramBlock '.'
+  SemantVisitor::visit(node.head());
+  SemantVisitor::visit(node.block());
 }
 
 }  // namespace pascc::semant
