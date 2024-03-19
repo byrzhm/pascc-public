@@ -118,3 +118,11 @@ git config pull.rebase false
     </td>
   </tr>
 </table>
+
+## References
+
+- [Jianxff PASCC](https://github.com/BUPT-CS-Assignment/PASCC)
+- [Jianxff PASCC BACK-END](https://github.com/BUPT-CS-Assignment/PASCC_BACKEND)
+- [Jianxff PASCC FRONT-END](https://github.com/BUPT-CS-Assignment/PASCC_ONLINE)
+- [Yorange0 pascal2c-compiler](https://github.com/Yorange0/pascal2c-compiler)
+- [XieWeikai Pascal2C](https://github.com/XieWeikai/Pascal2C)
