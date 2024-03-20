@@ -8,6 +8,7 @@ namespace {
 std::string get_str_lit();
 int get_int_num();
 double get_real_num();
+char get_char();
 } // namespace
 %}
 
@@ -18,11 +19,16 @@ double get_real_num();
 %option debug
 %option case-insensitive
 
+digit                   [0-9]
+digits                  {digit}+
+fraction                (\.{digits})
+
 BLANK             [ \t\r]
 ID                [A-Za-z_][A-Za-z0-9_]*
 STR_LIT           \'([^\\\'\n]|(\\.)){2,}\'
-INT_NUM           -?\d+
-REAL_NUM          -?\d+(\.\d+)?
+INT_NUM           {digits}
+REAL_NUM          {digits}{fraction}
+CHAR              '[^'\n]'
 
 %{
   // Code run each time a pattern is matched.
@@ -84,9 +90,13 @@ FALSE            return Parser::make_FALSE(loc);
 EXIT             return Parser::make_EXIT(loc);
 
 {ID}             return Parser::make_ID(yytext, loc);
+
 {STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
+
 {INT_NUM}        return Parser::make_INT_NUM(get_int_num(),loc);
 {REAL_NUM}       return Parser::make_REAL_NUM(get_real_num(),loc);
+
+{CHAR}           return Parser::make_CHAR(get_char(),loc);
 
 "+"              return Parser::make_PLUS(loc);
 "-"              return Parser::make_MINUS(loc);
@@ -139,8 +149,12 @@ double get_real_num()
   return std::stod(str);
 }
 
+char get_char()
+{
+  std::string str = std::string(yytext);
+  return str.substr(1, 1);
 } // namespace
-
+}
 namespace pascc::parse {
   
 void
