@@ -6,6 +6,8 @@
 using namespace pascc::parse;
 namespace {
 std::string get_str_lit();
+int get_int_num();
+double get_real_num();
 } // namespace
 %}
 
@@ -19,6 +21,8 @@ std::string get_str_lit();
 BLANK             [ \t\r]
 ID                [A-Za-z_][A-Za-z0-9_]*
 STR_LIT           \'([^\\\'\n]|(\\.)){2,}\'
+INT_NUM           -?\d+
+REAL_NUM          -?\d+(\.\d+)?
 
 %{
   // Code run each time a pattern is matched.
@@ -81,6 +85,8 @@ EXIT             return Parser::make_EXIT(loc);
 
 {ID}             return Parser::make_ID(yytext, loc);
 {STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
+{INT_NUM}        return Parser::make_INT_NUM(get_int_num(),loc);
+{REAL_NUM}       return Parser::make_REAL_NUM(get_real_num(),loc);
 
 "+"              return Parser::make_PLUS(loc);
 "-"              return Parser::make_MINUS(loc);
@@ -104,8 +110,6 @@ EXIT             return Parser::make_EXIT(loc);
 ";"              return Parser::make_SEMICOLON(loc);
 ".."             return Parser::make_RANGE(loc);
 
-
-
 .                {
                     throw Parser::syntax_error(loc, "illegal character: " + std::string(yytext));
                  }
@@ -121,6 +125,18 @@ std::string get_str_lit()
   std::string str = std::string(yytext);
   str = str.substr(1, str.length() - 2);  
   return str;
+}
+
+int get_int_num()
+{
+  std::string str = std::string(yytext);
+  return std::stoi(str);
+}
+
+double get_real_num()
+{
+  std::string str = std::string(yytext);
+  return std::stod(str);
 }
 
 } // namespace

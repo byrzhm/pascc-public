@@ -107,6 +107,8 @@
 
 %token <std::string> ID "identifier"
 %token <std::string> STR_LIT "string_literal"
+%token <int> INT_NUM "integer_number"
+%token <double> REAL_NUM "float_number"
 
 %nterm <std::unique_ptr<Program>> program
 %nterm <std::unique_ptr<ProgramHead>> program_head
