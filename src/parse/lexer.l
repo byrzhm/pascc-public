@@ -152,7 +152,7 @@ double get_real_num()
 char get_char()
 {
   std::string str = std::string(yytext);
-  return str.substr(1, 1);
+  return str[1];
 } // namespace
 }
 namespace pascc::parse {
