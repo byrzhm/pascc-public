@@ -53,12 +53,30 @@ auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
     case pascc::parse::Parser::symbol_kind::S_FALSE: return "false";
     case pascc::parse::Parser::symbol_kind::S_EXIT: return "exit";
 
+    case pascc::parse::Parser::symbol_kind::S_PLUS: return "+";
+    case pascc::parse::Parser::symbol_kind::S_MINUS: return "-";
+    case pascc::parse::Parser::symbol_kind::S_MUL: return "*";
     case pascc::parse::Parser::symbol_kind::S_FDIV: return "/";
-    case pascc::parse::Parser::symbol_kind::S_SEMICOLON: return ";";
-    case pascc::parse::Parser::symbol_kind::S_PERIOD: return ".";
+    case pascc::parse::Parser::symbol_kind::S_EQ: return "=";
+    case pascc::parse::Parser::symbol_kind::S_GT: return ">";
+    case pascc::parse::Parser::symbol_kind::S_LT: return "<";
+    case pascc::parse::Parser::symbol_kind::S_NE: return "<>";
+    case pascc::parse::Parser::symbol_kind::S_LE: return "<=";
+    case pascc::parse::Parser::symbol_kind::S_GE: return ">=";
+    case pascc::parse::Parser::symbol_kind::S_ASSIGN: return ":=";
+
+
+    case pascc::parse::Parser::symbol_kind::S_LSB: return "[";
+    case pascc::parse::Parser::symbol_kind::S_RSB: return "]";
     case pascc::parse::Parser::symbol_kind::S_LPAREN: return "(";
     case pascc::parse::Parser::symbol_kind::S_RPAREN: return ")";
-    case pascc::parse::Parser::symbol_kind::S_LT: return "<";
+    case pascc::parse::Parser::symbol_kind::S_PERIOD: return ".";
+    case pascc::parse::Parser::symbol_kind::S_COMMA: return ",";
+    case pascc::parse::Parser::symbol_kind::S_COLON: return ":";
+    case pascc::parse::Parser::symbol_kind::S_SEMICOLON: return ";";
+    case pascc::parse::Parser::symbol_kind::S_RANGE: return "..";
+
+
     case pascc::parse::Parser::symbol_kind::S_ID: return symbol.value.as<std::string>();
     case pascc::parse::Parser::symbol_kind::S_STR_LIT: return symbol.value.as<std::string>();
 
@@ -125,12 +143,29 @@ auto symbol_to_string(const Parser::symbol_kind_type &kind, const std::string &i
     case pascc::parse::Parser::symbol_kind::S_FALSE: return "false";
     case pascc::parse::Parser::symbol_kind::S_EXIT: return "exit";
 
+    case pascc::parse::Parser::symbol_kind::S_PLUS: return "+";
+    case pascc::parse::Parser::symbol_kind::S_MINUS: return "-";
+    case pascc::parse::Parser::symbol_kind::S_MUL: return "*";
     case pascc::parse::Parser::symbol_kind::S_FDIV: return "/";
-    case pascc::parse::Parser::symbol_kind::S_SEMICOLON: return ";";
-    case pascc::parse::Parser::symbol_kind::S_PERIOD: return ".";
+    case pascc::parse::Parser::symbol_kind::S_EQ: return "=";
+    case pascc::parse::Parser::symbol_kind::S_GT: return ">";
+    case pascc::parse::Parser::symbol_kind::S_LT: return "<";
+    case pascc::parse::Parser::symbol_kind::S_NE: return "<>";
+    case pascc::parse::Parser::symbol_kind::S_LE: return "<=";
+    case pascc::parse::Parser::symbol_kind::S_GE: return ">=";
+    case pascc::parse::Parser::symbol_kind::S_ASSIGN: return ":=";
+
+
+    case pascc::parse::Parser::symbol_kind::S_LSB: return "[";
+    case pascc::parse::Parser::symbol_kind::S_RSB: return "]";
     case pascc::parse::Parser::symbol_kind::S_LPAREN: return "(";
     case pascc::parse::Parser::symbol_kind::S_RPAREN: return ")";
-    case pascc::parse::Parser::symbol_kind::S_LT: return "<";
+    case pascc::parse::Parser::symbol_kind::S_PERIOD: return ".";
+    case pascc::parse::Parser::symbol_kind::S_COMMA: return ",";
+    case pascc::parse::Parser::symbol_kind::S_COLON: return ":";
+    case pascc::parse::Parser::symbol_kind::S_SEMICOLON: return ";";
+    case pascc::parse::Parser::symbol_kind::S_RANGE: return "..";
+
     case pascc::parse::Parser::symbol_kind::S_ID: return id;
     case pascc::parse::Parser::symbol_kind::S_STR_LIT: return "'string literal'";
 
@@ -287,11 +322,91 @@ TEST(LexerTest, number)
 TEST(LexerTest, operator)
 {
   // TODO(who): add operator test
+  std::vector<Parser::symbol_kind_type> src_data = {
+      Parser::symbol_kind::S_PLUS,
+      Parser::symbol_kind::S_MINUS,
+      Parser::symbol_kind::S_MUL,
+      Parser::symbol_kind::S_FDIV,
+      Parser::symbol_kind::S_EQ,
+      Parser::symbol_kind::S_GT,
+      Parser::symbol_kind::S_LT,
+      Parser::symbol_kind::S_NE,
+      Parser::symbol_kind::S_LE,
+      Parser::symbol_kind::S_GE,
+      Parser::symbol_kind::S_ASSIGN
+  };
+
+  // create data
+  std::string filename = "operator.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare
+  EXPECT_EQ(src_data.size(), actual_result.size());
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(symbol_to_string(src_data[i]), symbol_to_string(actual_result[i]));
+  }
+
+  drv.scan_end();
 }
 
 TEST(LexerTest, delimiter)
 {
   // TODO(who): add delimiter test
+  std::vector<Parser::symbol_kind_type> src_data = {
+      Parser::symbol_kind::S_LSB,
+      Parser::symbol_kind::S_RSB,
+      Parser::symbol_kind::S_LPAREN,
+      Parser::symbol_kind::S_RPAREN,
+      Parser::symbol_kind::S_PERIOD,
+      Parser::symbol_kind::S_COMMA,
+      Parser::symbol_kind::S_COLON,
+      Parser::symbol_kind::S_SEMICOLON,
+      Parser::symbol_kind::S_RANGE
+  };
+
+  // create data
+  std::string filename = "delimiter.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare
+  EXPECT_EQ(src_data.size(), actual_result.size());
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(symbol_to_string(src_data[i]), symbol_to_string(actual_result[i]));
+  }
+
+  drv.scan_end();
 }
 
 TEST(LexerTest, comment)
