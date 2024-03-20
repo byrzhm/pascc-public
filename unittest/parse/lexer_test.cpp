@@ -307,7 +307,7 @@ TEST(LexerTest, keyword)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.kind_);
   }
 
@@ -349,7 +349,7 @@ TEST(LexerTest, string)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.kind_);
   }
 
@@ -382,7 +382,7 @@ TEST(LexerTest, integerNumber)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.value.as<int>());
   }
 
@@ -419,7 +419,7 @@ TEST(LexerTest, realNumber)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.value.as<double>());
   }
 
@@ -456,7 +456,7 @@ TEST(LexerTest, integerNumberRandom)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.value.as<int>());
   }
 
@@ -494,7 +494,7 @@ TEST(LexerTest, realNumberRandom)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.value.as<double>());
   }
 
@@ -539,7 +539,7 @@ TEST(LexerTest, operator)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.kind_);
   }
 
@@ -582,7 +582,7 @@ TEST(LexerTest, delimiter)
     if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
       break;
     }
-
+    std::cout << symbol.location << '\n';
     actual_result.push_back(symbol.kind_);
   }
 
@@ -596,9 +596,106 @@ TEST(LexerTest, delimiter)
   drv.scan_end();
 }
 
-TEST(LexerTest, comment)
+TEST(LexerTest, lineComment)
 {
-  // TODO(who): add comment test
+  std::vector<std::string> src_data = {
+      "// sd5545'('djnwnqkn",
+      "//",
+      "//\t",
+      "//Mamba出去"
+  };
+
+  std::string filename = "lineComment.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+    std::cout << symbol.location << '\n';
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare
+  EXPECT_EQ(actual_result.size(), 0);
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, blockComment1)
+{
+  // { comment }
+
+  std::vector<std::string> src_data = {
+      "{ sd5545'('djnwnqkn}",
+      "{\n\n\n}",
+      "{\n男人\tHAHA\n\tWhat can I say,\nMAMBA OUT!}"
+  };
+
+  std::string filename = "blockComment1.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+    std::cout << symbol.location << '\n';
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare
+  EXPECT_EQ(actual_result.size(), 0);
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, blockComment2)
+{
+  // (* comment *)
+
+  std::vector<std::string> src_data = {
+      "(* sd5545'('djnwnqkn*)",
+      "(*\n\n\n*)",
+      "(*\n男人\tHAHA\n\tWhat can I say,\nMAMBA OUT!*)",
+      "(********)"
+  };
+
+  std::string filename = "blockComment2.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+    std::cout << symbol.location << '\n';
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare
+  EXPECT_EQ(actual_result.size(), 0);
+
+  drv.scan_end();
 }
 
 // TODO(mfz&zh): more lexer test???
