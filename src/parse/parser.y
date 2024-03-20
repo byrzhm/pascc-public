@@ -113,10 +113,11 @@
 
 %nterm <std::unique_ptr<Program>> program
 %nterm <std::unique_ptr<ProgramHead>> program_head
-%nterm <std::unique_ptr<ProgramBlock>> program_body
-%nterm <std::unique_ptr<StmtBlock>> statement_block
+%nterm <std::unique_ptr<ProgramBlock>> program_block
+%nterm <std::unque_ptr<Block>> block
+%nterm <std::unique_ptr<StmtPart>> statement_part
 %nterm <std::unique_ptr<Stmt>> statement
-%nterm <std::unique_ptr<ProcCallStmt>> procedure_statement
+%nterm <std::unique_ptr<ProcCallStmt>> procedure_call_statement
 
 %start program
 
@@ -124,19 +125,21 @@
 
 program: 
   program_head program_block {
-    
+    // std::make_unique<T>(...) 将会生成 std::unique_ptr<T>, 其中 T 会使用 ... 提供的参数进行构造 
+    $$ = std::make_unique<Program>(std::move($1), std::move($2));
+    drv.program_ = std::move($$);
   }
   ;
 
 program_head:
   PROGRAM ID LPAREN id_list RPAREN SEMICOLON {
-
+    $$ = std::make_unique<ProgramHead>(std::move($2), std::move($4));
   }
   | PROGRAM ID LPAREN RPAREN SEMICOLON {
-
+    $$ = std::make_unique<ProgramHead>(std::move($2));
   }
   | PROGRAM ID SEMICOLON {
-
+    $$ = std::make_unique<ProgramHead>(std::move($2));
   }
   ;
 
