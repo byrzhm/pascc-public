@@ -538,7 +538,10 @@ private:
 class ArrayType: public TypeDenoter
 {
 public:
-  ArrayType(std::unique_ptr<TypeDenoter> type, std::vector<Period> periods)
+  ArrayType(
+      std::unique_ptr<TypeDenoter> type,
+      std::vector<std::unique_ptr<Period>> periods
+  )
     : type_(std::move(type))
     , periods_(std::move(periods))
   {}
@@ -547,11 +550,11 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
-  [[nodiscard]] auto periods() -> std::vector<Period> & { return periods_; }
+  [[nodiscard]] auto periods() -> std::vector<std::unique_ptr<Period>> & { return periods_; }
 
 private:
   std::unique_ptr<TypeDenoter> type_;
-  std::vector<Period> periods_;
+  std::vector<std::unique_ptr<Period>> periods_;
 };
 
 class RecordType: public TypeDenoter
@@ -1230,7 +1233,10 @@ public:
    * @param program_name 程序的名字
    * @param id_list 程序头部的参数列表
    */
-  ProgramHead(std::string program_name, std::vector<std::string> id_list)
+  ProgramHead(
+      std::string program_name,
+      std::vector<std::string> id_list
+  )
     : program_name_(std::move(program_name))
     , id_list_(std::move(id_list))
   {}
@@ -1298,33 +1304,33 @@ private:
 class Visitor
 {
 public:
-  virtual ~Visitor()                                  = default;
+  virtual ~Visitor()                              = default;
 
-  virtual void visit(ast::Expr &node)                 = 0;
-  virtual void visit(ast::BinaryExpr &node)           = 0;
-  virtual void visit(ast::UnaryExpr &node)            = 0;
-  virtual void visit(ast::UnsignedConstant &node)     = 0;
-  virtual void visit(ast::FuncCall &node)             = 0;
-  virtual void visit(ast::Assignable &node)             = 0;
-  virtual void visit(ast::AssignableId &node)           = 0;
+  virtual void visit(ast::Expr &node)             = 0;
+  virtual void visit(ast::BinaryExpr &node)       = 0;
+  virtual void visit(ast::UnaryExpr &node)        = 0;
+  virtual void visit(ast::UnsignedConstant &node) = 0;
+  virtual void visit(ast::FuncCall &node)         = 0;
+  virtual void visit(ast::Assignable &node)       = 0;
+  virtual void visit(ast::AssignableId &node)     = 0;
 
-  virtual void visit(ast::Stmt &node)                 = 0;
-  virtual void visit(ast::IfStmt &node)               = 0;
-  virtual void visit(ast::WhileStmt &node)            = 0;
-  virtual void visit(ast::ForStmt &node)                = 0;
-  virtual void visit(ast::ProcCallStmt &node)         = 0;
-  virtual void visit(ast::ReadStmt &node)             = 0;
-  virtual void visit(ast::WriteStmt &node)            = 0;
-  virtual void visit(ast::ReadlnStmt &node)           = 0;
-  virtual void visit(ast::WritelnStmt &node)          = 0;
-  virtual void visit(ast::CompoundStmt &node)         = 0;
+  virtual void visit(ast::Stmt &node)             = 0;
+  virtual void visit(ast::IfStmt &node)           = 0;
+  virtual void visit(ast::WhileStmt &node)        = 0;
+  virtual void visit(ast::ForStmt &node)          = 0;
+  virtual void visit(ast::ProcCallStmt &node)     = 0;
+  virtual void visit(ast::ReadStmt &node)         = 0;
+  virtual void visit(ast::WriteStmt &node)        = 0;
+  virtual void visit(ast::ReadlnStmt &node)       = 0;
+  virtual void visit(ast::WritelnStmt &node)      = 0;
+  virtual void visit(ast::CompoundStmt &node)     = 0;
 
-  virtual void visit(ast::Block &node)                = 0;
-  virtual void visit(ast::StmtPart &node)               = 0;
+  virtual void visit(ast::Block &node)            = 0;
+  virtual void visit(ast::StmtPart &node)         = 0;
 
-  virtual void visit(ast::ProgramBlock &node)         = 0;
-  virtual void visit(ast::ProgramHead &node)          = 0;
-  virtual void visit(ast::Program &node)              = 0;
+  virtual void visit(ast::ProgramBlock &node)     = 0;
+  virtual void visit(ast::ProgramHead &node)      = 0;
+  virtual void visit(ast::Program &node)          = 0;
 };
 
 
