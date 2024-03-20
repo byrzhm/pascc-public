@@ -1,10 +1,12 @@
 %{
 #include <string>
 #include <cstdlib>
+#include <algorithm>
 #include "parse/parser_driver.hpp"
 #include "parser.hpp"
 using namespace pascc::parse;
 namespace {
+std::string get_id();
 std::string get_str_lit();
 int get_int_num();
 double get_real_num();
@@ -97,7 +99,7 @@ TRUE             return Parser::make_TRUE(loc);
 FALSE            return Parser::make_FALSE(loc);
 EXIT             return Parser::make_EXIT(loc);
 
-{ID}             return Parser::make_ID(yytext, loc);
+{ID}             return Parser::make_ID(get_id(), loc);
 
 {STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
 
@@ -138,6 +140,14 @@ EXIT             return Parser::make_EXIT(loc);
 %%
 
 namespace {
+
+std::string get_id()
+{
+  std::string str = std::string(yytext);
+  std::transform(str.begin(), str.end(), str.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+  return str;
+}
 
 std::string get_str_lit()
 {
