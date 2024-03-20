@@ -398,13 +398,8 @@ TEST(LexerTest, integerNumber)
 
 TEST(LexerTest, realNumber)
 {
-  std::vector<std::string> real_nums{
-      "1.1",
-      "2.",
-      ".6",
-      "114.514",
-      "1e6"
-  };
+  std::vector<std::string> real_nums{"1.1",     "2.",  ".6",
+                                     "114.514", "1e6", ".23e-9"};
   std::vector<double> src_data(real_nums.size());
   for (unsigned i = 0; i < real_nums.size(); ++i) {
     src_data[i] = std::stod(real_nums[i]);
@@ -444,7 +439,7 @@ TEST(LexerTest, integerNumberRandom)
   const int TSIZE = 100;
   std::vector<int> src_data(TSIZE);
   for (int i = 0; i < TSIZE; ++i) {
-    src_data[i] = static_cast<int>(rng());
+    src_data[i] = static_cast<int>(rng() % std::numeric_limits<int>::max());
   }
 
   std::string filename = "integer_number.txt";

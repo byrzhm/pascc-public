@@ -19,16 +19,16 @@ char get_char();
 %option debug
 %option case-insensitive
 
-digit                   [0-9]
-digits                  {digit}+
-fraction                (\.{digits})
+DIGIT		                [0-9]
+DIGITS		              {DIGIT}+
+NUMERIC			            (({DIGITS}\.{DIGITS}?)|(\.{DIGITS}))
 
-BLANK             [ \t\r]
-ID                [A-Za-z_][A-Za-z0-9_]*
-STR_LIT           \'([^\\\'\n]|(\\.)){2,}\'
-INT_NUM           {digits}
-REAL_NUM          {digits}{fraction}
-CHAR              '[^'\n]'
+BLANK                   [ \t\r]
+ID                      [A-Za-z_][A-Za-z0-9_]*
+STR_LIT                 \'([^\\\'\n]|(\\.)){2,}\'
+INTEGER                 {DIGIT}+
+REAL                    ({DIGITS}|{NUMERIC})[Ee][-+]?{DIGITS}
+CHAR                    '[^'\n]' 
 
 %{
   // Code run each time a pattern is matched.
@@ -93,8 +93,9 @@ EXIT             return Parser::make_EXIT(loc);
 
 {STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
 
-{INT_NUM}        return Parser::make_INT_NUM(get_int_num(),loc);
-{REAL_NUM}       return Parser::make_REAL_NUM(get_real_num(),loc);
+{INTEGER}        return Parser::make_INT_NUM(get_int_num(),loc);
+{NUMERIC}        return Parser::make_REAL_NUM(get_real_num(),loc);
+{REAL}           return Parser::make_REAL_NUM(get_real_num(),loc);
 
 {CHAR}           return Parser::make_CHAR(get_char(),loc);
 
