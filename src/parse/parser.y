@@ -14,6 +14,8 @@
 %define parse.error detailed
 %define parse.lac full
 
+%verbose
+
 %locations
 
 %code requires {
@@ -36,17 +38,78 @@
 %token EOF 0
 
 %token
-  PROGRAM   "program"
+  AND       "and"
+  ARRAY     "array"
   BEGIN     "begin"
+  CASE      "case"
+  CONST     "const"
+  IDIV      "div"
+  DO        "do"
+  DOWNTO    "downto"
+  ELSE      "else"
   END       "end"
+  FILE      "file"
+  FOR       "for"
+  FUNCTION  "function"
+  GOTO      "goto"
+  IF        "if"
+  IN        "in"
+  LABEL     "label"
+  MOD       "mod"
+  NIL       "nil"
+  NOT       "not"
+  OF        "of"
+  OR        "or"
+  PACKED    "packed"
+  PROCEDURE "procedure"
+  PROGRAM   "program"
+  RECORD    "record"
+  REPEAT    "repeat"
+  SET       "set"
+  THEN      "then"
+  TO        "to"
+  TYPE      "type"
+  UNTIL     "until"
+  VAR       "var"
+  WHILE     "while"
+  WITH      "with"
+
+  READ      "read"
+  READLN    "readln"
+  WRITE     "write"
   WRITELN   "writeln"
-  SEMICOLON ";"
-  PERIOD    "."
+  TRUE      "true"
+  FALSE     "false"
+  EXIT      "exit"
+
+  PLUS      "+"
+  MINUS     "-"
+  MUL       "*"
+  FDIV      "/"
+  EQ        "="
+  GT        ">"
+  LT        "<"
+  NE        "<>"
+  LE        "<="
+  GE        ">="
+  ASSIGN    ":="
+
+  LSB       "["
+  RSB       "]"
   LPAREN    "("
   RPAREN    ")"
+  PERIOD    "."
+  COMMA     ","
+  COLON     ":"
+  SEMICOLON ";"
+  RANGE     ".."
 ;
 
 %token <std::string> ID "identifier"
+%token <std::string> STR_LIT "string_literal"
+%token <int> INT_NUM "integer_number"
+%token <double> REAL_NUM "float_number"
+%token <char> CHAR "character"
 
 %nterm <std::unique_ptr<Program>> program
 %nterm <std::unique_ptr<ProgramHead>> program_head
