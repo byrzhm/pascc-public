@@ -88,7 +88,7 @@
   PERIOD    "."
   LPAREN    "("
   RPAREN    ")"
-  LESS      "<"
+  LT        "<"
 ;
 
 %token <std::string> ID "identifier"

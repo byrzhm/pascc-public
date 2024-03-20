@@ -86,7 +86,7 @@ EXIT             return Parser::make_EXIT(loc);
 ")"              return Parser::make_RPAREN(loc);
 ";"              return Parser::make_SEMICOLON(loc);
 "."              return Parser::make_PERIOD(loc);
-"<"              return Parser::make_LESS(loc);
+"<"              return Parser::make_LT(loc);
 
 
 
