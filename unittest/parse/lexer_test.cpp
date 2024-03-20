@@ -1,4 +1,5 @@
 #include <fstream>
+#include <random>
 
 #include "parse/parser_driver.hpp"
 #include "parser.hpp"
@@ -77,7 +78,7 @@ auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
     case pascc::parse::Parser::symbol_kind::S_RANGE: return "..";
 
 
-    case pascc::parse::Parser::symbol_kind::S_ID: return symbol.value.as<std::string>();
+    case pascc::parse::Parser::symbol_kind::S_ID:
     case pascc::parse::Parser::symbol_kind::S_STR_LIT: return symbol.value.as<std::string>();
 
     // non-terminal
@@ -92,7 +93,8 @@ auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
     case pascc::parse::Parser::symbol_kind::S_YYEMPTY:
     case pascc::parse::Parser::symbol_kind::S_YYEOF:
     case pascc::parse::Parser::symbol_kind::S_YYerror:
-    case pascc::parse::Parser::symbol_kind::S_YYUNDEF: return "Unknown";
+    case pascc::parse::Parser::symbol_kind::S_YYUNDEF:
+    default: return "Unknown";
   }
 }
 
@@ -181,7 +183,8 @@ auto symbol_to_string(const Parser::symbol_kind_type &kind, const std::string &i
     case pascc::parse::Parser::symbol_kind::S_YYEMPTY:
     case pascc::parse::Parser::symbol_kind::S_YYEOF:
     case pascc::parse::Parser::symbol_kind::S_YYerror:
-    case pascc::parse::Parser::symbol_kind::S_YYUNDEF: return "Unknown";
+    case pascc::parse::Parser::symbol_kind::S_YYUNDEF:
+    default: return "Unknown";
   }
 }
 
@@ -192,6 +195,52 @@ void create_data(const std::vector<Parser::symbol_kind_type> &data, const std::s
     ofs << symbol_to_string(d) << '\n';
   }
 }
+
+template<typename T>
+void create_data(const std::vector<T> &data, const std::string &filename)
+{
+  std::ofstream ofs(filename);
+  for (const auto &d : data) {
+    ofs << d << '\n';
+  }
+}
+
+/**
+ * @brief 生成一个随机的pascal实数字符串
+ * 
+ * @return std::string 随机的pascal实数字符串
+ */
+auto gen_real_num_str() -> std::string
+{
+  std::string str;
+
+  // 生成随机数，以确定实数字符串的形式
+  std::mt19937 rng{std::random_device{}()};
+  auto randomNumber = rng() % 5;
+
+  switch (randomNumber) {
+    case 0:
+      str = std::to_string(rng() % 10) + "." + std::to_string(rng() % 10);
+      break;
+    case 1:
+      str = "." + std::to_string(rng() % 10);
+      break;
+    case 2:
+      str = std::to_string(rng() % 100) + ".";
+      break;
+    case 3:
+      str = "." + std::to_string(rng() % 100) + "e-" + std::to_string(rng() % 10);
+      break;
+    case 4:
+      str = std::to_string(rng() % 10) + "." + std::to_string(rng() % 10) + "e" + std::to_string(rng() % 10);
+      break;
+    default:
+      break;
+  }
+
+  return str;
+}
+
 
 TEST(LexerTest, keyword)
 {
@@ -305,7 +354,7 @@ TEST(LexerTest, string)
   }
 
   // compare
-  EXPECT_EQ(src_data, actual_result);
+  EXPECT_EQ(src_data.size(), actual_result.size());
   int size = static_cast<int>(src_data.size());
   for (int i = 0; i < size; ++i) {
     EXPECT_EQ(symbol_to_string(src_data[i]), symbol_to_string(actual_result[i]));
@@ -314,14 +363,158 @@ TEST(LexerTest, string)
   drv.scan_end();
 }
 
-TEST(LexerTest, number)
+TEST(LexerTest, integerNumber)
 {
-  // TODO(who): add number test
+  std::mt19937 rng{std::random_device{}()};
+  std::vector<int> src_data{1, 66, 888, 114514};
+
+  std::string filename = "integer_number.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<int> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.value.as<int>());
+  }
+
+  // compare
+  EXPECT_EQ(src_data.size(), actual_result.size());
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(src_data[i], actual_result[i]);
+  }
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, realNumber)
+{
+  std::vector<std::string> real_nums{
+      "1.1",
+      "2.",
+      ".6",
+      "114.514",
+      "1e6"
+  };
+  std::vector<double> src_data(real_nums.size());
+  for (unsigned i = 0; i < real_nums.size(); ++i) {
+    src_data[i] = std::stod(real_nums[i]);
+  }
+
+  std::string filename = "real_number.txt";
+  create_data(real_nums, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<double> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.value.as<double>());
+  }
+
+  // compare
+  EXPECT_EQ(src_data.size(), actual_result.size());
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(src_data[i], actual_result[i]);
+  }
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, integerNumberRandom)
+{
+  std::mt19937 rng{std::random_device{}()};
+  const int TSIZE = 100;
+  std::vector<int> src_data(TSIZE);
+  for (int i = 0; i < TSIZE; ++i) {
+    src_data[i] = static_cast<int>(rng());
+  }
+
+  std::string filename = "integer_number.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<int> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.value.as<int>());
+  }
+
+  // compare
+  EXPECT_EQ(src_data.size(), actual_result.size());
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(src_data[i], actual_result[i]);
+  }
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, realNumberRandom)
+{
+  const int TSIZE = 100;
+  std::vector<std::string> real_nums(TSIZE);
+  std::vector<double> src_data(TSIZE);
+  for (int i = 0; i < TSIZE; ++i) {
+    real_nums[i] = gen_real_num_str();
+    src_data[i]  = std::stod(real_nums[i]);
+  }
+
+  std::string filename = "real_number.txt";
+  create_data(real_nums, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<double> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.value.as<double>());
+  }
+
+  // compare
+  EXPECT_EQ(src_data.size(), actual_result.size());
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(src_data[i], actual_result[i]);
+  }
+
+  drv.scan_end();
 }
 
 TEST(LexerTest, operator)
 {
-  // TODO(who): add operator test
   std::vector<Parser::symbol_kind_type> src_data = {
       Parser::symbol_kind::S_PLUS,
       Parser::symbol_kind::S_MINUS,
@@ -367,7 +560,6 @@ TEST(LexerTest, operator)
 
 TEST(LexerTest, delimiter)
 {
-  // TODO(who): add delimiter test
   std::vector<Parser::symbol_kind_type> src_data = {
       Parser::symbol_kind::S_LSB,
       Parser::symbol_kind::S_RSB,
