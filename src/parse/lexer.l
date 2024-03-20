@@ -19,6 +19,7 @@ char get_char();
 %option debug
 %option case-insensitive
 
+NON_NEWLINE             [^\n\r]
 DIGIT		                [0-9]
 DIGITS		              {DIGIT}+
 NUMERIC			            (({DIGITS}\.{DIGITS}?)|(\.{DIGITS}))
@@ -29,6 +30,8 @@ STR_LIT                 \'([^\\\'\n]|(\\.)){2,}\'
 INTEGER                 {DIGIT}+
 REAL                    ({DIGITS}|{NUMERIC})[Ee][-+]?{DIGITS}
 CHAR                    '[^'\n]' 
+
+LINE_COMMENT			            ("//"{NON_NEWLINE}*)
 
 %{
   // Code run each time a pattern is matched.
@@ -43,6 +46,7 @@ CHAR                    '[^'\n]'
 %}
 
 {BLANK}+         loc.step();
+{LINE_COMMENT}   loc.step();
 \n+              loc.lines(yyleng); loc.step();
 
 AND              return Parser::make_AND(loc);
