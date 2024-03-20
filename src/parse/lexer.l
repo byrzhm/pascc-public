@@ -35,7 +35,7 @@ CHAR                    '[^'\n]'
 
 LINE_COMMENT			      ("//"{NON_NEWLINE}*)
 BLOCK_COMMENT1          (\{[^}]*\})
-BLOCK_COMMENT2          (\(\*[^(\*\))]*\*\))
+BLOCK_COMMENT2          (\(\*[^\*\)]*\*\))
 
 %{
   // Code run each time a pattern is matched.
