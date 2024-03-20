@@ -4,6 +4,9 @@
 #include "parse/parser_driver.hpp"
 #include "parser.hpp"
 using namespace pascc::parse;
+namespace {
+std::string get_str_lit();
+} // namespace
 %}
 
 %option noyywrap
@@ -15,6 +18,7 @@ using namespace pascc::parse;
 
 BLANK             [ \t\r]
 ID                [A-Za-z_][A-Za-z0-9_]*
+STR_LIT           \'([^\\\'\n]|(\\.)){2,}\'
 
 %{
   // Code run each time a pattern is matched.
@@ -36,11 +40,13 @@ END              return Parser::make_END(loc);
 PROGRAM          return Parser::make_PROGRAM(loc);
 WRITELN          return Parser::make_WRITELN(loc);
 {ID}             return Parser::make_ID(yytext, loc);
+{STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
 
 "("              return Parser::make_LPAREN(loc);
 ")"              return Parser::make_RPAREN(loc);
 ";"              return Parser::make_SEMICOLON(loc);
 "."              return Parser::make_PERIOD(loc);
+"<"              return Parser::make_LESS(loc);
 
 .                {
                     throw Parser::syntax_error(loc, "illegal character: " + std::string(yytext));
@@ -49,6 +55,17 @@ WRITELN          return Parser::make_WRITELN(loc);
 <<EOF>>          return Parser::make_EOF(loc);
 
 %%
+
+namespace {
+
+std::string get_str_lit()
+{
+  std::string str = std::string(yytext);
+  str = str.substr(1, str.length() - 2);  
+  return str;
+}
+
+} // namespace
 
 namespace pascc::parse {
   

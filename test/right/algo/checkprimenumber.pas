@@ -1,12 +1,12 @@
 program CheckPrimeNumber;
 
 var
-    num: Int64;
+    num: integer;
     isNumPrime: boolean;
 
 function IsPrime(n: Int64): boolean;
 var
-    j: Int64;
+    j: integer;
 begin
     IsPrime := true;
 
