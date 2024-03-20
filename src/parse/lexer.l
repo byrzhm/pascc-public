@@ -31,7 +31,9 @@ INTEGER                 {DIGIT}+
 REAL                    ({DIGITS}|{NUMERIC})[Ee][-+]?{DIGITS}
 CHAR                    '[^'\n]' 
 
-LINE_COMMENT			            ("//"{NON_NEWLINE}*)
+LINE_COMMENT			      ("//"{NON_NEWLINE}*)
+BLOCK_COMMENT1          (\{[^}]*\})
+BLOCK_COMMENT2          (\(\*[^(\*\))]*\*\))
 
 %{
   // Code run each time a pattern is matched.
@@ -47,6 +49,8 @@ LINE_COMMENT			            ("//"{NON_NEWLINE}*)
 
 {BLANK}+         loc.step();
 {LINE_COMMENT}   loc.step();
+{BLOCK_COMMENT1} loc.step();
+{BLOCK_COMMENT2} loc.step();
 \n+              loc.lines(yyleng); loc.step();
 
 AND              return Parser::make_AND(loc);
