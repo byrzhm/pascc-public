@@ -82,11 +82,27 @@ EXIT             return Parser::make_EXIT(loc);
 {ID}             return Parser::make_ID(yytext, loc);
 {STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
 
+"+"              return Parser::make_PLUS(loc);
+"-"              return Parser::make_MINUS(loc);
+"*"              return Parser::make_MUL(loc);
+"/"              return Parser::make_FDIV(loc);
+"="              return Parser::make_EQ(loc);
+">"              return Parser::make_GT(loc);
+"<"              return Parser::make_LT(loc);
+"<>"             return Parser::make_NE(loc);
+"<="             return Parser::make_LE(loc);
+">="             return Parser::make_GE(loc);
+":="             return Parser::make_ASSIGN(loc);
+
+"["              return Parser::make_LSB(loc);
+"]"              return Parser::make_RSB(loc);
 "("              return Parser::make_LPAREN(loc);
 ")"              return Parser::make_RPAREN(loc);
-";"              return Parser::make_SEMICOLON(loc);
 "."              return Parser::make_PERIOD(loc);
-"<"              return Parser::make_LESS(loc);
+","              return Parser::make_COMMA(loc);
+":"              return Parser::make_COLON(loc);
+";"              return Parser::make_SEMICOLON(loc);
+".."             return Parser::make_RANGE(loc);
 
 
 
