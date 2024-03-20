@@ -35,10 +35,50 @@ STR_LIT           \'([^\\\'\n]|(\\.)){2,}\'
 {BLANK}+         loc.step();
 \n+              loc.lines(yyleng); loc.step();
 
+AND              return Parser::make_AND(loc);
+ARRAY            return Parser::make_ARRAY(loc);
 BEGIN            return Parser::make_BEGIN(loc);
+CASE             return Parser::make_CASE(loc);
+CONST            return Parser::make_CONST(loc);
+DIV              return Parser::make_IDIV(loc);
+DO               return Parser::make_DO(loc);
+DOWNTO           return Parser::make_DOWNTO(loc);
+ELSE             return Parser::make_ELSE(loc);
 END              return Parser::make_END(loc);
+FILE             return Parser::make_FILE(loc);
+FOR              return Parser::make_FOR(loc);
+FUNCTION         return Parser::make_FUNCTION(loc);
+GOTO             return Parser::make_GOTO(loc);
+IF               return Parser::make_IF(loc);
+IN               return Parser::make_IN(loc);
+LABEL            return Parser::make_LABEL(loc);
+MOD              return Parser::make_MOD(loc);
+NIL              return Parser::make_NIL(loc);
+NOT              return Parser::make_NOT(loc);
+OF               return Parser::make_OF(loc);
+OR               return Parser::make_OR(loc);
+PACKED           return Parser::make_PACKED(loc);
+PROCEDURE        return Parser::make_PROCEDURE(loc);
 PROGRAM          return Parser::make_PROGRAM(loc);
+RECORD           return Parser::make_RECORD(loc);
+REPEAT           return Parser::make_REPEAT(loc);
+SET              return Parser::make_SET(loc);
+THEN             return Parser::make_THEN(loc);
+TO               return Parser::make_TO(loc);
+TYPE             return Parser::make_TYPE(loc);
+UNTIL            return Parser::make_UNTIL(loc);
+VAR              return Parser::make_VAR(loc);
+WHILE            return Parser::make_WHILE(loc);
+WITH             return Parser::make_WITH(loc);
+
+READ             return Parser::make_READ(loc);
+READLN           return Parser::make_READLN(loc);
+WRITE            return Parser::make_WRITE(loc);
 WRITELN          return Parser::make_WRITELN(loc);
+TRUE             return Parser::make_TRUE(loc);
+FALSE            return Parser::make_FALSE(loc);
+EXIT             return Parser::make_EXIT(loc);
+
 {ID}             return Parser::make_ID(yytext, loc);
 {STR_LIT}        return Parser::make_STR_LIT(get_str_lit(), loc);
 
@@ -47,6 +87,8 @@ WRITELN          return Parser::make_WRITELN(loc);
 ";"              return Parser::make_SEMICOLON(loc);
 "."              return Parser::make_PERIOD(loc);
 "<"              return Parser::make_LESS(loc);
+
+
 
 .                {
                     throw Parser::syntax_error(loc, "illegal character: " + std::string(yytext));
