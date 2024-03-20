@@ -19,6 +19,7 @@ auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
     case pascc::parse::Parser::symbol_kind::S_LPAREN: return "(";
     case pascc::parse::Parser::symbol_kind::S_RPAREN: return ")";
     case pascc::parse::Parser::symbol_kind::S_ID: return symbol.value.as<std::string>();
+    case pascc::parse::Parser::symbol_kind::S_STR_LIT: return symbol.value.as<std::string>();
 
     // non-terminal
     case pascc::parse::Parser::symbol_kind::S_program:
@@ -49,6 +50,7 @@ auto symbol_to_string(const Parser::symbol_kind_type &kind, const std::string &i
     case pascc::parse::Parser::symbol_kind::S_LPAREN: return "(";
     case pascc::parse::Parser::symbol_kind::S_RPAREN: return ")";
     case pascc::parse::Parser::symbol_kind::S_ID: return id;
+    case pascc::parse::Parser::symbol_kind::S_STR_LIT: return "'string literal'";
 
     // non-terminal
     case pascc::parse::Parser::symbol_kind::S_program:
@@ -87,7 +89,7 @@ TEST(LexerTest, keyword)
   };
 
   // create data
-  std::string filename = "data/keyword.txt";
+  std::string filename = "keyword.txt";
   create_data(src_data, filename);
 
   // scan file
@@ -123,6 +125,38 @@ TEST(LexerTest, id)
 TEST(LexerTest, string)
 {
   // TODO(who): add string test
+  std::vector<Parser::symbol_kind_type> src_data = {
+      Parser::symbol_kind::S_STR_LIT,
+
+  };
+
+  // create data
+  std::string filename = "string_literal.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare
+  EXPECT_EQ(src_data, actual_result);
+  int size = static_cast<int>(src_data.size());
+  for (int i = 0; i < size; ++i) {
+    EXPECT_EQ(symbol_to_string(src_data[i]), symbol_to_string(actual_result[i]));
+  }
+
+  drv.scan_end();
 }
 
 TEST(LexerTest, number)
@@ -145,4 +179,4 @@ TEST(LexerTest, comment)
   // TODO(who): add comment test
 }
 
-// TODO(who): more lexer test???
+// TODO(mfz&zh): more lexer test???

@@ -14,6 +14,8 @@
 %define parse.error detailed
 %define parse.lac full
 
+%verbose
+
 %locations
 
 %code requires {
@@ -44,9 +46,11 @@
   PERIOD    "."
   LPAREN    "("
   RPAREN    ")"
+  LESS      "<"
 ;
 
 %token <std::string> ID "identifier"
+%token <std::string> STR_LIT "string_literal"
 
 %nterm <std::unique_ptr<Program>> program
 %nterm <std::unique_ptr<ProgramHead>> program_head
