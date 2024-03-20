@@ -27,11 +27,11 @@ void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
 {
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::VariableAccess &node)
+void SemantVisitor::visit([[maybe_unused]] ast::Assignable &node)
 {
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::EntireVariableAccess &node)
+void SemantVisitor::visit([[maybe_unused]] ast::AssignableId &node)
 {
 }
 
@@ -48,14 +48,6 @@ void SemantVisitor::visit([[maybe_unused]] ast::WhileStmt &node)
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::ForStmt &node)
-{
-}
-
-void SemantVisitor::visit([[maybe_unused]] ast::NormalAssignStmt &node)
-{
-}
-
-void SemantVisitor::visit([[maybe_unused]] ast::FuncRetAssignStmt &node)
 {
 }
 
@@ -87,13 +79,12 @@ void SemantVisitor::visit([[maybe_unused]] ast::Block &node)
 {
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::StmtBlock &node)
+void SemantVisitor::visit([[maybe_unused]] ast::StmtPart &node)
 {
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramBlock &node)
 {
-  SemantVisitor::visit(node.stmtBlock());
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)
@@ -103,8 +94,8 @@ void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)
 void SemantVisitor::visit([[maybe_unused]] ast::Program &node)
 {
   //Program -> ProgramHead ';' ProgramBlock '.'
-  SemantVisitor::visit(node.head());
-  SemantVisitor::visit(node.block());
+  node.head().accept(*this);
+  node.block().accept(*this);
 }
 
 }  // namespace pascc::semant

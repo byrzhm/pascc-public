@@ -15,15 +15,13 @@ public:
   void visit(ast::UnaryExpr &node) override;
   void visit(ast::UnsignedConstant &node) override;
   void visit(ast::FuncCall &node) override;
-  void visit(ast::VariableAccess &node) override;
-  void visit(ast::EntireVariableAccess &node) override;
+  void visit(ast::Assignable &node) override;
+  void visit(ast::AssignableId &node) override;
 
   void visit(ast::Stmt &node) override;
   void visit(ast::IfStmt &node) override;
   void visit(ast::WhileStmt &node) override;
   void visit(ast::ForStmt &node) override;
-  void visit(ast::NormalAssignStmt &node) override;
-  void visit(ast::FuncRetAssignStmt &node) override;
   void visit(ast::ProcCallStmt &node) override;
   void visit(ast::ReadStmt &node) override;
   void visit(ast::WriteStmt &node) override;
@@ -32,7 +30,7 @@ public:
   void visit(ast::CompoundStmt &node) override;
 
   void visit(ast::Block &node) override;
-  void visit(ast::StmtBlock &node) override;
+  void visit(ast::StmtPart &node) override;
 
   void visit(ast::ProgramBlock &node) override;
   void visit(ast::ProgramHead &node) override;

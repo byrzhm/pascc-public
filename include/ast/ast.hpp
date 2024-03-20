@@ -13,8 +13,17 @@ class Visitor;
 
 namespace ast {
 
+class Stmt;
+class VarDecl;
+
+class ConstDeclPart;
+class TypeDeclPart;
+class VarDeclPart;
+class SubprogDeclPart;
+class StmtPart;
+
 /**
- * @brief Represents a node in the Abstract Syntax Tree (AST).
+ * @brief 表示 Abstract Syntax Tree (AST) 的节点
  */
 class ASTNode
 {
@@ -30,10 +39,49 @@ private:
 };
 
 /**
- * @brief Represents an expression in the abstract syntax tree.
- * 
- * This class is a subclass of ASTNode and provides a base class for all types of expressions.
- * It defines a virtual function accept() that allows a visitor to traverse the expression.
+ * @brief
+ */
+class Block: public ASTNode
+{
+public:
+  Block(
+      std::unique_ptr<ConstDeclPart> const_decl_part,
+      std::unique_ptr<TypeDeclPart> type_decl_part,
+      std::unique_ptr<VarDeclPart> var_decl_part,
+      std::unique_ptr<SubprogDeclPart> subprog_decl_part,
+      std::unique_ptr<StmtPart> stmt_part
+  )
+    : const_decl_part_(std::move(const_decl_part))
+    , type_decl_part_(std::move(type_decl_part))
+    , var_decl_part_(std::move(var_decl_part))
+    , subprog_decl_part_(std::move(subprog_decl_part))
+    , stmt_part_(std::move(stmt_part))
+  {}
+
+  Block(Block &&) = default;
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto constDeclPart() -> ConstDeclPart & { return *const_decl_part_; }
+
+  [[nodiscard]] auto typeDeclPart() -> TypeDeclPart & { return *type_decl_part_; }
+
+  [[nodiscard]] auto varDeclPart() -> VarDeclPart & { return *var_decl_part_; }
+
+  [[nodiscard]] auto subprogDeclPart() -> SubprogDeclPart & { return *subprog_decl_part_; }
+
+  [[nodiscard]] auto stmtPart() -> StmtPart & { return *stmt_part_; }
+
+private:
+  std::unique_ptr<ConstDeclPart> const_decl_part_;
+  std::unique_ptr<TypeDeclPart> type_decl_part_;
+  std::unique_ptr<VarDeclPart> var_decl_part_;
+  std::unique_ptr<SubprogDeclPart> subprog_decl_part_;
+  std::unique_ptr<StmtPart> stmt_part_;
+};
+
+/**
+ * @brief 表示 expression 基类
  */
 class Expr: public ASTNode
 {
@@ -41,25 +89,41 @@ public:
   void accept(Visitor &v) override;
 };
 
+class BoolExpr: public Expr
+{
+public:
+  explicit BoolExpr(std::unique_ptr<Expr> expr)
+    : expr_(std::move(expr))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto expr() -> Expr & { return *expr_; }
+
+private:
+  std::unique_ptr<Expr> expr_;
+};
+
 enum class BinOp
 {
-  Plus,   ///< +
-  Minus,  ///< -
-  Mul,    ///< *
-  Div,    ///< /
-  Mod,    ///< mod
-  And,    ///< and
-  Or,     ///< or
-  Eq,     ///< =
-  Neq,    ///< <>
-  Lt,     ///< <
-  Gt,     ///< >
-  Le,     ///< <=
-  Ge      ///< >=
+  PLUS,   ///< +
+  MINUS,  ///< -
+  MUL,    ///< *
+  FDIV,   ///< /
+  IDIV,   ///< div
+  MOD,    ///< mod
+  AND,    ///< and
+  OR,     ///< or
+  EQ,     ///< =
+  NE,     ///< <>
+  LT,     ///< <
+  GT,     ///< >
+  LE,     ///< <=
+  GE      ///< >=
 };
 
 /**
- * Represents a binary expression.
+ * @brief 表示 binary expression.
  */
 class BinaryExpr: public Expr
 {
@@ -86,19 +150,19 @@ public:
    * Gets the binary operator.
    * @return The binary operator.
    */
-  [[nodiscard]] auto op() const -> BinOp { return binop_; }
+  [[nodiscard]] auto op() -> BinOp { return binop_; }
 
   /**
    * Gets the left-hand side expression.
    * @return The left-hand side expression.
    */
-  [[nodiscard]] auto lhs() const -> const Expr & { return *lhs_; }
+  [[nodiscard]] auto lhs() -> Expr & { return *lhs_; }
 
   /**
    * Gets the right-hand side expression.
    * @return The right-hand side expression.
    */
-  [[nodiscard]] auto rhs() const -> const Expr & { return *rhs_; }
+  [[nodiscard]] auto rhs() -> Expr & { return *rhs_; }
 
 private:
   BinOp binop_;
@@ -108,19 +172,20 @@ private:
 
 enum class UnaryOp
 {
-  Not,  ///< not
-  Neg   ///< -
+  Not,    ///< not
+  MINUS,  ///< -
+  PLUS    ///< +
 };
 
 /**
- * Represents a unary expression.
+ * 表示 unary expression.
  */
 class UnaryExpr: public Expr
 {
 public:
   /**
-   * Constructs a `NotExpr` object with the given expression.
-   * @param expr The expression to be negated.
+   * Constructs a `UnaryExpr` object with the given expression.
+   * @param expr The expression to be operated.
    */
   UnaryExpr(UnaryOp op, std::unique_ptr<Expr> expr)
     : op_(op)
@@ -137,13 +202,13 @@ public:
    * Returns the unary operator.
    * @return The unary operator.
    */
-  [[nodiscard]] auto op() const -> UnaryOp { return op_; }
+  [[nodiscard]] auto op() -> UnaryOp { return op_; }
 
   /**
-   * Returns the expression to be negated.
-   * @return The expression to be negated.
+   * Returns the expression to be operated.
+   * @return The expression to be operated.
    */
-  [[nodiscard]] auto expr() const -> const Expr & { return *expr_; }
+  [[nodiscard]] auto expr() -> Expr & { return *expr_; }
 
 private:
   UnaryOp op_;
@@ -151,7 +216,52 @@ private:
 };
 
 /**
- * @brief Represents an unsigned constant expression.
+ * @brief number 类
+ *
+ *  num -> INT_NUM
+ *       | REAL_NUM                    
+ */
+class Number: public ASTNode
+{
+public:
+  explicit Number(int value)
+    : type_("integer")
+    , value_(value)
+  {}
+
+  explicit Number(double value)
+    : type_("real")
+    , value_(value)
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto type() -> std::string & { return type_; }
+
+  [[nodiscard]] auto value() -> std::variant<int, double> { return value_; }
+
+private:
+  std::string type_;                 ///< real 或 integer
+  std::variant<int, double> value_;  ///< 使用 std::get<int>(value_) 或 std::get<double>(value_) 获取值
+};
+
+class StringLiteral: public Expr
+{
+public:
+  explicit StringLiteral(std::string string)
+    : value_(std::move(string))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto value() -> std::string & { return value_; }
+
+private:
+  std::string value_;
+};
+
+/**
+ * @brief 表示 unsigned constant expression.
  * 
  * This class is a subclass of the `Expr` class and represents an unsigned constant value.
  * It stores the value of the constant as an unsigned integer.
@@ -159,34 +269,36 @@ private:
 class UnsignedConstant: public Expr
 {
 public:
-  /**
-   * @brief Constructs an `UnsignedConstant` object with the given value.
-   * 
-   * @param value The value of the unsigned constant.
-   */
-  explicit UnsignedConstant(unsigned value)
-    : value_(value)
+  explicit UnsignedConstant(std::unique_ptr<Number> number)
+  {
+    if (number->type() == "integer") {
+      type_  = "integer";
+      value_ = std::get<int>(number->value());
+    } else {
+      type_  = "real";
+      value_ = std::get<double>(number->value());
+    }
+  }
+
+  explicit UnsignedConstant(char value)
+    : type_("char")
+    , value_(value)
   {}
 
-  /**
-   * @brief Accepts a visitor and calls the appropriate visit method.
-   * 
-   * This method is used for visitor pattern implementation.
-   * It calls the appropriate visit method of the provided visitor object.
-   * 
-   * @param v The visitor object to accept.
-   */
+  explicit UnsignedConstant(bool value)
+    : type_("boolean")
+    , value_(value)
+  {}
+
   void accept(Visitor &v) override;
 
-  /**
-   * @brief Returns the value of the unsigned constant.
-   * 
-   * @return The value of the unsigned constant.
-   */
-  [[nodiscard]] auto value() const -> unsigned { return value_; }
+  [[nodiscard]] auto type() -> std::string & { return type_; }
+
+  [[nodiscard]] auto value() -> std::variant<int, double, char, bool> { return value_; }
 
 private:
-  unsigned value_; /**< The value of the unsigned constant. */
+  std::string type_;
+  std::variant<int, double, char, bool> value_;
 };
 
 /**
@@ -195,27 +307,20 @@ private:
 class FuncCall: public Expr
 {
 public:
-  /**
-   * Constructs a `FuncCall` object with the given function identifier and actual arguments.
-   * 
-   * @param funcid The identifier of the function being called.
-   * @param actuals The actual arguments passed to the function.
-   */
   FuncCall(std::string funcid, std::vector<std::unique_ptr<Expr>> actuals)
     : funcid_(std::move(funcid))
     , actuals_(std::move(actuals))
   {}
 
-  /**
-   * Accepts a visitor and invokes the appropriate visit method.
-   * 
-   * @param v The visitor object.
-   */
   void accept(Visitor &v) override;
 
+  [[nodiscard]] auto funcid() -> std::string & { return funcid_; }
+
+  [[nodiscard]] auto actuals() -> std::vector<std::unique_ptr<Expr>> & { return actuals_; }
+
 private:
-  std::string funcid_;                          // The identifier of the function being called.
-  std::vector<std::unique_ptr<Expr>> actuals_;  // The actual arguments passed to the function.
+  std::string funcid_;
+  std::vector<std::unique_ptr<Expr>> actuals_;
 };
 
 /**
@@ -224,7 +329,7 @@ private:
  * This class is a subclass of the `Expr` class and represents an expression that accesses a variable.
  * It provides a method `accept` for visitor pattern implementation.
  */
-class VariableAccess: public Expr
+class Assignable: public Expr
 {
 public:
   void accept(Visitor &v) override;
@@ -234,351 +339,612 @@ public:
  * Represents an entire variable access in the abstract syntax tree.
  * This class is derived from the VariableAccess class.
  */
-class EntireVariableAccess: public VariableAccess
+class AssignableId: public Assignable
 {
 public:
-  /**
-   * Constructs an EntireVariableAccess object with the given variable identifier.
-   * @param varid The identifier of the variable.
-   */
-  explicit EntireVariableAccess(std::string varid)
-    : varid_(std::move(varid))
+  explicit AssignableId(std::string id)
+    : id_(std::move(id))
   {}
 
-  /**
-   * Accepts a visitor and calls the appropriate visit method based on the concrete type of this object.
-   * @param v The visitor object.
-   */
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto id() -> std::string & { return id_; }
+
+private:
+  std::string id_;
+};
+
+class IndexedVar: public Assignable
+{
+public:
+  IndexedVar(
+      std::unique_ptr<Assignable> assignable,
+      std::vector<std::unique_ptr<Expr>> indices
+  )
+    : assignable_(std::move(assignable))
+    , indices_(std::move(indices))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto assignable() -> Assignable & { return *assignable_; }
+
+  [[nodiscard]] auto indices() -> std::vector<std::unique_ptr<Expr>> & { return indices_; }
+
+private:
+  std::unique_ptr<Assignable> assignable_;
+  std::vector<std::unique_ptr<Expr>> indices_;
+};
+
+class FieldDesignator: public Assignable
+{
+public:
+  FieldDesignator(
+      std::unique_ptr<Assignable> assignable,
+      std::string field
+  )
+    : assignable_(std::move(assignable))
+    , field_(std::move(field))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto assignable() -> Assignable & { return *assignable_; }
+
+  [[nodiscard]] auto field() -> std::string & { return field_; }
+
+private:
+  std::unique_ptr<Assignable> assignable_;
+  std::string field_;
+};
+
+
+/**
+ * @brief 常量 
+ *  constant -> PLUS I
+ *            | MINUS ID
+ *            | ID
+ *            | num
+ *            | PLUS num
+ *            | MINUS num
+ *            | CHAR
+ *            | string_literal
+ */
+class Constant: public ASTNode
+{
+public:
+  explicit Constant(std::string id, int sign = 1)
+    : sign_(sign)
+    , type_("reference")
+    , value_(std::move(id))
+  {}
+
+  explicit Constant(Number &number, int sign = 1)
+    : sign_(sign)
+    , type_(number.type())
+  {
+    if (number.type() == "integer") {
+      value_ = std::get<int>(number.value());
+    } else {
+      value_ = std::get<double>(number.value());
+    }
+  }
+
+  explicit Constant(char value, int sign = 1)
+    : sign_(sign)
+    , type_("char")
+    , value_(value)
+  {}
+
+  explicit Constant(StringLiteral &string_literal)
+    : sign_(1)
+    , type_("string")
+    , value_(string_literal.value())
+  {}
+
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto sign() -> int & { return sign_; }
+
+  [[nodiscard]] auto type() -> std::string & { return type_; }
+
+  [[nodiscard]] auto value() -> std::variant<std::string, int, double, char> { return value_; }
+
+private:
+  int sign_;
+  std::string type_;
+  std::variant<std::string, int, double, char> value_;
+};
+
+class ConstDecl: public ASTNode
+{
+public:
+  ConstDecl(std::string const_id, std::unique_ptr<Constant> constant)
+    : const_id_(std::move(const_id))
+    , constant_(std::move(constant))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto constId() -> std::string & { return const_id_; }
+
+  [[nodiscard]] auto constant() -> Constant & { return *constant_; }
+
+private:
+  std::string const_id_;
+  std::unique_ptr<Constant> constant_;
+};
+
+class ConstDeclPart: public ASTNode
+{
+public:
   void accept(Visitor &v) override;
 
 private:
-  std::string varid_; /**< The identifier of the variable. */
+  std::vector<std::unique_ptr<ConstDecl>> const_decls_;
+};
+
+//*******************************************************
+//************************* Type ************************
+//*******************************************************
+
+class TypeDenoter: public ASTNode
+{
+public:
+  void accept(Visitor &v) override;
+};
+
+class TypeId: public TypeDenoter
+{
+public:
+  explicit TypeId(std::string id)
+    : id_(std::move(id))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto id() -> std::string & { return id_; }
+
+private:
+  std::string id_;
 };
 
 /**
- * @brief The base class for all statement nodes in the abstract syntax tree (AST).
+ * @brief 范围
  * 
- * This class represents a statement in the AST. It is derived from the `ASTNode` class.
- * All statement nodes should inherit from this class.
+ * period -> constant RANGE constant
  */
+class Period: public ASTNode
+{
+public:
+  Period(std::unique_ptr<Constant> low, std::unique_ptr<Constant> high)
+    : low_(std::move(low))
+    , high_(std::move(high))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto low() -> Constant & { return *low_; }
+
+  [[nodiscard]] auto high() -> Constant & { return *high_; }
+
+private:
+  std::unique_ptr<Constant> low_;
+  std::unique_ptr<Constant> high_;
+};
+
+class ArrayType: public TypeDenoter
+{
+public:
+  ArrayType(std::unique_ptr<TypeDenoter> type, std::vector<Period> periods)
+    : type_(std::move(type))
+    , periods_(std::move(periods))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
+
+  [[nodiscard]] auto periods() -> std::vector<Period> & { return periods_; }
+
+private:
+  std::unique_ptr<TypeDenoter> type_;
+  std::vector<Period> periods_;
+};
+
+class RecordType: public TypeDenoter
+{
+public:
+  explicit RecordType(std::vector<std::unique_ptr<VarDecl>> fields)
+    : fields_(std::move(fields))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto fields() -> std::vector<std::unique_ptr<VarDecl>> & { return fields_; }
+
+private:
+  std::vector<std::unique_ptr<VarDecl>> fields_;
+};
+
+class TypeDecl: public ASTNode
+{
+public:
+  TypeDecl(std::string type_id, std::unique_ptr<TypeDenoter> type_denoter)
+    : type_id_(std::move(type_id))
+    , type_denoter_(std::move(type_denoter))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto typeId() -> std::string & { return type_id_; }
+
+  [[nodiscard]] auto typeDenoter() -> TypeDenoter & { return *type_denoter_; }
+
+private:
+  std::string type_id_;
+  std::unique_ptr<TypeDenoter> type_denoter_;
+};
+
+/**
+ * @brief 变量声明部分
+ *
+ * type_declaration_part -> ε | TYPE type_declarations SEMICOLON
+ * type_declarations -> type_declarations SEMICOLON ID EQ type_denoter
+ *                    | ID EQ type_denoter
+ */
+class TypeDeclPart: public ASTNode
+{
+public:
+  explicit TypeDeclPart(std::vector<std::unique_ptr<TypeDecl>> type_decls)
+    : type_decls_(std::move(type_decls))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto typeDecls() -> std::vector<std::unique_ptr<TypeDecl>> & { return type_decls_; }
+
+private:
+  std::vector<std::unique_ptr<TypeDecl>> type_decls_;
+};
+
+//*******************************************************
+//************************* Var *************************
+//*******************************************************
+
+class VarDecl: public ASTNode
+{
+public:
+  VarDecl(
+      std::vector<std::string> id_list,
+      std::unique_ptr<TypeDenoter> type
+  )
+    : id_list_(std::move(id_list))
+    , type_(std::move(type))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto idList() -> std::vector<std::string> & { return id_list_; }
+
+  [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
+
+private:
+  std::vector<std::string> id_list_;
+  std::unique_ptr<TypeDenoter> type_;
+};
+
+class VarDeclPart: public ASTNode
+{
+public:
+  explicit VarDeclPart(std::vector<std::unique_ptr<VarDecl>> var_decls)
+    : var_decls_(std::move(var_decls))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto varDecls() -> std::vector<std::unique_ptr<VarDecl>> & { return var_decls_; }
+
+private:
+  std::vector<std::unique_ptr<VarDecl>> var_decls_;
+};
+
+//*******************************************************
+//********************** Subprogram *********************
+//*******************************************************
+
+class SubprogDecl: public ASTNode
+{
+public:
+  void accept(Visitor &v) override;
+};
+
+class FormalParam: public ASTNode
+{
+public:
+  void accept(Visitor &v) override;
+};
+
+class ValueParamSpec: public FormalParam
+{
+public:
+  ValueParamSpec(
+      std::vector<std::string> id_list,
+      std::unique_ptr<TypeDenoter> type
+  )
+    : id_list_(std::move(id_list))
+    , type_(std::move(type))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto idList() -> std::vector<std::string> & { return id_list_; }
+
+  [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
+
+private:
+  std::vector<std::string> id_list_;
+  std::unique_ptr<TypeDenoter> type_;
+};
+
+class VarParamSpec: public FormalParam
+{
+public:
+  VarParamSpec(
+      std::vector<std::string> id_list,
+      std::unique_ptr<TypeDenoter> type
+  )
+    : id_list_(std::move(id_list))
+    , type_(std::move(type))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto idList() -> std::vector<std::string> & { return id_list_; }
+
+  [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
+
+private:
+  std::vector<std::string> id_list_;
+  std::unique_ptr<TypeDenoter> type_;
+};
+
+class ProcHead: public ASTNode
+{
+public:
+  ProcHead(
+      std::string proc_id,
+      std::vector<std::unique_ptr<FormalParam>> formal_params
+  )
+    : proc_id_(std::move(proc_id))
+    , formal_params_(std::move(formal_params))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto procId() -> std::string & { return proc_id_; }
+
+  [[nodiscard]] auto formalParams() -> std::vector<std::unique_ptr<FormalParam>> & { return formal_params_; }
+
+private:
+  std::string proc_id_;
+  std::vector<std::unique_ptr<FormalParam>> formal_params_;
+};
+
+class ProcBlock: public Block
+{
+public:
+  explicit ProcBlock(Block block)
+    : Block(std::move(block))
+  {}
+
+  void accept(Visitor &v) override;
+};
+
+class ProcDecl: public SubprogDecl
+{
+public:
+  ProcDecl(
+      std::unique_ptr<ProcHead> head,
+      std::unique_ptr<ProcBlock> block
+  )
+    : head_(std::move(head))
+    , block_(std::move(block))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto head() -> ProcHead & { return *head_; }
+
+  [[nodiscard]] auto block() -> ProcBlock & { return *block_; }
+
+private:
+  std::unique_ptr<ProcHead> head_;
+  std::unique_ptr<ProcBlock> block_;
+};
+
+class FuncHead: public ASTNode
+{
+public:
+  FuncHead(
+      std::string func_id,
+      std::vector<std::unique_ptr<FormalParam>> formal_params,
+      std::unique_ptr<TypeDenoter> return_type
+  )
+    : func_id_(std::move(func_id))
+    , formal_params_(std::move(formal_params))
+    , return_type_(std::move(return_type))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto funcId() -> std::string & { return func_id_; }
+
+  [[nodiscard]] auto formalParams() -> std::vector<std::unique_ptr<FormalParam>> & { return formal_params_; }
+
+  [[nodiscard]] auto returnType() -> TypeDenoter & { return *return_type_; }
+
+private:
+  std::string func_id_;
+  std::vector<std::unique_ptr<FormalParam>> formal_params_;
+  std::unique_ptr<TypeDenoter> return_type_;
+};
+
+class FuncBlock: public Block
+{
+public:
+  explicit FuncBlock(Block block)
+    : Block(std::move(block))
+  {}
+
+  void accept(Visitor &v) override;
+};
+
+class FuncDecl: public SubprogDecl
+{
+public:
+  FuncDecl(
+      std::unique_ptr<FuncHead> head,
+      std::unique_ptr<FuncBlock> block
+  )
+    : head_(std::move(head))
+    , block_(std::move(block))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto head() -> FuncHead & { return *head_; }
+
+  [[nodiscard]] auto block() -> FuncBlock & { return *block_; }
+
+private:
+  std::unique_ptr<FuncHead> head_;
+  std::unique_ptr<FuncBlock> block_;
+};
+
+class SubprogDeclPart: public ASTNode
+{
+public:
+  explicit SubprogDeclPart(
+      std::vector<std::unique_ptr<SubprogDecl>> subprog_decls
+  )
+    : subprog_decls_(std::move(subprog_decls))
+  {}
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto subprogDecls() -> std::vector<std::unique_ptr<SubprogDecl>> & { return subprog_decls_; }
+
+private:
+  std::vector<std::unique_ptr<SubprogDecl>> subprog_decls_;
+};
+
+//*******************************************************
+//********************** Statement **********************
+//*******************************************************
+
 class Stmt: public ASTNode
 {
 public:
   void accept(Visitor &v) override;
 };
 
-/**
- * Represents an if statement in the AST.
- */
-class IfStmt: public Stmt
-{
-public:
-  /**
-   * Constructs an IfStmt object with the given condition, then statement, and else statement.
-   * @param cond The condition expression of the if statement.
-   * @param then The statement to be executed if the condition is true.
-   * @param else_ The statement to be executed if the condition is false.
-   */
-  IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> then, std::unique_ptr<Stmt> else_)
-    : cond_(std::move(cond))
-    , then_(std::move(then))
-    , else_(std::move(else_))
-  {}
-
-  /**
-   * Accepts a visitor and calls the appropriate visit method based on the type of the statement.
-   * @param v The visitor object.
-   */
-  void accept(Visitor &v) override;
-
-private:
-  std::unique_ptr<Expr> cond_;  ///< The condition expression of the if statement.
-  std::unique_ptr<Stmt> then_;  ///< The statement to be executed if the condition is true.
-  std::unique_ptr<Stmt> else_;  ///< The statement to be executed if the condition is false.
-};
-
-/**
- * @brief Represents a while statement in the AST.
- * 
- * This class is a subclass of Stmt and represents a while statement in the abstract syntax tree (AST).
- * It contains a condition expression and a body statement.
- */
-class WhileStmt: public Stmt
-{
-public:
-  /**
-   * @brief Constructs a WhileStmt object with the given condition and body.
-   * 
-   * @param cond The condition expression of the while statement.
-   * @param body The body statement of the while statement.
-   */
-  WhileStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body)
-    : cond_(std::move(cond))
-    , body_(std::move(body))
-  {}
-
-  /**
-   * @brief Accepts a visitor and calls the appropriate visit method.
-   * 
-   * This method is used to implement the visitor pattern for the while statement.
-   * It calls the visit method of the provided visitor object, passing itself as an argument.
-   * 
-   * @param v The visitor object to accept.
-   */
-  void accept(Visitor &v) override;
-
-private:
-  std::unique_ptr<Expr> cond_;  ///< The condition expression of the while statement.
-  std::unique_ptr<Stmt> body_;  ///< The body statement of the while statement.
-};
-
-
-/**
- * @brief Represents a for loop statement.
- * 
- * This class is derived from the Stmt class and represents a for loop statement in the AST.
- * It contains information about the control variable, initial value, condition, body, and direction (to or downto).
- */
-class ForStmt: public Stmt
-{
-public:
-  /**
-   * @brief Constructs a ForLoopStmt object.
-   * 
-   * @param ctrl_var The control variable expression.
-   * @param init_val The initial value expression.
-   * @param cond The condition expression.
-   * @param body The body statement.
-   * @param to Specifies the direction of the loop (true for 'to', false for 'downto').
-   */
-  ForStmt(std::unique_ptr<Expr> ctrl_var, std::unique_ptr<Expr> init_val, std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> body, bool to)
-    : ctrl_var_(std::move(ctrl_var))
-    , init_val_(std::move(init_val))
-    , cond_(std::move(cond))
-    , body_(std::move(body))
-    , to_(to)
-  {}
-
-  /**
-   * @brief Accepts a visitor and calls the appropriate visit method.
-   * 
-   * @param v The visitor object.
-   */
-  void accept(Visitor &v) override;
-
-  /**
-   * @brief Returns the control variable expression.
-   * 
-   * @return The control variable expression.
-   */
-  [[nodiscard]] auto ctrlVar() const -> const Expr & { return *ctrl_var_; }
-
-  /**
-   * @brief Returns the initial value expression.
-   * 
-   * @return The initial value expression.
-   */
-  [[nodiscard]] auto initVal() const -> const Expr & { return *init_val_; }
-
-  /**
-   * @brief Returns the condition expression.
-   * 
-   * @return The condition expression.
-   */
-  [[nodiscard]] auto cond() const -> const Expr & { return *cond_; }
-
-  /**
-   * @brief Returns the body statement.
-   * 
-   * @return The body statement.
-   */
-  [[nodiscard]] auto body() const -> const Stmt & { return *body_; }
-
-  /**
-   * @brief Returns the direction of the loop.
-   * 
-   * @return The direction of the loop (true for 'to', false for 'downto').
-   */
-  [[nodiscard]] auto to() const -> bool { return to_; }
-
-private:
-  std::unique_ptr<Expr> ctrl_var_;  ///< The control variable expression.
-  std::unique_ptr<Expr> init_val_;  ///< The initial value expression.
-  std::unique_ptr<Expr> cond_;      ///< The condition expression.
-  std::unique_ptr<Stmt> body_;      ///< The body statement.
-  bool to_;                         ///< Specifies the direction of the loop (true for 'to', false for 'downto').
-};
-
-/**
- * @brief Represents an assignment statement.
- * 
- * The `AssignStmt` class is a subclass of `Stmt` and represents an assignment statement in the abstract syntax tree (AST).
- * It provides a method `accept` for visitor pattern implementation.
- */
-class AssignStmt: public Stmt
+class SimpleStmt: public Stmt
 {
 public:
   void accept(Visitor &v) override;
 };
 
-/**
- * \class NormalAssignStmt
- * \brief Represents a normal assignment statement.
- * 
- * This class inherits from the AssignStmt class and provides a representation for a normal assignment statement.
- * It contains a left-hand side (lhs) and a right-hand side (rhs) expression.
- */
-class NormalAssignStmt: public AssignStmt
+class AssignStmt: public SimpleStmt
 {
 public:
-  /**
-   * \brief Constructs a NormalAssignStmt object.
-   * \param lhs The left-hand side expression of the assignment statement.
-   * \param rhs The right-hand side expression of the assignment statement.
-   */
-  NormalAssignStmt(std::unique_ptr<VariableAccess> lhs, std::unique_ptr<Expr> rhs)
+  AssignStmt(
+      std::unique_ptr<Assignable> lhs,
+      std::unique_ptr<Expr> rhs
+  )
     : lhs_(std::move(lhs))
     , rhs_(std::move(rhs))
   {}
 
-  /**
-   * \brief Accepts a visitor to perform an operation on the NormalAssignStmt object.
-   * \param v The visitor object.
-   */
   void accept(Visitor &v) override;
 
-  /**
-   * \brief Returns the left-hand side expression of the assignment statement.
-   * \return The left-hand side expression.
-   */
-  [[nodiscard]] auto lhs() const -> const VariableAccess & { return *lhs_; }
+  [[nodiscard]] auto lhs() -> Assignable & { return *lhs_; }
 
-  /**
-   * \brief Returns the right-hand side expression of the assignment statement.
-   * \return The right-hand side expression.
-   */
-  [[nodiscard]] auto rhs() const -> const Expr & { return *rhs_; }
+  [[nodiscard]] auto rhs() -> Expr & { return *rhs_; }
 
 private:
-  std::unique_ptr<VariableAccess> lhs_;  ///< The left-hand side expression.
-  std::unique_ptr<Expr> rhs_;            ///< The right-hand side expression.
+  std::unique_ptr<Assignable> lhs_;
+  std::unique_ptr<Expr> rhs_;
 };
 
-/**
- * @class FuncRetAssignStmt
- * @brief Represents an assignment statement where the value is assigned from a function return.
- * 
- * This class inherits from the AssignStmt class and provides additional functionality for
- * assigning the return value of a function to a variable.
- */
-class FuncRetAssignStmt: public AssignStmt
+class ProcCallStmt: public SimpleStmt
 {
 public:
-  /**
-   * @brief Constructs a FuncRetAssignStmt object with the given function identifier and expression.
-   * 
-   * @param funcid The identifier of the function.
-   * @param expr The expression representing the function call.
-   */
-  FuncRetAssignStmt(std::string funcid, std::unique_ptr<Expr> expr)
-    : funcid_(std::move(funcid))
-    , expr_(std::move(expr))
+  explicit ProcCallStmt(std::string proc_id)
+    : proc_id_(std::move(proc_id))
   {}
 
-  /**
-   * @brief Accepts a visitor object and invokes the appropriate visit method.
-   * 
-   * This method is part of the visitor design pattern implementation.
-   * 
-   * @param v The visitor object to accept.
-   */
-  void accept(Visitor &v) override;
-
-  /**
-   * @brief Returns the identifier of the function.
-   * 
-   * @return The identifier of the function.
-   */
-  [[nodiscard]] auto funcid() const -> const std::string & { return funcid_; }
-
-  /**
-   * @brief Returns the expression representing the function call.
-   * 
-   * @return The expression representing the function call.
-   */
-  [[nodiscard]] auto expr() const -> const Expr & { return *expr_; }
-
-private:
-  std::string funcid_;          ///< The identifier of the function.
-  std::unique_ptr<Expr> expr_;  ///< The expression representing the function call.
-};
-
-class ProcCallStmt: public Stmt
-{
-public:
-  ProcCallStmt() = delete;
-
-  explicit ProcCallStmt(std::string procid)
-    : procid_(std::move(procid))
-  {}
-
-  ProcCallStmt(std::string procid, std::vector<std::unique_ptr<Expr>> actuals)
-    : procid_(std::move(procid))
+  ProcCallStmt(
+      std::string proc_id,
+      std::vector<std::unique_ptr<Expr>> actuals
+  )
+    : proc_id_(std::move(proc_id))
     , actuals_(std::move(actuals))
   {}
 
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto procid() const -> const std::string & { return procid_; }
+  [[nodiscard]] auto procId() -> std::string & { return proc_id_; }
 
-  [[nodiscard]] auto actuals() const -> const std::vector<std::unique_ptr<Expr>> & { return actuals_; }
+  [[nodiscard]] auto actuals() -> std::vector<std::unique_ptr<Expr>> & { return actuals_; }
 
 private:
-  std::string procid_;
+  std::string proc_id_;
   std::vector<std::unique_ptr<Expr>> actuals_;
 };
 
-/**
- * @brief Represents a Read statement in the AST.
- * 
- * The ReadStmt class is a derived class of the ProcCallStmt class. It represents a Read statement
- * in the Abstract Syntax Tree (AST). The Read statement is used to read input from the user.
- */
 class ReadStmt: public ProcCallStmt
 {
 public:
+  ReadStmt()
+    : ProcCallStmt("read")
+  {}
+
+  explicit ReadStmt(std::vector<std::unique_ptr<Expr>> assignables)
+    : ProcCallStmt("read", std::move(assignables))
+  {}
+
   void accept(Visitor &v) override;
 };
 
-/**
- * @brief The WriteStmt class represents a statement that calls a procedure to write output.
- * 
- * This class is derived from the ProcCallStmt class.
- * It provides an implementation for the accept() method required by the Visitor pattern.
- */
 class WriteStmt: public ProcCallStmt
 {
 public:
+  WriteStmt()
+    : ProcCallStmt("write")
+  {}
+
+  explicit WriteStmt(std::vector<std::unique_ptr<Expr>> exprs)
+    : ProcCallStmt("write", std::move(exprs))
+  {}
+
   void accept(Visitor &v) override;
 };
 
-/**
- * @brief Represents a statement that reads input from the user.
- * 
- * This class is a subclass of ProcCallStmt and provides an implementation for the accept() method.
- * The accept() method is used to accept a visitor and invoke the appropriate visit method.
- */
 class ReadlnStmt: public ProcCallStmt
 {
 public:
+  ReadlnStmt()
+    : ProcCallStmt("readln")
+  {}
+
+  explicit ReadlnStmt(std::vector<std::unique_ptr<Expr>> assignables)
+    : ProcCallStmt("readln", std::move(assignables))
+  {}
+
   void accept(Visitor &v) override;
 };
 
-/**
- * @brief Represents a writeln statement, which is a type of procedure call statement.
- * 
- * This class inherits from the ProcCallStmt class and provides an implementation for the accept() method.
- */
 class WritelnStmt: public ProcCallStmt
 {
 public:
@@ -586,39 +952,208 @@ public:
     : ProcCallStmt("writeln")
   {}
 
+  explicit WritelnStmt(std::vector<std::unique_ptr<Expr>> exprs)
+    : ProcCallStmt("writeln", std::move(exprs))
+  {}
+
   void accept(Visitor &v) override;
 };
 
-/**
- * @brief Represents a compound statement in the abstract syntax tree.
- * 
- * A compound statement is a block of statements enclosed in curly braces.
- * It can contain zero or more statements.
- */
-class CompoundStmt: public Stmt
+class ExitStmt: public ProcCallStmt
 {
 public:
-  /**
-   * @brief Constructs a CompoundStmt object with the given statements.
-   * 
-   * @param stmts The statements to be included in the compound statement.
-   */
+  ExitStmt()
+    : ProcCallStmt("exit")
+  {}
+
+  explicit ExitStmt(std::unique_ptr<Expr> expr)
+    : ProcCallStmt("exit", std::vector<std::unique_ptr<Expr>>{std::move(expr)})
+  {}
+
+  void accept(Visitor &v) override;
+};
+
+class StructuredStmt: public Stmt
+{
+public:
+  void accept(Visitor &v) override;
+};
+
+class ConditionalStmt: public StructuredStmt
+{
+public:
+  void accept(Visitor &v) override;
+};
+
+class IfStmt: public ConditionalStmt
+{
+public:
+  IfStmt(
+      std::unique_ptr<BoolExpr> cond,
+      std::unique_ptr<Stmt> then,
+      std::unique_ptr<Stmt> _else
+  )
+    : cond_(std::move(cond))
+    , then_(std::move(then))
+    , else_(std::move(_else))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+
+  [[nodiscard]] auto then() -> Stmt & { return *then_; }
+
+  [[nodiscard]] auto Else() -> Stmt & { return *else_; }
+
+private:
+  std::unique_ptr<BoolExpr> cond_;
+  std::unique_ptr<Stmt> then_;
+  std::unique_ptr<Stmt> else_;
+};
+
+class CaseListElement: public ASTNode
+{
+public:
+  CaseListElement(
+      std::vector<std::unique_ptr<Constant>> constants,
+      std::unique_ptr<Stmt> stmt
+  )
+    : constants_(std::move(constants))
+    , stmt_(std::move(stmt))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto constants() -> std::vector<std::unique_ptr<Constant>> & { return constants_; }
+
+  [[nodiscard]] auto stmt() -> Stmt & { return *stmt_; }
+
+private:
+  std::vector<std::unique_ptr<Constant>> constants_;
+  std::unique_ptr<Stmt> stmt_;
+};
+
+class CaseStmt: public ConditionalStmt
+{
+public:
+  CaseStmt(
+      std::unique_ptr<Expr> expr,
+      std::vector<CaseListElement> case_list
+  )
+    : expr_(std::move(expr))
+    , case_list_(std::move(case_list))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto expr() -> Expr & { return *expr_; }
+
+  [[nodiscard]] auto caseList() -> std::vector<CaseListElement> & { return case_list_; }
+
+private:
+  std::unique_ptr<Expr> expr_;
+  std::vector<CaseListElement> case_list_;
+};
+
+class RepetitiveStmt: public StructuredStmt
+{
+public:
+  void accept(Visitor &v) override;
+};
+
+class RepeatStmt: public RepetitiveStmt
+{
+public:
+  RepeatStmt(
+      std::unique_ptr<Stmt> body,
+      std::unique_ptr<BoolExpr> cond
+  )
+    : body_(std::move(body))
+    , cond_(std::move(cond))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto body() -> Stmt & { return *body_; }
+
+  [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+
+private:
+  std::unique_ptr<Stmt> body_;
+  std::unique_ptr<BoolExpr> cond_;
+};
+
+class WhileStmt: public RepetitiveStmt
+{
+public:
+  WhileStmt(
+      std::unique_ptr<BoolExpr> cond,
+      std::unique_ptr<Stmt> body
+  )
+    : cond_(std::move(cond))
+    , body_(std::move(body))
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+
+  [[nodiscard]] auto body() -> Stmt & { return *body_; }
+
+private:
+  std::unique_ptr<BoolExpr> cond_;
+  std::unique_ptr<Stmt> body_;
+};
+
+class ForStmt: public RepetitiveStmt
+{
+public:
+  ForStmt(
+      std::unique_ptr<Expr> ctrl_var,
+      std::unique_ptr<Expr> init_val,
+      std::unique_ptr<Expr> cond,
+      std::unique_ptr<Stmt> body,
+      bool updown
+  )
+    : ctrl_var_(std::move(ctrl_var))
+    , init_val_(std::move(init_val))
+    , cond_(std::move(cond))
+    , body_(std::move(body))
+    , updown_(updown)
+  {}
+
+  void accept(Visitor &v) override;
+
+  [[nodiscard]] auto ctrlVar() -> Expr & { return *ctrl_var_; }
+
+  [[nodiscard]] auto initVal() -> Expr & { return *init_val_; }
+
+  [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+
+  [[nodiscard]] auto body() -> Stmt & { return *body_; }
+
+  [[nodiscard]] auto updown() -> bool & { return updown_; }
+
+private:
+  std::unique_ptr<Expr> ctrl_var_;
+  std::unique_ptr<Expr> init_val_;
+  std::unique_ptr<Expr> cond_;
+  std::unique_ptr<Stmt> body_;
+  bool updown_;
+};
+
+class CompoundStmt: public StructuredStmt
+{
+public:
   explicit CompoundStmt(std::vector<std::unique_ptr<Stmt>> stmts)
     : stmts_(std::move(stmts))
   {}
 
-  /**
-   * @brief Accepts a visitor and invokes the appropriate visit method.
-   * 
-   * @param v The visitor object.
-   */
+  CompoundStmt(CompoundStmt &&) = default;
+
   void accept(Visitor &v) override;
 
-  /**
-   * @brief Returns the statements contained in the compound statement.
-   * 
-   * @return A const reference to the vector of statements.
-   */
   [[nodiscard]] auto stmts() const -> const std::vector<std::unique_ptr<Stmt>> & { return stmts_; }
 
 private:
@@ -626,72 +1161,35 @@ private:
 };
 
 /**
- * @brief Represents a block of statements.
- * 
- * This class is a subclass of `ASTNode` and represents a block of statements in the abstract syntax tree.
- * It contains a vector of unique pointers to `Stmt` objects, which represent individual statements within the block.
+ * @brief statement_part
+ *
+ * statement_part -> compound_statement
  */
-class StmtBlock: public ASTNode
+class StmtPart: public CompoundStmt
 {
 public:
   /**
-   * @brief Constructs a `StmtBlock` object with the given statements.
+   * @brief 
    * 
-   * @param stmts The vector of unique pointers to `Stmt` objects representing the statements in the block.
+   * @param stmts 
    */
-  explicit StmtBlock(std::vector<std::unique_ptr<Stmt>> stmts)
-    : stmts_(std::move(stmts))
+  explicit StmtPart(CompoundStmt stmt)
+    : CompoundStmt(std::move(stmt))
   {}
 
+  StmtPart(StmtPart &&) = default;
+
   /**
-   * @brief Accepts a visitor and invokes the appropriate visit method.
+   * @brief 
    * 
-   * This method is used for visitor pattern implementation.
-   * It accepts a visitor object and calls the appropriate visit method based on the dynamic type of the object.
-   * 
-   * @param v The visitor object to accept.
+   * @param v 
    */
   void accept(Visitor &v) override;
-
-  /**
-   * @brief Returns the vector of statements in the block.
-   * 
-   * @return A const reference to the vector of unique pointers to `Stmt` objects representing the statements in the block.
-   */
-  [[nodiscard]] auto stmts() const -> const std::vector<std::unique_ptr<Stmt>> & { return stmts_; }
-
-private:
-  std::vector<std::unique_ptr<Stmt>> stmts_;
 };
 
-/**
- * @brief Represents a block of statements in the abstract syntax tree.
- * 
- * The `Block` class is a derived class of `ASTNode` and represents a block of statements
- * in the abstract syntax tree. It contains a `StmtBlock` object that holds the statements
- * within the block.
- */
-class Block: public ASTNode
-{
-public:
-  /**
-   * @brief Constructs a Block object with the given statement block.
-   * 
-   * @param stmt_block The statement block within the block.
-   */
-  explicit Block(StmtBlock stmt_block)
-    : stmt_block_(std::move(stmt_block))
-  {}
-
-  void accept(Visitor &v) override;
-
-  [[nodiscard]] auto stmtBlock() const -> const StmtBlock & { return stmt_block_; }
-
-  [[nodiscard]] auto stmtBlock() -> StmtBlock & { return stmt_block_; }
-
-private:
-  StmtBlock stmt_block_;
-};
+//*******************************************************
+//********************** Program ************************
+//*******************************************************
 
 /**
  * @brief Represents a program block.
@@ -702,8 +1200,8 @@ private:
 class ProgramBlock: public Block
 {
 public:
-  explicit ProgramBlock(StmtBlock stmt_block)
-    : Block(std::move(stmt_block))
+  explicit ProgramBlock(Block block)
+    : Block(std::move(block))
   {}
 
   void accept(Visitor &v) override;
@@ -711,28 +1209,25 @@ public:
 
 /**
  * @class ProgramHead
- * @brief Represents the program header in an abstract syntax tree (AST).
- * 
- * The ProgramHead class is a subclass of ASTNode and represents the program header
- * in an abstract syntax tree. It contains the program name and a list of identifiers.
+ * @brief Program的头部信息
  */
 class ProgramHead: public ASTNode
 {
 public:
   /**
-   * @brief Constructs a ProgramHead object with the given program name.
+   * @brief program 构造函数
    * 
-   * @param program_name The name of the program.
+   * @param program_name 程序的名字
    */
   explicit ProgramHead(std::string program_name)
     : program_name_(std::move(program_name))
   {}
 
   /**
-   * @brief Constructs a ProgramHead object with the given program name and identifier list.
+   * @brief program 构造函数
    * 
-   * @param program_name The name of the program.
-   * @param id_list The list of identifiers.
+   * @param program_name 程序的名字
+   * @param id_list 程序头部的参数列表
    */
   ProgramHead(std::string program_name, std::vector<std::string> id_list)
     : program_name_(std::move(program_name))
@@ -740,29 +1235,27 @@ public:
   {}
 
   /**
-   * @brief Accepts a visitor object and calls the appropriate visit method.
-   * 
-   * @param v The visitor object.
+   * @brief 访问者设计模式接口
    */
   void accept(Visitor &v) override;
 
   /**
-   * @brief Returns the program name.
+   * @brief 返回 program name
    * 
-   * @return The program name.
+   * @return program name
    */
-  [[nodiscard]] auto programName() const -> const std::string & { return program_name_; }
+  [[nodiscard]] auto programName() -> std::string & { return program_name_; }
 
   /**
-   * @brief Returns the list of identifiers.
+   * @brief 返回 id list
    * 
-   * @return The list of identifiers.
+   * @return id list
    */
-  [[nodiscard]] auto idList() const -> const std::vector<std::string> & { return id_list_; }
+  [[nodiscard]] auto idList() -> std::vector<std::string> & { return id_list_; }
 
 private:
-  std::string program_name_;          ///< The name of the program.
-  std::vector<std::string> id_list_;  ///< The list of identifiers.
+  std::string program_name_;          ///< 程序的名字
+  std::vector<std::string> id_list_;  ///< 程序头部的参数列表
 };
 
 /**
@@ -780,30 +1273,23 @@ public:
    * @param head The program head.
    * @param block The program block.
    */
-  Program(ProgramHead head, ProgramBlock block)
+  Program(
+      std::unique_ptr<ProgramHead> head,
+      std::unique_ptr<ProgramBlock> block
+  )
     : head_(std::move(head))
     , block_(std::move(block))
   {}
 
-  /**
-   * @brief Accepts a visitor and calls the appropriate visit method.
-   * 
-   * @param v The visitor to accept.
-   */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto head() const -> const ProgramHead & { return head_; }
+  [[nodiscard]] auto head() -> ProgramHead & { return *head_; }
 
-  [[nodiscard]] auto head() -> ProgramHead & { return head_; }
-
-  [[nodiscard]] auto block() const -> const ProgramBlock & { return block_; }
-
-  [[nodiscard]] auto block() -> ProgramBlock & { return block_; }
-
+  [[nodiscard]] auto block() -> ProgramBlock & { return *block_; }
 
 private:
-  ProgramHead head_;    ///< The program head.
-  ProgramBlock block_;  ///< The program block.
+  std::unique_ptr<ProgramHead> head_;    ///< The program head.
+  std::unique_ptr<ProgramBlock> block_;  ///< The program block.
 };
 
 }  // namespace ast
@@ -818,15 +1304,13 @@ public:
   virtual void visit(ast::UnaryExpr &node)            = 0;
   virtual void visit(ast::UnsignedConstant &node)     = 0;
   virtual void visit(ast::FuncCall &node)             = 0;
-  virtual void visit(ast::VariableAccess &node)       = 0;
-  virtual void visit(ast::EntireVariableAccess &node) = 0;
+  virtual void visit(ast::Assignable &node)             = 0;
+  virtual void visit(ast::AssignableId &node)           = 0;
 
   virtual void visit(ast::Stmt &node)                 = 0;
   virtual void visit(ast::IfStmt &node)               = 0;
   virtual void visit(ast::WhileStmt &node)            = 0;
-  virtual void visit(ast::ForStmt &node)              = 0;
-  virtual void visit(ast::NormalAssignStmt &node)     = 0;
-  virtual void visit(ast::FuncRetAssignStmt &node)    = 0;
+  virtual void visit(ast::ForStmt &node)                = 0;
   virtual void visit(ast::ProcCallStmt &node)         = 0;
   virtual void visit(ast::ReadStmt &node)             = 0;
   virtual void visit(ast::WriteStmt &node)            = 0;
@@ -835,7 +1319,7 @@ public:
   virtual void visit(ast::CompoundStmt &node)         = 0;
 
   virtual void visit(ast::Block &node)                = 0;
-  virtual void visit(ast::StmtBlock &node)            = 0;
+  virtual void visit(ast::StmtPart &node)               = 0;
 
   virtual void visit(ast::ProgramBlock &node)         = 0;
   virtual void visit(ast::ProgramHead &node)          = 0;

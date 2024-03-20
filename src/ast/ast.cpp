@@ -27,12 +27,12 @@ void FuncCall::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void VariableAccess::accept(Visitor &visitor)
+void Assignable::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }
 
-void EntireVariableAccess::accept(Visitor &visitor)
+void AssignableId::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }
@@ -72,7 +72,7 @@ void Block::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void StmtBlock::accept(Visitor &visitor)
+void StmtPart::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }

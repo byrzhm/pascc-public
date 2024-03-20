@@ -72,12 +72,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncCall &node)
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::VariableAccess &node)
+void CodegenVisitor::visit([[maybe_unused]] ast::Assignable &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::EntireVariableAccess &node)
+void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
 {
   throw std::runtime_error("Not implemented");
 }
@@ -100,18 +100,6 @@ void CodegenVisitor::visit([[maybe_unused]] ast::WhileStmt &node)
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
-{
-  throw std::runtime_error("Not implemented");
-}
-
-// ! 赋值比较恶心，先等 AST 实现
-
-void CodegenVisitor::visit([[maybe_unused]] ast::NormalAssignStmt &node)
-{
-  throw std::runtime_error("Not implemented");
-}
-
-void CodegenVisitor::visit([[maybe_unused]] ast::FuncRetAssignStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
@@ -164,7 +152,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
 }
 
 // DON'T MODIFY
-void CodegenVisitor::visit(ast::StmtBlock &node)
+void CodegenVisitor::visit(ast::StmtPart &node)
 {
   IndentGuard ig(&indent_, INDENT_SIZE);
   for (const auto &stmt : node.stmts())
@@ -177,7 +165,7 @@ void CodegenVisitor::visit(ast::StmtBlock &node)
 void CodegenVisitor::visit(ast::ProgramBlock &node)
 {
   println("int main() {");
-  node.stmtBlock().accept(*this);
+  node.stmtPart().accept(*this);
   println("}");
 }
 
