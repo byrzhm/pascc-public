@@ -205,8 +205,11 @@ program:
   program_head program_block {
     // std::make_unique<T>(...) 将会生成 std::unique_ptr<T>, 其中 T 会使用 ... 提供的参数进行构造 
     $$ = std::make_unique<Program>(std::move($1), std::move($2));
+    // std::cout << @1.begin.line << ", " << @1.begin.column << ", "
+    //           << @1.end.line << ", " << @1.end.column << '\n';
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
     drv.program_ = std::move($$);
-    std::cout << @1 << '\n';
   }
   ;
 
