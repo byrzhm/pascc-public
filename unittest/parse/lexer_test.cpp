@@ -81,14 +81,6 @@ auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
     case pascc::parse::Parser::symbol_kind::S_ID:
     case pascc::parse::Parser::symbol_kind::S_STR_LIT: return symbol.value.as<std::string>();
 
-    // non-terminal
-    case pascc::parse::Parser::symbol_kind::S_program:
-    case pascc::parse::Parser::symbol_kind::S_program_head:
-    case pascc::parse::Parser::symbol_kind::S_program_body:
-    case pascc::parse::Parser::symbol_kind::S_statement_block:
-    case pascc::parse::Parser::symbol_kind::S_statement:
-    case pascc::parse::Parser::symbol_kind::S_procedure_statement: return "nonterminal";
-
     case pascc::parse::Parser::symbol_kind::YYNTOKENS:
     case pascc::parse::Parser::symbol_kind::S_YYEMPTY:
     case pascc::parse::Parser::symbol_kind::S_YYEOF:
@@ -170,14 +162,6 @@ auto symbol_to_string(const Parser::symbol_kind_type &kind, const std::string &i
 
     case pascc::parse::Parser::symbol_kind::S_ID: return id;
     case pascc::parse::Parser::symbol_kind::S_STR_LIT: return "'string literal'";
-
-    // non-terminal
-    case pascc::parse::Parser::symbol_kind::S_program:
-    case pascc::parse::Parser::symbol_kind::S_program_head:
-    case pascc::parse::Parser::symbol_kind::S_program_body:
-    case pascc::parse::Parser::symbol_kind::S_statement_block:
-    case pascc::parse::Parser::symbol_kind::S_statement:
-    case pascc::parse::Parser::symbol_kind::S_procedure_statement: return "nonterminal";
 
     case pascc::parse::Parser::symbol_kind::YYNTOKENS:
     case pascc::parse::Parser::symbol_kind::S_YYEMPTY:
