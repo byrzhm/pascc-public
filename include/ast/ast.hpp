@@ -40,7 +40,10 @@ private:
 };
 
 /**
- * @brief
+ * @brief Block 基类
+ *  ProgramBlock -> Block
+ *  FuncBlock -> Block
+ *  ProcBlock -> Block
  */
 class Block: public ASTNode
 {
@@ -82,7 +85,7 @@ private:
 };
 
 /**
- * @brief 表示 expression 基类
+ * @brief 表示 expr 基类
  */
 class Expr: public ASTNode
 {
@@ -90,6 +93,9 @@ public:
   void accept(Visitor &v) override;
 };
 
+/**
+ * @brief 表示布尔表达式
+ */
 class BoolExpr: public Expr
 {
 public:
@@ -173,7 +179,7 @@ private:
 
 enum class UnaryOp
 {
-  Not,    ///< not
+  NOT,    ///< not
   MINUS,  ///< -
   PLUS    ///< +
 };
@@ -421,7 +427,9 @@ public:
   {}
 
   explicit Constant(std::unique_ptr<Number> number, int sign = 1)
-      : sign_(sign), type_(number->type()) {
+    : sign_(sign)
+    , type_(number->type())
+  {
     if (number->type() == "integer") {
       value_ = std::get<int>(number->value());
     } else {
@@ -436,7 +444,10 @@ public:
   {}
 
   explicit Constant(std::unique_ptr<StringLiteral> string_literal)
-      : sign_(1), type_("string"), value_(string_literal->value()) {}
+    : sign_(1)
+    , type_("string")
+    , value_(string_literal->value())
+  {}
 
   void accept(Visitor &v) override;
 
@@ -474,6 +485,10 @@ private:
 class ConstDeclPart: public ASTNode
 {
 public:
+  explicit ConstDeclPart(std::vector<std::unique_ptr<ConstDecl>> const_decls)
+    : const_decls_(std::move(const_decls))
+  {}
+
   void accept(Visitor &v) override;
 
 private:
@@ -714,7 +729,7 @@ public:
   explicit ProcHead(std::string proc_id)
     : proc_id_(std::move(proc_id))
   {}
-  
+
   ProcHead(
       std::string proc_id,
       std::vector<std::unique_ptr<FormalParam>> formal_params
@@ -739,6 +754,10 @@ class ProcBlock: public Block
 public:
   explicit ProcBlock(Block block)
     : Block(std::move(block))
+  {}
+
+  explicit ProcBlock(std::unique_ptr<Block> block)
+    : Block(std::move(*block))
   {}
 
   void accept(Visitor &v) override;
@@ -806,6 +825,10 @@ class FuncBlock: public Block
 public:
   explicit FuncBlock(Block block)
     : Block(std::move(block))
+  {}
+
+  explicit FuncBlock(std::unique_ptr<Block> block)
+    : Block(std::move(*block))
   {}
 
   void accept(Visitor &v) override;
@@ -976,8 +999,8 @@ public:
     : ProcCallStmt("exit")
   {}
 
-  explicit ExitStmt(std::unique_ptr<Expr> expr)
-    : ProcCallStmt("exit", std::vector<std::unique_ptr<Expr>>{std::move(expr)})
+  explicit ExitStmt(std::vector<std::unique_ptr<Expr>> exprs)
+    : ProcCallStmt("exit", std::move(exprs))
   {}
 
   void accept(Visitor &v) override;
@@ -1049,7 +1072,7 @@ class CaseStmt: public ConditionalStmt
 public:
   CaseStmt(
       std::unique_ptr<Expr> expr,
-      std::vector<CaseListElement> case_list
+      std::vector<std::unique_ptr<CaseListElement>> case_list
   )
     : expr_(std::move(expr))
     , case_list_(std::move(case_list))
@@ -1059,11 +1082,11 @@ public:
 
   [[nodiscard]] auto expr() -> Expr & { return *expr_; }
 
-  [[nodiscard]] auto caseList() -> std::vector<CaseListElement> & { return case_list_; }
+  [[nodiscard]] auto caseList() -> std::vector<std::unique_ptr<CaseListElement>> & { return case_list_; }
 
 private:
   std::unique_ptr<Expr> expr_;
-  std::vector<CaseListElement> case_list_;
+  std::vector<std::unique_ptr<CaseListElement>> case_list_;
 };
 
 class RepetitiveStmt: public StructuredStmt
@@ -1076,7 +1099,7 @@ class RepeatStmt: public RepetitiveStmt
 {
 public:
   RepeatStmt(
-      std::unique_ptr<Stmt> body,
+      std::vector<std::unique_ptr<Stmt>> body,
       std::unique_ptr<BoolExpr> cond
   )
     : body_(std::move(body))
@@ -1085,12 +1108,12 @@ public:
 
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto body() -> Stmt & { return *body_; }
+  [[nodiscard]] auto body() -> std::vector<std::unique_ptr<Stmt>> & { return body_; }
 
   [[nodiscard]] auto cond() -> Expr & { return *cond_; }
 
 private:
-  std::unique_ptr<Stmt> body_;
+  std::vector<std::unique_ptr<Stmt>> body_;
   std::unique_ptr<BoolExpr> cond_;
 };
 
@@ -1187,6 +1210,10 @@ public:
     : CompoundStmt(std::move(stmt))
   {}
 
+  explicit StmtPart(std::unique_ptr<CompoundStmt> stmt)
+    : CompoundStmt(std::move(*stmt))
+  {}
+
   StmtPart(StmtPart &&) = default;
 
   /**
@@ -1212,6 +1239,10 @@ class ProgramBlock: public Block
 public:
   explicit ProgramBlock(Block block)
     : Block(std::move(block))
+  {}
+
+  explicit ProgramBlock(std::unique_ptr<Block> block)
+    : Block(std::move(*block))
   {}
 
   void accept(Visitor &v) override;
@@ -1310,33 +1341,84 @@ private:
 class Visitor
 {
 public:
-  virtual ~Visitor()                              = default;
+  virtual ~Visitor()                           = default;
 
+  virtual void visit(ast::Block &node)         = 0;
+  virtual void visit(ast::Number &node)        = 0;
+  virtual void visit(ast::Constant &node)      = 0;
+  virtual void visit(ast::StringLiteral &node) = 0;
+
+
+  /// expression
   virtual void visit(ast::Expr &node)             = 0;
+  virtual void visit(ast::UnsignedConstant &node) = 0;
   virtual void visit(ast::BinaryExpr &node)       = 0;
   virtual void visit(ast::UnaryExpr &node)        = 0;
-  virtual void visit(ast::UnsignedConstant &node) = 0;
   virtual void visit(ast::FuncCall &node)         = 0;
   virtual void visit(ast::Assignable &node)       = 0;
   virtual void visit(ast::AssignableId &node)     = 0;
+  virtual void visit(ast::IndexedVar &node)       = 0;
+  virtual void visit(ast::FieldDesignator &node)  = 0;
 
-  virtual void visit(ast::Stmt &node)             = 0;
-  virtual void visit(ast::IfStmt &node)           = 0;
-  virtual void visit(ast::WhileStmt &node)        = 0;
-  virtual void visit(ast::ForStmt &node)          = 0;
-  virtual void visit(ast::ProcCallStmt &node)     = 0;
-  virtual void visit(ast::ReadStmt &node)         = 0;
-  virtual void visit(ast::WriteStmt &node)        = 0;
-  virtual void visit(ast::ReadlnStmt &node)       = 0;
-  virtual void visit(ast::WritelnStmt &node)      = 0;
-  virtual void visit(ast::CompoundStmt &node)     = 0;
 
-  virtual void visit(ast::Block &node)            = 0;
-  virtual void visit(ast::StmtPart &node)         = 0;
+  /// const declaration
+  virtual void visit(ast::ConstDecl &node)     = 0;
+  virtual void visit(ast::ConstDeclPart &node) = 0;
 
-  virtual void visit(ast::ProgramBlock &node)     = 0;
-  virtual void visit(ast::ProgramHead &node)      = 0;
-  virtual void visit(ast::Program &node)          = 0;
+
+  /// type declaration
+  virtual void visit(ast::TypeId &node)       = 0;
+  virtual void visit(ast::Period &node)       = 0;
+  virtual void visit(ast::ArrayType &node)    = 0;
+  virtual void visit(ast::RecordType &node)   = 0;
+  virtual void visit(ast::TypeDecl &node)     = 0;
+  virtual void visit(ast::TypeDeclPart &node) = 0;
+  virtual void visit(ast::TypeDenoter &node)  = 0;
+
+
+  /// var declaration
+  virtual void visit(ast::VarDeclPart &node)    = 0;
+  virtual void visit(ast::ValueParamSpec &node) = 0;
+  virtual void visit(ast::VarParamSpec &node)   = 0;
+  virtual void visit(ast::VarDecl &node)        = 0;
+
+
+  /// subprogram declaration
+  virtual void visit(ast::ProcHead &node)        = 0;
+  virtual void visit(ast::ProcBlock &node)       = 0;
+  virtual void visit(ast::ProcDecl &node)        = 0;
+  virtual void visit(ast::FuncHead &node)        = 0;
+  virtual void visit(ast::FuncBlock &node)       = 0;
+  virtual void visit(ast::FuncDecl &node)        = 0;
+  virtual void visit(ast::FormalParam &node)     = 0;
+  virtual void visit(ast::SubprogDecl &node)     = 0;
+  virtual void visit(ast::SubprogDeclPart &node) = 0;
+
+
+  /// statement
+  virtual void visit(ast::Stmt &node) = 0;
+  // conditional statement
+  virtual void visit(ast::IfStmt &node)          = 0;
+  virtual void visit(ast::CaseStmt &node)        = 0;
+  virtual void visit(ast::CaseListElement &node) = 0;
+  // repetitive statement
+  virtual void visit(ast::RepeatStmt &node) = 0;
+  virtual void visit(ast::WhileStmt &node)  = 0;
+  virtual void visit(ast::ForStmt &node)    = 0;
+  // simple statement
+  virtual void visit(ast::ProcCallStmt &node) = 0;
+  virtual void visit(ast::ReadStmt &node)     = 0;
+  virtual void visit(ast::WriteStmt &node)    = 0;
+  virtual void visit(ast::ReadlnStmt &node)   = 0;
+  virtual void visit(ast::WritelnStmt &node)  = 0;
+  virtual void visit(ast::ExitStmt &node)     = 0;
+  virtual void visit(ast::CompoundStmt &node) = 0;
+  virtual void visit(ast::StmtPart &node)     = 0;
+
+  /// program
+  virtual void visit(ast::ProgramBlock &node) = 0;
+  virtual void visit(ast::ProgramHead &node)  = 0;
+  virtual void visit(ast::Program &node)      = 0;
 };
 
 
