@@ -420,14 +420,12 @@ public:
     , value_(std::move(id))
   {}
 
-  explicit Constant(Number &number, int sign = 1)
-    : sign_(sign)
-    , type_(number.type())
-  {
-    if (number.type() == "integer") {
-      value_ = std::get<int>(number.value());
+  explicit Constant(std::unique_ptr<Number> number, int sign = 1)
+      : sign_(sign), type_(number->type()) {
+    if (number->type() == "integer") {
+      value_ = std::get<int>(number->value());
     } else {
-      value_ = std::get<double>(number.value());
+      value_ = std::get<double>(number->value());
     }
   }
 
@@ -437,12 +435,8 @@ public:
     , value_(value)
   {}
 
-  explicit Constant(StringLiteral &string_literal)
-    : sign_(1)
-    , type_("string")
-    , value_(string_literal.value())
-  {}
-
+  explicit Constant(std::unique_ptr<StringLiteral> string_literal)
+      : sign_(1), type_("string"), value_(string_literal->value()) {}
 
   void accept(Visitor &v) override;
 
@@ -717,6 +711,10 @@ private:
 class ProcHead: public ASTNode
 {
 public:
+  explicit ProcHead(std::string proc_id)
+    : proc_id_(std::move(proc_id))
+  {}
+  
   ProcHead(
       std::string proc_id,
       std::vector<std::unique_ptr<FormalParam>> formal_params
@@ -771,6 +769,14 @@ private:
 class FuncHead: public ASTNode
 {
 public:
+  FuncHead(
+      std::string func_id,
+      std::unique_ptr<TypeDenoter> return_type
+  )
+    : func_id_(std::move(func_id))
+    , return_type_(std::move(return_type))
+  {}
+
   FuncHead(
       std::string func_id,
       std::vector<std::unique_ptr<FormalParam>> formal_params,
