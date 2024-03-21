@@ -3,7 +3,10 @@ message(STATUS "CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 
 # 生成文件: parser.cpp, location.hh
 # 生成路径: ${CMAKE_CURRENT_BINARY_DIR} 即 build/src/parse/
-BISON_TARGET(PASCC_PARSER parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
+BISON_TARGET(
+    PASCC_PARSER parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
+    COMPILE_FLAGS "-Wcounterexamples"
+)
 
 # 生成文件: lexer.cpp
 # 生成路径: ${CMAKE_CURRENT_BINARY_DIR} 即 build/src/parse/
