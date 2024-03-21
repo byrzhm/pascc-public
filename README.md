@@ -121,9 +121,4 @@ git config pull.rebase false
 
 ## References
 
-- [Jianxff PASCC](https://github.com/BUPT-CS-Assignment/PASCC)
-- [Jianxff PASCC BACK-END](https://github.com/BUPT-CS-Assignment/PASCC_BACKEND)
-- [Jianxff PASCC FRONT-END](https://github.com/BUPT-CS-Assignment/PASCC_ONLINE)
-- [Yorange0 pascal2c-compiler](https://github.com/Yorange0/pascal2c-compiler)
-- [XieWeikai Pascal2C](https://github.com/XieWeikai/Pascal2C)
 - [postgres](https://github.com/postgres/postgres/blob/master/src/backend/parser/scan.l#L409)
