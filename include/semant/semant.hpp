@@ -73,6 +73,7 @@ public:
   void visit(ast::WhileStmt &node) override;
   void visit(ast::ForStmt &node) override;
   // simple statement
+  void visit(ast::AssignStmt &node) override;
   void visit(ast::ProcCallStmt &node) override;
   void visit(ast::ReadStmt &node) override;
   void visit(ast::WriteStmt &node) override;

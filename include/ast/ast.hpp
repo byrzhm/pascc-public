@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -66,6 +67,16 @@ public:
 
   void accept(Visitor &v) override;
 
+  [[nodiscard]] auto hasConstDeclPart() -> bool { return const_decl_part_ != nullptr; }
+
+  [[nodiscard]] auto hasTypeDeclPart() -> bool { return type_decl_part_ != nullptr; }
+
+  [[nodiscard]] auto hasVarDeclPart() -> bool { return var_decl_part_ != nullptr; }
+
+  [[nodiscard]] auto hasSubprogDeclPart() -> bool { return subprog_decl_part_ != nullptr; }
+
+  [[nodiscard]] auto hasStmtPart() -> bool { return stmt_part_ != nullptr; }
+
   [[nodiscard]] auto constDeclPart() -> ConstDeclPart & { return *const_decl_part_; }
 
   [[nodiscard]] auto typeDeclPart() -> TypeDeclPart & { return *type_decl_part_; }
@@ -129,6 +140,8 @@ enum class BinOp
   GE      ///< >=
 };
 
+auto operator<<(std::ostream &os, BinOp op) -> std::ostream &;
+
 /**
  * @brief 表示 binary expression.
  */
@@ -183,6 +196,8 @@ enum class UnaryOp
   MINUS,  ///< -
   PLUS    ///< +
 };
+
+auto operator<<(std::ostream &os, UnaryOp op) -> std::ostream &;
 
 /**
  * 表示 unary expression.
@@ -491,6 +506,8 @@ public:
 
   void accept(Visitor &v) override;
 
+  [[nodiscard]] auto constDecls() -> std::vector<std::unique_ptr<ConstDecl>> & { return const_decls_; }
+
 private:
   std::vector<std::unique_ptr<ConstDecl>> const_decls_;
 };
@@ -544,6 +561,9 @@ private:
   std::unique_ptr<Constant> high_;
 };
 
+/**
+ * @brief type_denoter -> ARRAY LSB periods RSB OF type_denoter
+ */
 class ArrayType: public TypeDenoter
 {
 public:
@@ -1037,6 +1057,8 @@ public:
 
   [[nodiscard]] auto then() -> Stmt & { return *then_; }
 
+  [[nodiscard]] auto hasElse() -> bool { return else_ != nullptr; }
+
   [[nodiscard]] auto Else() -> Stmt & { return *else_; }
 
 private:
@@ -1151,7 +1173,7 @@ public:
   )
     : ctrl_var_(std::move(ctrl_var))
     , init_val_(std::move(init_val))
-    , cond_(std::move(cond))
+    , end_val_(std::move(cond))
     , body_(std::move(body))
     , updown_(updown)
   {}
@@ -1162,7 +1184,7 @@ public:
 
   [[nodiscard]] auto initVal() -> Expr & { return *init_val_; }
 
-  [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+  [[nodiscard]] auto endVal() -> Expr & { return *end_val_; }
 
   [[nodiscard]] auto body() -> Stmt & { return *body_; }
 
@@ -1171,7 +1193,7 @@ public:
 private:
   std::unique_ptr<Expr> ctrl_var_;
   std::unique_ptr<Expr> init_val_;
-  std::unique_ptr<Expr> cond_;
+  std::unique_ptr<Expr> end_val_;
   std::unique_ptr<Stmt> body_;
   bool updown_;
 };
@@ -1406,6 +1428,7 @@ public:
   virtual void visit(ast::WhileStmt &node)  = 0;
   virtual void visit(ast::ForStmt &node)    = 0;
   // simple statement
+  virtual void visit(ast::AssignStmt &node)   = 0;
   virtual void visit(ast::ProcCallStmt &node) = 0;
   virtual void visit(ast::ReadStmt &node)     = 0;
   virtual void visit(ast::WriteStmt &node)    = 0;

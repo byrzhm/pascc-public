@@ -217,6 +217,11 @@ void SemantVisitor::visit([[maybe_unused]] ast::ForStmt &node)
   throw std::runtime_error("Not implemented");
 }
 
+void SemantVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
 void SemantVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
 {
   throw std::runtime_error("Not implemented");

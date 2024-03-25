@@ -256,6 +256,11 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
   throw std::runtime_error("Not implemented");
 }
 
+void CodegenVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
 // TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
 {

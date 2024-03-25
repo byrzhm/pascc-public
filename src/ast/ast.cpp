@@ -2,6 +2,37 @@
 
 namespace pascc::ast {
 
+auto operator<<(std::ostream &os, BinOp op) -> std::ostream &
+{
+  switch (op) {
+    case BinOp::PLUS: os << "+"; break;
+    case BinOp::MINUS: os << "-"; break;
+    case BinOp::MUL: os << "*"; break;
+    case BinOp::FDIV: os << "/"; break;
+    case BinOp::IDIV: os << "div"; break;
+    case BinOp::MOD: os << "mod"; break;
+    case BinOp::AND: os << "and"; break;
+    case BinOp::OR: os << "or"; break;
+    case BinOp::EQ: os << "="; break;
+    case BinOp::NE: os << "<>"; break;
+    case BinOp::LT: os << "<"; break;
+    case BinOp::GT: os << ">"; break;
+    case BinOp::LE: os << "<="; break;
+    case BinOp::GE: os << ">="; break;
+  }
+  return os;
+}
+
+auto operator<<(std::ostream &os, UnaryOp op) -> std::ostream &
+{
+  switch (op) {
+    case UnaryOp::NOT: os << "not"; break;
+    case UnaryOp::MINUS: os << "-"; break;
+    case UnaryOp::PLUS: os << "+"; break;
+  }
+  return os;
+}
+
 void Block::accept(Visitor &visitor)
 {
   visitor.visit(*this);
