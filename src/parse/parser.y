@@ -513,10 +513,14 @@ compound_statement:
 statement_list:
   statement_list SEMICOLON statement {
     $$.swap($1);
-    $$.emplace_back(std::move($3));
+    if ($3 != nullptr) {
+      $$.emplace_back(std::move($3));
+    }
   }
   | statement {
-    $$.emplace_back(std::move($1));
+    if ($1 != nullptr) {
+      $$.emplace_back(std::move($1));
+    }
   }
   ;
                 
