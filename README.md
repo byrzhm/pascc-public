@@ -122,3 +122,4 @@ git config pull.rebase false
 ## References
 
 - [postgres](https://github.com/postgres/postgres/blob/master/src/backend/parser/scan.l#L409)
+- [graphviz dotguide](https://graphviz.org/pdf/dotguide.pdf)
