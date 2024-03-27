@@ -1,6 +1,2 @@
-add_executable(pascc main.cpp)
-
-target_link_libraries(pascc
-    PRIVATE
-        pascc_lib
-)
+add_subdirectory(pascc)
+add_subdirectory(painter)
