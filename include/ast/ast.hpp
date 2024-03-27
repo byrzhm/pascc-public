@@ -363,7 +363,7 @@ private:
 };
 
 /**
- * @brief number 类
+ * @brief 表示 number 类
  * @anchor Number
  * @note num -> INT_NUM | REAL_NUM                    
  */
@@ -520,7 +520,7 @@ private:
 };
 
 /**
- * @brief 索引变量，如 a[10]
+ * @brief 表示索引变量，如 a[10]
  * @anchor IndexedVar
  */
 class IndexedVar: public Assignable
@@ -698,7 +698,7 @@ private:
 };
 
 /**
- * @brief 单独常量声明
+ * @brief 表示一个单独常量声明
  * @anchor ConstDecl
  */
 class ConstDecl: public ASTNode
@@ -724,7 +724,7 @@ private:
 };
 
 /**
- * @brief 常量声明部分
+ * @brief 表示常量声明部分
  * @anchor ConstDeclPart
  * @see Block
  */
@@ -756,7 +756,7 @@ private:
 //*******************************************************
 
 /**
- * @brief 类型表示符
+ * @brief 表示类型表示符
  * @anchor TypeDenoter
  * @see TypeId ArrayType RecordType
  */
@@ -770,7 +770,7 @@ public:
 };
 
 /**
- * @brief 类型标识符，基本类型，以及用户声明声明的类型
+ * @brief 表示类型标识符，基本类型，以及用户声明声明的类型
  * @anchor TypeId
  * @see TypeDenoter
  */
@@ -820,7 +820,7 @@ private:
 };
 
 /**
- * @brief 数组类型
+ * @brief 表示数组类型
  * @anchor ArrayType
  * @see TypeDenoter
  * @note type_denoter -> ARRAY LSB periods RSB OF type_denoter
@@ -851,7 +851,7 @@ private:
 };
 
 /**
- * @brief 记录类型，与C语言的结构体类似
+ * @brief 表示记录类型，与C语言的结构体类似
  * @anchor RecordType
  * @see TypeDenoter
  */
@@ -874,7 +874,7 @@ private:
 };
 
 /**
- * @brief 类型声明
+ * @brief 表示单独一个类型声明
  * @anchor TypeDecl
  */
 class TypeDecl: public ASTNode
@@ -900,7 +900,7 @@ private:
 };
 
 /**
- * @brief 变量声明部分
+ * @brief 表示变量声明部分
  * @anchor TypeDeclPart
  * @see Block
  * @note type_declaration_part -> ε | TYPE type_declarations SEMICOLON \n
@@ -930,7 +930,7 @@ private:
 //*******************************************************
 
 /**
- * @brief 单个变量声明
+ * @brief 表示单个变量声明
  * @anchor VarDecl
  */
 class VarDecl: public ASTNode
@@ -959,7 +959,7 @@ private:
 };
 
 /**
- * @brief 变量声明部分
+ * @brief 表示变量声明部分
  * @anchor VarDeclPart
  * @see Block
  */
@@ -986,7 +986,7 @@ private:
 //*******************************************************
 
 /**
- * @brief 单个子程序声明
+ * @brief 表示单个子程序声明
  * @anchor SubprogDecl
  */
 class SubprogDecl: public ASTNode
@@ -999,7 +999,7 @@ public:
 };
 
 /**
- * @brief 形式参数
+ * @brief 表示形式参数
  * @anchor FormalParam
  * @see ValueParamSpec VarParamSpec
  */
@@ -1013,7 +1013,7 @@ public:
 };
 
 /**
- * @brief 传值形式参数传递
+ * @brief 表示传值形式参数传递
  * @anchor ValueParamSpec
  * @see FormalParam
  */
@@ -1043,7 +1043,7 @@ private:
 };
 
 /**
- * @brief 引用形式参数传递
+ * @brief 表示引用形式参数传递
  * @anchor VarParamSpec
  * @see FormalParam
  */
@@ -1073,7 +1073,7 @@ private:
 };
 
 /**
- * @brief 过程声明的头部信息
+ * @brief 表示过程声明的头部信息
  * @anchor ProcHead
  */
 class ProcHead: public ASTNode
@@ -1106,7 +1106,7 @@ private:
 };
 
 /**
- * @brief 过程块
+ * @brief 表示过程块
  * @anchor ProcBlock
  * @see Block
  */
@@ -1128,7 +1128,7 @@ public:
 };
 
 /**
- * @brief 单个过程声明
+ * @brief 表示单个过程声明
  * @anchor ProcDecl
  * @see SubprogDecl
  */
@@ -1158,7 +1158,7 @@ private:
 };
 
 /**
- * @brief 函数头部信息
+ * @brief 表示函数头部信息
  * @anchor FuncHead
  */
 class FuncHead: public ASTNode
@@ -1200,7 +1200,7 @@ private:
 };
 
 /**
- * @brief 函数块
+ * @brief 表示函数块
  * @anchor FuncBlock
  * @see Block
  */
@@ -1222,7 +1222,7 @@ public:
 };
 
 /**
- * @brief 单个函数声明
+ * @brief 表示单个函数声明
  * @anchor FuncDecl
  * @see SubprogDecl
  */
@@ -1252,7 +1252,7 @@ private:
 };
 
 /**
- * @brief 子程序声明部分
+ * @brief 表示子程序声明部分
  * @anchor SubprogDeclPart
  * @see Block
  */
@@ -1372,7 +1372,7 @@ private:
 };
 
 /**
- * @brief 特殊过程调用 Read
+ * @brief 表示特殊过程调用 Read
  * @anchor ReadStmt
  * @see ProcCallStmt
  */
@@ -1394,7 +1394,7 @@ public:
 };
 
 /**
- * @brief 特殊过程调用 Write
+ * @brief 表示特殊过程调用 Write
  * @anchor WriteStmt
  * @see ProcCallStmt
  */
@@ -1416,7 +1416,7 @@ public:
 };
 
 /**
- * @brief 特殊过程调用 Readln
+ * @brief 表示特殊过程调用 Readln
  * @anchor ReadlnStmt
  * @see ProcCallStmt
  */
@@ -1438,7 +1438,7 @@ public:
 };
 
 /**
- * @brief 特殊过程调用 Writeln
+ * @brief 表示特殊过程调用 Writeln
  * @anchor WritelnStmt
  * @see ProcCallStmt
  */
@@ -1460,7 +1460,7 @@ public:
 };
 
 /**
- * @brief 特殊过程调用 Exit
+ * @brief 表示特殊过程调用 Exit
  * @anchor ExitStmt
  * @see ProcCallStmt
  */
@@ -1482,7 +1482,7 @@ public:
 };
 
 /**
- * @brief 结构化语句
+ * @brief 表示结构化语句
  * @anchor StructuredStmt
  * @see ConditionalStmt RepetitiveStmt
  */
@@ -1496,7 +1496,7 @@ public:
 };
 
 /**
- * @brief 条件语句
+ * @brief 表示条件语句
  * @anchor ConditionalStmt
  * @see StructuredStmt
  * @see IfStmt CaseStmt
@@ -1511,7 +1511,7 @@ public:
 };
 
 /**
- * @brief If语句
+ * @brief 表示If语句
  * @anchor IfStmt
  * @see ConditionalStmt
  */
@@ -1622,7 +1622,7 @@ public:
 };
 
 /**
- * @brief Repeat语句
+ * @brief 表示Repeat语句
  * @anchor RepeatStmt
  * @see RepetitiveStmt
  */
@@ -1652,7 +1652,7 @@ private:
 };
 
 /**
- * @brief While语句
+ * @brief 表示While语句
  * @anchor WhileStmt
  * @see RepetitiveStmt
  */
@@ -1682,7 +1682,7 @@ private:
 };
 
 /**
- * @brief For语句
+ * @brief 表示For语句
  * @anchor ForStmt
  * @see RepetitiveStmt
  */
@@ -1765,7 +1765,7 @@ private:
 };
 
 /**
- * @brief statement_part
+ * @brief 表示语句部分
  * @anchor StmtPart
  * @see CompoudStmt
  * @see Block
@@ -1799,7 +1799,7 @@ public:
 //*******************************************************
 
 /**
- * @brief 表示 program block
+ * @brief 表示程序块
  * @anchor ProgramBlock
  * @see Block
  */
@@ -1831,7 +1831,7 @@ public:
 };
 
 /**
- * @brief Program 的头部信息
+ * @brief 表示程序的头部信息
  * @anchor ProgramHead
  */
 class ProgramHead: public ASTNode
@@ -1885,7 +1885,7 @@ private:
 };
 
 /**
- * @brief Pascal程序分为 head 和 block 两部分
+ * @brief 表示一个Pascal程序，Pascal程序分为 head 和 block 两部分
  * @anchor Program
  * @see ProgramHead ProgramBlock
  */
@@ -1935,7 +1935,7 @@ private:
 
 /**
  * @brief Visitor 抽象基类
- *
+ * @anchor Visitor
  * @b 访问者设计模式：
  * 
  *   <a href="https://www.youtube.com/watch?v=PEcy1vYHb8A">视频讲解</a> \n
@@ -2026,6 +2026,5 @@ public:
   virtual void visit(ast::ProgramHead &node)  = 0;
   virtual void visit(ast::Program &node)      = 0;
 };
-
 
 }  // namespace pascc
