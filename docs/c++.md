@@ -1,0 +1,2 @@
+- [unique_ptr](https://www.youtube.com/watch?v=AmjoK55h68Y)
+- [visitor design pattern](https://www.youtube.com/watch?v=PEcy1vYHb8A)

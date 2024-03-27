@@ -13,7 +13,7 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
     target_link_libraries(
         ${pascc_test_name} 
         gtest_main 
-        # pascc_lib
+        pascc_lib
     )
 
     set_target_properties(
@@ -23,3 +23,5 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
         COMMAND ${pascc_test_name}
     )
 endforeach()
+
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/data/codegen" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/data")
