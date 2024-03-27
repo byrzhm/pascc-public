@@ -45,9 +45,32 @@ auto CodegenVisitor::print(const std::string &str) -> void
   (file_output_ ? fout_ : std::cout) << indent(indent_) << str;
 }
 
-// ! Expr 再等等
+void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::Number &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::Constant &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
+{
+  throw std::runtime_error("Not implemented");
+}
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Expr &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
 {
   throw std::runtime_error("Not implemented");
 }
@@ -62,27 +85,140 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
-{
-  throw std::runtime_error("Not implemented");
-}
-
 void CodegenVisitor::visit([[maybe_unused]] ast::FuncCall &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::VariableAccess &node)
+void CodegenVisitor::visit([[maybe_unused]] ast::Assignable &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::EntireVariableAccess &node)
+void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
-// ! 控制语句再等等
+void CodegenVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ConstDecl &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ConstDeclPart &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::TypeId &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::Period &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ArrayType &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::RecordType &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::TypeDecl &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::TypeDeclPart &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::TypeDenoter &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::VarDeclPart &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ValueParamSpec &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::VarParamSpec &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::VarDecl &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ProcHead &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ProcBlock &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::ProcDecl &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::FuncHead &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::FuncBlock &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::FormalParam &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDecl &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
+{
+  throw std::runtime_error("Not implemented");
+}
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Stmt &node)
 {
@@ -90,6 +226,22 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Stmt &node)
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::IfStmt &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::CaseStmt &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
+
+void CodegenVisitor::visit([[maybe_unused]] ast::RepeatStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
@@ -104,14 +256,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
   throw std::runtime_error("Not implemented");
 }
 
-// ! 赋值比较恶心，先等 AST 实现
-
-void CodegenVisitor::visit([[maybe_unused]] ast::NormalAssignStmt &node)
-{
-  throw std::runtime_error("Not implemented");
-}
-
-void CodegenVisitor::visit([[maybe_unused]] ast::FuncRetAssignStmt &node)
+void CodegenVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
@@ -152,19 +297,19 @@ void CodegenVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
   println(R"(printf("\n");)");
 }
 
+void CodegenVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
+{
+  throw std::runtime_error("Not implemented");
+}
+
 // TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::CompoundStmt &node)
 {
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
-{
-  throw std::runtime_error("Not implemented");
-}
-
 // DON'T MODIFY
-void CodegenVisitor::visit(ast::StmtBlock &node)
+void CodegenVisitor::visit(ast::StmtPart &node)
 {
   IndentGuard ig(&indent_, INDENT_SIZE);
   for (const auto &stmt : node.stmts())
@@ -177,7 +322,7 @@ void CodegenVisitor::visit(ast::StmtBlock &node)
 void CodegenVisitor::visit(ast::ProgramBlock &node)
 {
   println("int main() {");
-  node.stmtBlock().accept(*this);
+  node.stmtPart().accept(*this);
   println("}");
 }
 

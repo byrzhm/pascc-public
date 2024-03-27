@@ -15,7 +15,8 @@ Checks: '
   -readability-magic-numbers,
   -cppcoreguidelines-special-member-functions,
   -bugprone-easily-swappable-parameters,
-  -modernize-return-braced-init-list
+  -modernize-return-braced-init-list,
+  -cppcoreguidelines-pro-type-reinterpret-cast
   '
 
 WarningsAsErrors: ''

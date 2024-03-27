@@ -4,18 +4,16 @@
 
 #include "ast/ast.hpp"
 
-namespace pascc::codegen {
+namespace pascc::util {
 
-class CodegenVisitor: public Visitor
+class PaintVisitor: public Visitor
 {
 public:
-  explicit CodegenVisitor(const std::string &filepath)
-  {
-    if (!filepath.empty()) {
-      file_output_ = true;
-      fout_.open(filepath);
-    }
-  }
+  PaintVisitor() = delete;
+
+  explicit PaintVisitor(const std::string &filename)
+    : out_(filename)
+  {}
 
   void visit(ast::Block &node) override;
   void visit(ast::Number &node) override;
@@ -96,12 +94,7 @@ public:
   void visit(ast::Program &node) override;
 
 private:
-  auto println(const std::string &str) -> void;
-  auto print(const std::string &str) -> void;
-
-  bool file_output_ = false;
-  std::ofstream fout_;
-  int indent_ = 0;
+  std::ofstream out_;
 };
 
-}  // namespace pascc::codegen
+}  // namespace pascc::util
