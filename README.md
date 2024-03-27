@@ -23,7 +23,7 @@ git clone git@github.com:byrzhm/pascc-private.git
 ### 搭建环境
 
 ``` shell
-sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git fp-compiler
+sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git fp-compiler graphviz doxygen
 git submodule update --init --recursive
 ```
 
