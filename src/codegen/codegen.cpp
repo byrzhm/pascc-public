@@ -62,12 +62,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Constant &node)
 
 void CodegenVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
 {
-  throw std::runtime_error("Not implemented");
+  std::cout << node.value();
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Expr &node)
 {
-  throw std::runtime_error("Not implemented");
+  throw std::runtime_error("Expr should not be visited directly");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
@@ -288,13 +288,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ReadlnStmt &node)
 // TODO(fpy&dly): writeln arguments and remove [[maybe_unused]]
 void CodegenVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
 {
-  // print("printf(");
-  // for (...)
-  // 1st actual
-  // 2nd actual
-  // ...
-  // print(")\n");
-  println(R"(printf("\n");)");
+  // printf("1st param 2st param ...");
+  print("printf(\"");
+  for (const auto &actual : node.actuals()) {
+    actual->accept(*this);
+  }
+  std::cout << "\\n\");\n";
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
@@ -340,6 +339,4 @@ void CodegenVisitor::visit(ast::Program &node)
   node.head().accept(*this);
   node.block().accept(*this);
 }
-
-
 }  // namespace pascc::codegen
