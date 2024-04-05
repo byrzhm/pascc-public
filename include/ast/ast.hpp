@@ -900,7 +900,7 @@ private:
 };
 
 /**
- * @brief 表示变量声明部分
+ * @brief 表示类型声明部分
  * @anchor TypeDeclPart
  * @see Block
  * @note type_declaration_part -> ε | TYPE type_declarations SEMICOLON \n
