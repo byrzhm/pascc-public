@@ -60,6 +60,10 @@ private:
  * @brief 表示 Block 基类
  * @anchor Block 
  * @see ProgramBlock ProcBlock FuncBlock
+ * @note block -> \n 
+ *                constant_declaration_part type_declaration_part \n
+ *                variable_declaration_part subprogram_declaration_part \n
+ *                statement_part
  */
 class Block: public ASTNode
 {
@@ -198,11 +202,38 @@ public:
    * @ref accept "ASTNode::accept"
    */
   void accept(Visitor &v) override;
+
+  /**
+   * 返回表达式的类型
+   *
+   * @return std::string 表达式的类型
+   */
+  [[nodiscard]] auto type() -> std::string & { return type_; }
+
+  /**
+   * @brief 是否是左值
+   * 
+   * @return true 是左值
+   * @return false 不是左值
+   */
+  [[nodiscard]] auto isLvalue() const -> bool { return is_lvalue_; }
+
+  /**
+   * @brief 设置是否是左值
+   * 
+   * @param is_lvalue 是否是左值
+   */
+  void setIsLvalue(bool is_lvalue) { is_lvalue_ = is_lvalue; }
+
+private:
+  std::string type_{"no_type"};  ///< 表达式的类型
+  bool is_lvalue_{false};        ///< 是否是左值
 };
 
 /**
  * @brief 表示布尔表达式
  * @anchor BoolExpr
+ * @note bool_expr -> expr
  */
 class BoolExpr: public Expr
 {
@@ -366,6 +397,7 @@ private:
  * @brief 表示 number 类
  * @anchor Number
  * @note num -> INT_NUM | REAL_NUM                    
+ * @attention writeln(1) 中的 1 不是 Number 类型，而是 UnsignedConstant 类型
  */
 class Number: public ASTNode
 {
@@ -397,13 +429,17 @@ private:
 /**
  * @brief 表示字符串字面量
  * @anchor StringLiteral
+ * @note string_literal -> STR_LIT
  */
 class StringLiteral: public Expr
 {
 public:
   explicit StringLiteral(std::string string)
     : value_(std::move(string))
-  {}
+  {
+    type() = "string";
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -419,6 +455,11 @@ private:
 /**
  * @brief 表示无符号常量
  * @anchor UnsignedConstant
+ * @note unsigned_constant -> \n
+ *           num \n
+ *           | CHAR \n
+ *           | TRUE \n
+ *           | FALSE
  */
 class UnsignedConstant: public Expr
 {
@@ -426,45 +467,56 @@ public:
   explicit UnsignedConstant(std::unique_ptr<Number> number)
   {
     if (number->type() == "integer") {
-      type_  = "integer";
+      type() = "integer";
       value_ = std::get<int>(number->value());
     } else {
-      type_  = "real";
+      type() = "real";
       value_ = std::get<double>(number->value());
     }
+    setIsLvalue(false);
   }
 
   explicit UnsignedConstant(char value)
-    : type_("char")
-    , value_(value)
-  {}
+    : value_(value)
+  {
+    type() = "char";
+    setIsLvalue(false);
+  }
 
   explicit UnsignedConstant(bool value)
-    : type_("boolean")
-    , value_(value)
-  {}
+    : value_(value)
+  {
+    type() = "boolean";
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto type() -> std::string & { return type_; }
-
   [[nodiscard]] auto value() -> std::variant<int, double, char, bool> { return value_; }
 
 private:
-  std::string type_;
   std::variant<int, double, char, bool> value_;
 };
 
 /**
  * @brief 表示函数调用
  * @anchor FuncCall
+ * @note function_call -> \n 
+ *       ID LPAREN RPAREN \n
+ *       ID LPAREN expr_list RPAREN
+ * @attention 没有参数的函数调用可以不带括号，但是语法分析阶段很难区分函数调用与变量名 \n 
+ *            简单起见，函数调用必须带括号
  */
 class FuncCall: public Expr
 {
 public:
+  explicit FuncCall(std::string funcid)
+    : funcid_(std::move(funcid))
+  {}
+
   FuncCall(std::string funcid, std::vector<std::unique_ptr<Expr>> actuals)
     : funcid_(std::move(funcid))
     , actuals_(std::move(actuals))
@@ -487,10 +539,18 @@ private:
 /**
  * @brief 表示可赋值的表达式
  * @anchor Assignable
+ * @see AssignableId IndexedVar FieldDesignator
+ * @note assignable -> ID \n
+  *        | indexed_variable \n
+  *        | field_designator
  */
 class Assignable: public Expr
 {
 public:
+  Assignable()
+  {
+    setIsLvalue(true);
+  }
   /**
    * @ref accept "ASTNode::accept"
    */
@@ -500,6 +560,8 @@ public:
 /**
  * @brief 表示一个可以赋值的标识符，如变量名与函数名
  * @anchor AssignableId
+ * @see Assignable
+ * @note assignable -> ID \n
  */
 class AssignableId: public Assignable
 {
@@ -522,6 +584,8 @@ private:
 /**
  * @brief 表示索引变量，如 a[10]
  * @anchor IndexedVar
+ * @see Assignable
+ * @note indexed_variable -> assignable LSB expr_list RSB
  */
 class IndexedVar: public Assignable
 {
@@ -551,6 +615,8 @@ private:
 /**
  * @brief 结构体成员访问，point.x
  * @anchor FieldDesignator
+ * @see Assignable
+ * @note field_designator -> assignable PERIOD ID
  */
 class FieldDesignator: public Assignable
 {
@@ -581,7 +647,7 @@ private:
 /**
  * @brief 表示常量类
  * @anchor Constant
- * @note constant: \n
+ * @note constant -> \n
  *        PLUS ID \n
  *        | MINUS ID \n
  *        | ID \n
@@ -698,8 +764,9 @@ private:
 };
 
 /**
- * @brief 表示一个单独常量声明
+ * @brief 表示单独一个常量声明
  * @anchor ConstDecl
+ * @note constant_declaration -> ID EQ constant
  */
 class ConstDecl: public ASTNode
 {
@@ -727,6 +794,8 @@ private:
  * @brief 表示常量声明部分
  * @anchor ConstDeclPart
  * @see Block
+ * @note constant_declaration_part -> \n 
+ *        ε | CONST constant_declarations SEMICOLON \n
  */
 class ConstDeclPart: public ASTNode
 {
@@ -759,6 +828,10 @@ private:
  * @brief 表示类型表示符
  * @anchor TypeDenoter
  * @see TypeId ArrayType RecordType
+ * @note type_denoter -> \n
+ *            type_identifier  \n
+ *          | ARRAY LSB periods RSB OF type_denoter \n
+ *          | RECORD field_list END
  */
 class TypeDenoter: public ASTNode
 {
@@ -773,6 +846,7 @@ public:
  * @brief 表示类型标识符，基本类型，以及用户声明声明的类型
  * @anchor TypeId
  * @see TypeDenoter
+ * @note type_identifier -> ID
  */
 class TypeId: public TypeDenoter
 {
@@ -854,6 +928,7 @@ private:
  * @brief 表示记录类型，与C语言的结构体类似
  * @anchor RecordType
  * @see TypeDenoter
+ * @note type_denoter -> RECORD field_list END
  */
 class RecordType: public TypeDenoter
 {
@@ -876,6 +951,7 @@ private:
 /**
  * @brief 表示单独一个类型声明
  * @anchor TypeDecl
+ * @note type_declaration -> ID EQ type_denoter
  */
 class TypeDecl: public ASTNode
 {
@@ -903,9 +979,7 @@ private:
  * @brief 表示类型声明部分
  * @anchor TypeDeclPart
  * @see Block
- * @note type_declaration_part -> ε | TYPE type_declarations SEMICOLON \n
- * type_declarations -> type_declarations SEMICOLON ID EQ type_denoter \n
- *                    | ID EQ type_denoter
+ * @note type_declaration_part -> ε | TYPE type_declarations SEMICOLON
  */
 class TypeDeclPart: public ASTNode
 {
@@ -932,6 +1006,7 @@ private:
 /**
  * @brief 表示单个变量声明
  * @anchor VarDecl
+ * @note variable_declaration -> ID_LIST COLON type_denoter
  */
 class VarDecl: public ASTNode
 {
@@ -962,6 +1037,8 @@ private:
  * @brief 表示变量声明部分
  * @anchor VarDeclPart
  * @see Block
+ * @note variable_declaration_part -> \n
+  *        ε | VAR variable_declarations SEMICOLON
  */
 class VarDeclPart: public ASTNode
 {
@@ -988,6 +1065,7 @@ private:
 /**
  * @brief 表示单个子程序声明
  * @anchor SubprogDecl
+ * @note subprogram_declaration -> procedure_declaration | function_declaration
  */
 class SubprogDecl: public ASTNode
 {
@@ -1002,6 +1080,7 @@ public:
  * @brief 表示形式参数
  * @anchor FormalParam
  * @see ValueParamSpec VarParamSpec
+ * @note formal_parameter -> value_parameter_spec | var_parameter_spec
  */
 class FormalParam: public ASTNode
 {
@@ -1016,6 +1095,7 @@ public:
  * @brief 表示传值形式参数传递
  * @anchor ValueParamSpec
  * @see FormalParam
+ * @note value_parameter_spec -> ID_LIST COLON type_denoter
  */
 class ValueParamSpec: public FormalParam
 {
@@ -1046,6 +1126,7 @@ private:
  * @brief 表示引用形式参数传递
  * @anchor VarParamSpec
  * @see FormalParam
+ * @note var_parameter_spec -> VAR ID_LIST COLON type_denoter
  */
 class VarParamSpec: public FormalParam
 {
@@ -1075,6 +1156,8 @@ private:
 /**
  * @brief 表示过程声明的头部信息
  * @anchor ProcHead
+ * @note procedure_head -> PROCEDURE ID SEMICOLON \n 
+ *        | PROCEDURE ID LPAREN formal_parameter_list RPAREN SEMICOLON
  */
 class ProcHead: public ASTNode
 {
@@ -1109,6 +1192,7 @@ private:
  * @brief 表示过程块
  * @anchor ProcBlock
  * @see Block
+ * @note procedure_block -> block
  */
 class ProcBlock: public Block
 {
@@ -1131,6 +1215,7 @@ public:
  * @brief 表示单个过程声明
  * @anchor ProcDecl
  * @see SubprogDecl
+ * @note procedure_declaration -> procedure_head procedure_block
  */
 class ProcDecl: public SubprogDecl
 {
@@ -1160,6 +1245,8 @@ private:
 /**
  * @brief 表示函数头部信息
  * @anchor FuncHead
+ * @note function_head -> FUNCTION ID COLON type_denoter SEMICOLON \n
+  *        | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON
  */
 class FuncHead: public ASTNode
 {
@@ -1203,6 +1290,7 @@ private:
  * @brief 表示函数块
  * @anchor FuncBlock
  * @see Block
+ * @note function_block -> block
  */
 class FuncBlock: public Block
 {
@@ -1225,6 +1313,7 @@ public:
  * @brief 表示单个函数声明
  * @anchor FuncDecl
  * @see SubprogDecl
+ * @note function_declaration -> function_head function_block
  */
 class FuncDecl: public SubprogDecl
 {
@@ -1255,6 +1344,8 @@ private:
  * @brief 表示子程序声明部分
  * @anchor SubprogDeclPart
  * @see Block
+ * @note subprogram_declaration_part -> \n
+  *        ε | subprogram_declarations SEMICOLON
  */
 class SubprogDeclPart: public ASTNode
 {
@@ -1283,6 +1374,7 @@ private:
 /**
  * @brief 表示一个语句
  * @anchor Stmt
+ * @note statement -> simple_statement | structured_statement
  */
 class Stmt: public ASTNode
 {
@@ -1297,6 +1389,7 @@ public:
  * @brief 表示一个简单语句
  * @anchor SimpleStmt
  * @see AssignStmt ProcCallStmt
+ * @note simple_statement -> empty_statement | assignment_statement | procedure_call_statement
  */
 class SimpleStmt: public Stmt
 {
@@ -1311,6 +1404,7 @@ public:
  * @brief 表示一个赋值语句
  * @anchor AssignStmt
  * @see SimpleStmt
+ * @note assignment_statement -> assignable ASSIGN expression
  */
 class AssignStmt: public SimpleStmt
 {
@@ -1341,6 +1435,15 @@ private:
  * @brief 表示一个过程调用语句
  * @anchor ProcCallStmt
  * @see SimpleStmt
+ * @note procedure_call_statement -> \n
+ *              ID \n
+ *              | ID LPAREN RPAREN \n
+ *              | ID LPAREN expr_list RPAREN \n
+ *              | write_statement \n
+ *              | writeln_statement \n
+ *              | read_statement \n
+ *              | readln_statement \n
+ *              | exit_statement
  */
 class ProcCallStmt: public SimpleStmt
 {
@@ -1375,6 +1478,7 @@ private:
  * @brief 表示特殊过程调用 Read
  * @anchor ReadStmt
  * @see ProcCallStmt
+ * @note read_statement -> READ LPAREN assignable_list RPAREN
  */
 class ReadStmt: public ProcCallStmt
 {
@@ -1397,6 +1501,7 @@ public:
  * @brief 表示特殊过程调用 Write
  * @anchor WriteStmt
  * @see ProcCallStmt
+ * @note write_statement -> WRITE LPAREN expr_list RPAREN
  */
 class WriteStmt: public ProcCallStmt
 {
@@ -1419,6 +1524,7 @@ public:
  * @brief 表示特殊过程调用 Readln
  * @anchor ReadlnStmt
  * @see ProcCallStmt
+ * @note readln_statement -> READLN LPAREN assignable_list RPAREN
  */
 class ReadlnStmt: public ProcCallStmt
 {
@@ -1441,6 +1547,10 @@ public:
  * @brief 表示特殊过程调用 Writeln
  * @anchor WritelnStmt
  * @see ProcCallStmt
+ * @note writeln_statement -> \n 
+ *          WRITELN \n
+ *          | WRITELN LPAREN RPAREN \n
+ *          | WRITELN LPAREN expr_list RPAREN
  */
 class WritelnStmt: public ProcCallStmt
 {
@@ -1463,6 +1573,10 @@ public:
  * @brief 表示特殊过程调用 Exit
  * @anchor ExitStmt
  * @see ProcCallStmt
+ * @note exit_statement -> \n 
+ *            EXIT \n 
+ *            | EXIT LPAREN RPAREN \n
+ *            | EXIT LPAREN expr_list RPAREN
  */
 class ExitStmt: public ProcCallStmt
 {
@@ -1485,6 +1599,10 @@ public:
  * @brief 表示结构化语句
  * @anchor StructuredStmt
  * @see ConditionalStmt RepetitiveStmt
+ * @note structured_statement -> \n 
+ *         compound_statement \n
+ *         | conditional_statement \n
+ *         | repetitive_statement
  */
 class StructuredStmt: public Stmt
 {
@@ -1500,6 +1618,7 @@ public:
  * @anchor ConditionalStmt
  * @see StructuredStmt
  * @see IfStmt CaseStmt
+ * @note conditional_statement -> if_statement | case_statement
  */
 class ConditionalStmt: public StructuredStmt
 {
@@ -1514,6 +1633,8 @@ public:
  * @brief 表示If语句
  * @anchor IfStmt
  * @see ConditionalStmt
+ * @note if_statement -> IF bool_expr THEN statement else_part \n
+ *       else_part -> ELSE statement | ε
  */
 class IfStmt: public ConditionalStmt
 {
@@ -1550,6 +1671,7 @@ private:
 /**
  * @brief 表示一个Case分支
  * @anchor CaseListElement
+ * @note case_list_element -> constant_list COLON statement
  */
 class CaseListElement: public ASTNode
 {
@@ -1580,6 +1702,7 @@ private:
  * @brief 表示Case语句
  * @anchor CaseStmt
  * @see ConditionalStmt
+ * @note case_statement -> CASE expr OF case_list_elements opt_semicolon END
  */
 class CaseStmt: public ConditionalStmt
 {
@@ -1611,6 +1734,7 @@ private:
  * @anchor RepetitveStmt
  * @see StructuredStmt
  * @see RepeatStmt WhileStmt ForStmt CompoundStmt
+ * @note repetitive_statement -> repeat_statement | while_statement | for_statement
  */
 class RepetitiveStmt: public StructuredStmt
 {
@@ -1625,6 +1749,7 @@ public:
  * @brief 表示Repeat语句
  * @anchor RepeatStmt
  * @see RepetitiveStmt
+ * @note repeat_statement -> REPEAT statement_list UNTIL bool_expr
  */
 class RepeatStmt: public RepetitiveStmt
 {
@@ -1655,6 +1780,7 @@ private:
  * @brief 表示While语句
  * @anchor WhileStmt
  * @see RepetitiveStmt
+ * @note while_statement -> WHILE bool_expr DO statement
  */
 class WhileStmt: public RepetitiveStmt
 {
@@ -1685,6 +1811,9 @@ private:
  * @brief 表示For语句
  * @anchor ForStmt
  * @see RepetitiveStmt
+ * @note for_statement -> \n 
+ *        FOR ID ASSIGN expr TO expr DO statement \n
+ *        | FOR ID ASSIGN expr DOWNTO expr DO statement
  */
 class ForStmt: public RepetitiveStmt
 {
@@ -1730,6 +1859,7 @@ private:
  * @brief 表示以 begin 与 end 包围的复合语句
  * @anchor CompoundStmt
  * @see StructuredStmt
+ * @note compound_statement -> BEGIN statement_list END
  */
 class CompoundStmt: public StructuredStmt
 {
@@ -1769,6 +1899,7 @@ private:
  * @anchor StmtPart
  * @see CompoudStmt
  * @see Block
+ * @note statement_part -> compound_statement
  */
 class StmtPart: public CompoundStmt
 {
@@ -1802,6 +1933,7 @@ public:
  * @brief 表示程序块
  * @anchor ProgramBlock
  * @see Block
+ * @note program_block -> block PERIOD
  */
 class ProgramBlock: public Block
 {
@@ -1833,6 +1965,10 @@ public:
 /**
  * @brief 表示程序的头部信息
  * @anchor ProgramHead
+ * @note program_head -> \n 
+ *       PROGRAM ID LPAREN id_list RPAREN SEMICOLON
+ *     | PROGRAM ID LPAREN RPAREN SEMICOLON
+ *     | PROGRAM ID SEMICOLON
  */
 class ProgramHead: public ASTNode
 {
@@ -1888,6 +2024,7 @@ private:
  * @brief 表示一个Pascal程序，Pascal程序分为 head 和 block 两部分
  * @anchor Program
  * @see ProgramHead ProgramBlock
+ * @note program -> program_head program_block
  */
 class Program: public ASTNode
 {
