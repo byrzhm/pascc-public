@@ -358,7 +358,7 @@ field_list:
     /* nothing */
   }
   | variable_declarations opt_semicolon {
-      $$.swap($1);
+    $$.swap($1);
   }
   ;
             
@@ -859,7 +859,10 @@ factor:
   ;
 
 function_designator:
-  ID LPAREN expr_list RPAREN {
+  ID LPAREN RPAREN {
+    $$ = std::make_unique<FuncCall>(std::move($1));
+  } 
+  | ID LPAREN expr_list RPAREN {
     $$ = std::make_unique<FuncCall>(std::move($1), std::move($3));
   } 
   ;       
