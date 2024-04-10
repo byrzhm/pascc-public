@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ast/ast.hpp"
+#include "ast/visitor.hpp"
 #include "semant/semant_context.hpp"
 
 namespace pascc::semant {
@@ -10,78 +10,7 @@ class SemantVisitor: public Visitor
 public:
   SemantVisitor() = default;
 
-  void visit(ast::Block &node) override;
-  void visit(ast::Number &node) override;
-  void visit(ast::Constant &node) override;
-  void visit(ast::StringLiteral &node) override;
-
-
-  /// expression
-  void visit(ast::BoolExpr &node) override;
-  void visit(ast::UnsignedConstant &node) override;
-  void visit(ast::BinaryExpr &node) override;
-  void visit(ast::UnaryExpr &node) override;
-  void visit(ast::FuncCall &node) override;
-  void visit(ast::AssignableId &node) override;
-  void visit(ast::IndexedVar &node) override;
-  void visit(ast::FieldDesignator &node) override;
-
-
-  /// const declaration
-  void visit(ast::ConstDecl &node) override;
-  void visit(ast::ConstDeclPart &node) override;
-
-
-  /// type declaration
-  void visit(ast::TypeId &node) override;
-  void visit(ast::Period &node) override;
-  void visit(ast::ArrayType &node) override;
-  void visit(ast::RecordType &node) override;
-  void visit(ast::TypeDecl &node) override;
-  void visit(ast::TypeDeclPart &node) override;
-
-
-  /// var declaration
-  void visit(ast::VarDeclPart &node) override;
-  void visit(ast::ValueParamSpec &node) override;
-  void visit(ast::VarParamSpec &node) override;
-  void visit(ast::VarDecl &node) override;
-
-
-  /// subprogram declaration
-  void visit(ast::ProcHead &node) override;
-  void visit(ast::ProcBlock &node) override;
-  void visit(ast::ProcDecl &node) override;
-  void visit(ast::FuncHead &node) override;
-  void visit(ast::FuncBlock &node) override;
-  void visit(ast::FuncDecl &node) override;
-  void visit(ast::SubprogDeclPart &node) override;
-
-
-  /// statement
-  // conditional statement
-  void visit(ast::IfStmt &node) override;
-  void visit(ast::CaseStmt &node) override;
-  void visit(ast::CaseListElement &node) override;
-  // repetitive statement
-  void visit(ast::RepeatStmt &node) override;
-  void visit(ast::WhileStmt &node) override;
-  void visit(ast::ForStmt &node) override;
-  // simple statement
-  void visit(ast::AssignStmt &node) override;
-  void visit(ast::ProcCallStmt &node) override;
-  void visit(ast::ReadStmt &node) override;
-  void visit(ast::WriteStmt &node) override;
-  void visit(ast::ReadlnStmt &node) override;
-  void visit(ast::WritelnStmt &node) override;
-  void visit(ast::ExitStmt &node) override;
-  void visit(ast::CompoundStmt &node) override;
-  void visit(ast::StmtPart &node) override;
-
-  /// program
-  void visit(ast::ProgramBlock &node) override;
-  void visit(ast::ProgramHead &node) override;
-  void visit(ast::Program &node) override;
+  SHARED_VISITOR_METHODS
 
   auto isOk() -> bool;
 
