@@ -582,7 +582,7 @@ class IndexedVar: public Assignable
 {
 public:
   IndexedVar(
-      std::unique_ptr<Assignable> assignable,
+      std::unique_ptr<Expr> assignable,
       std::vector<std::unique_ptr<Expr>> indices
   )
     : assignable_(std::move(assignable))
@@ -594,12 +594,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto assignable() -> Assignable & { return *assignable_; }
+  [[nodiscard]] auto assignable() -> Expr & { return *assignable_; }
 
   [[nodiscard]] auto indices() -> std::vector<std::unique_ptr<Expr>> & { return indices_; }
 
 private:
-  std::unique_ptr<Assignable> assignable_;
+  std::unique_ptr<Expr> assignable_;
   std::vector<std::unique_ptr<Expr>> indices_;
 };
 
@@ -613,7 +613,7 @@ class FieldDesignator: public Assignable
 {
 public:
   FieldDesignator(
-      std::unique_ptr<Assignable> assignable,
+      std::unique_ptr<Expr> assignable,
       std::string field
   )
     : assignable_(std::move(assignable))
@@ -625,12 +625,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto assignable() -> Assignable & { return *assignable_; }
+  [[nodiscard]] auto assignable() -> Expr & { return *assignable_; }
 
   [[nodiscard]] auto field() -> std::string & { return field_; }
 
 private:
-  std::unique_ptr<Assignable> assignable_;
+  std::unique_ptr<Expr> assignable_;
   std::string field_;
 };
 
@@ -1376,7 +1376,7 @@ class AssignStmt: public SimpleStmt
 {
 public:
   AssignStmt(
-      std::unique_ptr<Assignable> lhs,
+      std::unique_ptr<Expr> lhs,
       std::unique_ptr<Expr> rhs
   )
     : lhs_(std::move(lhs))
@@ -1388,12 +1388,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto lhs() -> Assignable & { return *lhs_; }
+  [[nodiscard]] auto lhs() -> Expr & { return *lhs_; }
 
   [[nodiscard]] auto rhs() -> Expr & { return *rhs_; }
 
 private:
-  std::unique_ptr<Assignable> lhs_;
+  std::unique_ptr<Expr> lhs_;
   std::unique_ptr<Expr> rhs_;
 };
 
