@@ -15,7 +15,7 @@ public:
   /**
    * @brief 解析pascal源文件, 生成抽象语法树
    *
-   * @param filepath 文件路径
+   * @param filepath 输入文件路径
    */
   auto parse(const std::string &filepath) -> Driver &;
 
@@ -26,8 +26,10 @@ public:
 
   /**
    * @brief 代码生成
+   *
+   * @param filepath 输出文件路径
    */
-  auto codegen() -> Driver &;
+  auto codegen(const std::string &filepath) -> Driver &;
 
   /**
    * @brief 获取抽象语法树
