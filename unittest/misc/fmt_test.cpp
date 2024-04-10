@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "fmt/color.h"
 #include "fmt/format.h"
 #include "fmt/ranges.h"  // IWYU pragma: keep
@@ -32,6 +34,52 @@ TEST(FMTTest, error)
       fmt::styled(
           "missing semicolon",
           fmt::emphasis::italic
+      )
+  );
+  EXPECT_TRUE(true);
+}
+
+struct Point
+{
+  double x_, y_;
+};
+
+template<>
+struct fmt::formatter<Point>: nested_formatter<double>
+{
+  auto format(Point p, format_context &ctx) const
+  {
+    return write_padded(ctx, [p, this](auto out) {
+      return format_to(out, "({}, {})", nested(p.x_), nested(p.y_));
+    });
+  }
+};
+
+
+TEST(FMTTest, custom)
+{
+  Point p(1, 2);
+  fmt::println("{}", p);
+  EXPECT_TRUE(true);
+}
+
+auto operator<<(std::ostream &os, const Point &p) -> std::ostream &
+{
+  return os << "(" << p.x_ << ", " << p.y_ << ")";
+}
+
+TEST(FMTTest, sstream)
+{
+  Point p(1, 2);
+  std::stringstream ss;
+  ss << p;
+  
+  fmt::println(
+      stderr,
+      "this is {}!",
+      fmt::styled(
+          ss.str(),
+          fmt::emphasis::bold | fmt::fg(fmt::color::green)
       )
   );
   EXPECT_TRUE(true);
