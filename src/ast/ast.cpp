@@ -38,11 +38,6 @@ void Block::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void Expr::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
 void BoolExpr::accept(Visitor &visitor)
 {
   visitor.visit(*this);
@@ -78,11 +73,6 @@ void FuncCall::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void Assignable::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
 void AssignableId::accept(Visitor &visitor)
 {
   visitor.visit(*this);
@@ -109,11 +99,6 @@ void ConstDecl::accept(Visitor &visitor)
 }
 
 void ConstDeclPart::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
-void TypeDenoter::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }
@@ -154,16 +139,6 @@ void VarDecl::accept(Visitor &visitor)
 }
 
 void VarDeclPart::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
-void SubprogDecl::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
-void FormalParam::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }
@@ -213,16 +188,6 @@ void SubprogDeclPart::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void Stmt::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
-void SimpleStmt::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
 void AssignStmt::accept(Visitor &visitor)
 {
   visitor.visit(*this);
@@ -258,16 +223,6 @@ void ExitStmt::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void StructuredStmt::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
-void ConditionalStmt::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
 void IfStmt::accept(Visitor &visitor)
 {
   visitor.visit(*this);
@@ -279,11 +234,6 @@ void CaseListElement::accept(Visitor &visitor)
 }
 
 void CaseStmt::accept(Visitor &visitor)
-{
-  visitor.visit(*this);
-}
-
-void RepetitiveStmt::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }

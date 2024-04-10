@@ -9,26 +9,21 @@ auto SemantVisitor::isOk() -> bool
 
 void SemantVisitor::visit([[maybe_unused]] ast::Block &node)
 {
-  /**
-   顺次访问 各个part
-   如果如果 stmt_part 为空，返回错误，程序终止。
-   */
-  throw std::runtime_error("Not implemented");
+  // ! Block 不应该被直接访问，而是以 ProgramBlock、ProcBlock、FuncBlock 的形式出现
+  throw std::runtime_error("Block should not be visited directly");
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::Number &node)
 {
-  /*
-  为父类 Expr 赋值 type = type, value = value , isassignable = 0;
-  */
+  // ! 为父类 Expr 赋值 type = type, value = value , isassignable = 0;
   throw std::runtime_error("Not implemented");
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::Constant &node)
 {
   /**
-  当 type == "reference" 且 sign = -1 时查符号表(找不到则返回未定义的错误)，若为字符串类型，则返回错误，程序终止。
- */
+    当 type == "reference" 且 sign = -1 时查符号表(找不到则返回未定义的错误)，若为字符串类型，则返回错误，程序终止。
+   */
 
   throw std::runtime_error("Not implemented");
 }
@@ -41,10 +36,10 @@ void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
   throw std::runtime_error("Not implemented");
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::Expr &node)
+void SemantVisitor::visit([[maybe_unused]] ast::BoolExpr &node)
 {
   /**
-   1. 应该具有变量 type value isAssignable
+    表示式应当为 bool 类型
    */
   throw std::runtime_error("Not implemented");
 }
@@ -97,14 +92,6 @@ void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
    对actuals_中的每一个参数进行类型检查，若存在不相等的情况，则返回错误，程序终止。
    type = FuncCall的return value
    isAssignable = 0
-   */
-  throw std::runtime_error("Not implemented");
-}
-
-void SemantVisitor::visit([[maybe_unused]] ast::Assignable &node)
-{
-  /**
-   父类 Expr 的 isAssignable = 1;
    */
   throw std::runtime_error("Not implemented");
 }
@@ -213,14 +200,6 @@ void SemantVisitor::visit([[maybe_unused]] ast::TypeDeclPart &node)
   throw std::runtime_error("Not implemented");
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::TypeDenoter &node)
-{
-  /**
-    需要一个变量 type
-   */
-  throw std::runtime_error("Not implemented");
-}
-
 void SemantVisitor::visit([[maybe_unused]] ast::VarDeclPart &node)
 {
   /**
@@ -312,32 +291,11 @@ void SemantVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
   throw std::runtime_error("Not implemented");
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::FormalParam &node)
-{
-  /**
-   应该具有变量 idlist , type , isreference
-   */
-  throw std::runtime_error("Not implemented");
-}
-
-void SemantVisitor::visit([[maybe_unused]] ast::SubprogDecl &node)
-{
-  /*
-    应该具有变量 type
-  */
-  throw std::runtime_error("Not implemented");
-}
-
 void SemantVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
 {
   /*
     访问各个 subprog_decl
   */
-  throw std::runtime_error("Not implemented");
-}
-
-void SemantVisitor::visit([[maybe_unused]] ast::Stmt &node)
-{
   throw std::runtime_error("Not implemented");
 }
 
@@ -412,7 +370,8 @@ void SemantVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
 void SemantVisitor::visit([[maybe_unused]] ast::ReadStmt &node)
 {
   /*
-  对actuals_中的每一个参数进行类型检查。
+    对actuals_中的每一个参数进行类型检查。
+    ! 读取的变量必须是 assignable
   */
   throw std::runtime_error("Not implemented");
 }

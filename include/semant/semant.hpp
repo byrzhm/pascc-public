@@ -17,12 +17,11 @@ public:
 
 
   /// expression
-  void visit(ast::Expr &node) override;
+  void visit(ast::BoolExpr &node) override;
   void visit(ast::UnsignedConstant &node) override;
   void visit(ast::BinaryExpr &node) override;
   void visit(ast::UnaryExpr &node) override;
   void visit(ast::FuncCall &node) override;
-  void visit(ast::Assignable &node) override;
   void visit(ast::AssignableId &node) override;
   void visit(ast::IndexedVar &node) override;
   void visit(ast::FieldDesignator &node) override;
@@ -40,7 +39,6 @@ public:
   void visit(ast::RecordType &node) override;
   void visit(ast::TypeDecl &node) override;
   void visit(ast::TypeDeclPart &node) override;
-  void visit(ast::TypeDenoter &node) override;
 
 
   /// var declaration
@@ -57,13 +55,10 @@ public:
   void visit(ast::FuncHead &node) override;
   void visit(ast::FuncBlock &node) override;
   void visit(ast::FuncDecl &node) override;
-  void visit(ast::FormalParam &node) override;
-  void visit(ast::SubprogDecl &node) override;
   void visit(ast::SubprogDeclPart &node) override;
 
 
   /// statement
-  void visit(ast::Stmt &node) override;
   // conditional statement
   void visit(ast::IfStmt &node) override;
   void visit(ast::CaseStmt &node) override;

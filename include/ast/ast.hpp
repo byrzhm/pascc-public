@@ -199,11 +199,6 @@ class Expr: public ASTNode
 {
 public:
   /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
-
-  /**
    * 返回表达式的类型
    *
    * @return std::string 表达式的类型
@@ -551,10 +546,6 @@ public:
   {
     setIsLvalue(true);
   }
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -835,11 +826,6 @@ private:
  */
 class TypeDenoter: public ASTNode
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1069,11 +1055,6 @@ private:
  */
 class SubprogDecl: public ASTNode
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1084,11 +1065,6 @@ public:
  */
 class FormalParam: public ASTNode
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1378,11 +1354,6 @@ private:
  */
 class Stmt: public ASTNode
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1393,11 +1364,6 @@ public:
  */
 class SimpleStmt: public Stmt
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1606,11 +1572,6 @@ public:
  */
 class StructuredStmt: public Stmt
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1622,11 +1583,6 @@ public:
  */
 class ConditionalStmt: public StructuredStmt
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -1738,11 +1694,6 @@ private:
  */
 class RepetitiveStmt: public StructuredStmt
 {
-public:
-  /**
-   * @ref accept "ASTNode::accept"
-   */
-  void accept(Visitor &v) override;
 };
 
 /**
@@ -2092,12 +2043,11 @@ public:
 
 
   /// expression
-  virtual void visit(ast::Expr &node)             = 0;
+  virtual void visit(ast::BoolExpr &node)         = 0;
   virtual void visit(ast::UnsignedConstant &node) = 0;
   virtual void visit(ast::BinaryExpr &node)       = 0;
   virtual void visit(ast::UnaryExpr &node)        = 0;
   virtual void visit(ast::FuncCall &node)         = 0;
-  virtual void visit(ast::Assignable &node)       = 0;
   virtual void visit(ast::AssignableId &node)     = 0;
   virtual void visit(ast::IndexedVar &node)       = 0;
   virtual void visit(ast::FieldDesignator &node)  = 0;
@@ -2115,7 +2065,6 @@ public:
   virtual void visit(ast::RecordType &node)   = 0;
   virtual void visit(ast::TypeDecl &node)     = 0;
   virtual void visit(ast::TypeDeclPart &node) = 0;
-  virtual void visit(ast::TypeDenoter &node)  = 0;
 
 
   /// var declaration
@@ -2132,13 +2081,10 @@ public:
   virtual void visit(ast::FuncHead &node)        = 0;
   virtual void visit(ast::FuncBlock &node)       = 0;
   virtual void visit(ast::FuncDecl &node)        = 0;
-  virtual void visit(ast::FormalParam &node)     = 0;
-  virtual void visit(ast::SubprogDecl &node)     = 0;
   virtual void visit(ast::SubprogDeclPart &node) = 0;
 
 
   /// statement
-  virtual void visit(ast::Stmt &node) = 0;
   // conditional statement
   virtual void visit(ast::IfStmt &node)          = 0;
   virtual void visit(ast::CaseStmt &node)        = 0;
@@ -2157,6 +2103,7 @@ public:
   virtual void visit(ast::ExitStmt &node)     = 0;
   virtual void visit(ast::CompoundStmt &node) = 0;
   virtual void visit(ast::StmtPart &node)     = 0;
+
 
   /// program
   virtual void visit(ast::ProgramBlock &node) = 0;

@@ -87,11 +87,6 @@ void CodegenVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
   std::cout << node.value();
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::Expr &node)
-{
-  throw std::runtime_error("Expr should not be visited directly");
-}
-
 void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
 {
   /* 
@@ -100,6 +95,14 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
           如果是bool，需要转换成C语言的true和false
           如果是char，需要转换打印''
           integer和real直接打印即可
+  */
+  throw std::runtime_error("Not implemented");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::BoolExpr &node)
+{
+  /*
+    布尔类型表达式
   */
   throw std::runtime_error("Not implemented");
 }
@@ -132,11 +135,6 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncCall &node)
     4. print ')'
   */
   throw std::runtime_error("Not implemented");
-}
-
-void CodegenVisitor::visit([[maybe_unused]] ast::Assignable &node)
-{
-  throw std::runtime_error("Assignable should not be visited directly");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
@@ -261,11 +259,6 @@ void CodegenVisitor::visit([[maybe_unused]] ast::TypeDeclPart &node)
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::TypeDenoter &node)
-{
-  throw std::runtime_error("TypeDenoter should not be visited");
-}
-
 void CodegenVisitor::visit([[maybe_unused]] ast::VarDeclPart &node)
 {
   /*
@@ -383,31 +376,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::FormalParam &node)
-{
-  throw std::runtime_error("FormalParam should not be visited directly");
-}
-
-void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDecl &node)
-{
-  /*
-    1. 如果是proc_decl_，对proc_decl_调用accept，做代码生成
-    2. 如果是func_decl_，对func_decl_调用accept，做代码生成
-  */
-  throw std::runtime_error("Not implemented");
-}
-
 void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
 {
   /*
     遍历subprog_decl_list_，对每一个subprog_decl_调用accept，做代码生成
   */
   throw std::runtime_error("Not implemented");
-}
-
-void CodegenVisitor::visit([[maybe_unused]] ast::Stmt &node)
-{
-  throw std::runtime_error("Stmt should not be visited directly");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::IfStmt &node)
