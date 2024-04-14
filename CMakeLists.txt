@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(pascc LANGUAGES C CXX)
@@ -56,9 +56,7 @@ message(STATUS "BISON_EXECUTABLE: ${BISON_EXECUTABLE}")
 message(STATUS "BISON_VERSION: ${BISON_VERSION}")
 
 # 生成文档
-find_package(Doxygen
-            REQUIRED dot
-            OPTIONAL_COMPONENTS mscgen dia)
+find_package(Doxygen) # 生成文档还需要安装 dot (graphviz)
 
 # 检查是否找到 Doxygen
 if(DOXYGEN_FOUND)

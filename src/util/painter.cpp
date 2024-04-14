@@ -48,9 +48,12 @@ void PaintVisitor::visit(ast::StringLiteral &node)
 }
 
 /// expression
-void PaintVisitor::visit([[maybe_unused]] ast::Expr &node)
+void PaintVisitor::visit(ast::BoolExpr &node)
 {
-  throw std::runtime_error("Expr should not be visited");
+  auto bool_expr = reinterpret_cast<uint64_t>(&node);
+  out_ << "   " << bool_expr << " [label=\"BoolExpr\"]\n";
+  out_ << "   " << bool_expr << " -> " << reinterpret_cast<uint64_t>(&node.expr()) << "\n";
+  node.expr().accept(*this);
 }
 
 void PaintVisitor::visit(ast::UnsignedConstant &node)
@@ -112,11 +115,6 @@ void PaintVisitor::visit(ast::FuncCall &node)
     out_ << "   " << func_call << " -> " << arg_ptr << "\n";
     arg->accept(*this);
   }
-}
-
-void PaintVisitor::visit([[maybe_unused]] ast::Assignable &node)
-{
-  throw std::runtime_error("Assignable should not be visited");
 }
 
 void PaintVisitor::visit(ast::AssignableId &node)
@@ -255,11 +253,6 @@ void PaintVisitor::visit(ast::TypeDeclPart &node)
     out_ << "   " << type_decl_part << " -> " << type_decl_ptr << "\n";
     type_decl->accept(*this);
   }
-}
-
-void PaintVisitor::visit([[maybe_unused]] ast::TypeDenoter &node)
-{
-  throw std::runtime_error("TypeDenoter should not be visited");
 }
 
 
@@ -457,16 +450,6 @@ void PaintVisitor::visit(ast::FuncDecl &node)
   node.block().accept(*this);
 }
 
-void PaintVisitor::visit([[maybe_unused]] ast::FormalParam &node)
-{
-  throw std::runtime_error("FormalParam should not be visited");
-}
-
-void PaintVisitor::visit([[maybe_unused]] ast::SubprogDecl &node)
-{
-  throw std::runtime_error("SubprogDecl should not be visited");
-}
-
 void PaintVisitor::visit(ast::SubprogDeclPart &node)
 {
   auto subprog_decl_part = reinterpret_cast<uint64_t>(&node);
@@ -482,11 +465,6 @@ void PaintVisitor::visit(ast::SubprogDeclPart &node)
 
 
 /// statement
-void PaintVisitor::visit([[maybe_unused]] ast::Stmt &node)
-{
-  throw std::runtime_error("Stmt should not be visited");
-}
-
 // conditional statement
 void PaintVisitor::visit(ast::IfStmt &node)
 {

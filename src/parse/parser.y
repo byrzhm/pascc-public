@@ -27,7 +27,9 @@
 }
 
 %code{
+  #include "util/log.hpp"
   #include "parse/parser_driver.hpp"
+  #include <sstream>
   using namespace pascc::parse;
 }
 
@@ -161,9 +163,9 @@
 %nterm <std::unique_ptr<Stmt>> simple_statement
 %nterm <std::unique_ptr<Stmt>> empty_statement
 %nterm <std::unique_ptr<Stmt>> assignment_statement
-%nterm <std::unique_ptr<Assignable>> assignable
-%nterm <std::unique_ptr<Assignable>> indexed_variable
-%nterm <std::unique_ptr<Assignable>> field_designator
+%nterm <std::unique_ptr<Expr>> assignable
+%nterm <std::unique_ptr<Expr>> indexed_variable
+%nterm <std::unique_ptr<Expr>> field_designator
 %nterm <std::unique_ptr<ProcCallStmt>>procedure_call_statement
 %nterm <std::unique_ptr<WriteStmt>> write_statement
 %nterm <std::unique_ptr<WritelnStmt>> writeln_statement
@@ -358,7 +360,7 @@ field_list:
     /* nothing */
   }
   | variable_declarations opt_semicolon {
-      $$.swap($1);
+    $$.swap($1);
   }
   ;
             
@@ -485,9 +487,11 @@ function_declaration:
 
 function_head:
   FUNCTION ID COLON type_denoter SEMICOLON {
+    drv.add_function($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4));
   }
   | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON {
+    drv.add_function($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4), std::move($7));
   }
   ;
@@ -559,7 +563,12 @@ assignment_statement:
 
 assignable:
   ID {
-    $$ = std::make_unique<AssignableId>(std::move($1));
+    if (drv.is_function($1)) {
+      // assignable 可能不能被赋值的情况, foo()是函数调用，那么foo也是函数调用
+      $$ = std::make_unique<FuncCall>(std::move($1));
+    } else {
+      $$ = std::make_unique<AssignableId>(std::move($1));
+    }
   }
   | indexed_variable {
     $$ = std::move($1);
@@ -859,7 +868,10 @@ factor:
   ;
 
 function_designator:
-  ID LPAREN expr_list RPAREN {
+  ID LPAREN RPAREN {
+    $$ = std::make_unique<FuncCall>(std::move($1));
+  } 
+  | ID LPAREN expr_list RPAREN {
     $$ = std::make_unique<FuncCall>(std::move($1), std::move($3));
   } 
   ;       
@@ -936,7 +948,9 @@ namespace pascc::parse {
 
 void Parser::error(const location_type &loc, const std::string &msg)
 {
-  std::cerr << loc << ": " << msg << '\n';
+  std::stringstream ss;
+  ss << loc << ": " << msg << '\n';
+  LOG_ERROR("{}", ss.str());
 }
 
 }
