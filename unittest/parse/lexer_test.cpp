@@ -90,6 +90,8 @@ auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
   }
 }
 
+
+
 auto symbol_to_string(const Parser::symbol_kind_type &kind, const std::string &id = "identifier") -> std::string
 {
   switch (kind) {
@@ -944,22 +946,93 @@ TEST(LexerTest, comprehensiveTest)
   drv.scan_end();
 }
 
-/*TEST(lexerTest, randomComprehensiveTest)
+TEST(lexerTest, randomComprehensiveTest)
 {
   int TSIZE = 100;
   std::vector<Parser::symbol_kind_type> src_data(TSIZE);
+  std::vector<Parser::symbol_kind_type> src_kind(TSIZE);
+  src_data = {
+      Parser::symbol_kind::S_YYEOF,
+      Parser::symbol_kind::S_YYerror,
+      Parser::symbol_kind::S_YYUNDEF,
+      Parser::symbol_kind::S_AND,
+      Parser::symbol_kind::S_ARRAY,
+      Parser::symbol_kind::S_BEGIN,
+      Parser::symbol_kind::S_CASE,
+      Parser::symbol_kind::S_CONST,
+      Parser::symbol_kind::S_IDIV,
+      Parser::symbol_kind::S_DO,
+      Parser::symbol_kind::S_DOWNTO,
+      Parser::symbol_kind::S_ELSE,
+      Parser::symbol_kind::S_END,
+      Parser::symbol_kind::S_FILE,
+      Parser::symbol_kind::S_FOR,
+      Parser::symbol_kind::S_FUNCTION,
+      Parser::symbol_kind::S_GOTO,
+      Parser::symbol_kind::S_IF,
+      Parser::symbol_kind::S_IN,
+      Parser::symbol_kind::S_LABEL,
+      Parser::symbol_kind::S_MOD,
+      Parser::symbol_kind::S_NIL,
+      Parser::symbol_kind::S_NOT,
+      Parser::symbol_kind::S_OF,
+      Parser::symbol_kind::S_OR,
+      Parser::symbol_kind::S_PACKED,
+      Parser::symbol_kind::S_PROCEDURE,
+      Parser::symbol_kind::S_PROGRAM,
+      Parser::symbol_kind::S_RECORD,
+      Parser::symbol_kind::S_REPEAT,
+      Parser::symbol_kind::S_SET,
+      Parser::symbol_kind::S_THEN,
+      Parser::symbol_kind::S_TO,
+      Parser::symbol_kind::S_TYPE,
+      Parser::symbol_kind::S_UNTIL,
+      Parser::symbol_kind::S_VAR,
+      Parser::symbol_kind::S_WHILE,
+      Parser::symbol_kind::S_WITH,
+      Parser::symbol_kind::S_READ,
+      Parser::symbol_kind::S_READLN,
+      Parser::symbol_kind::S_WRITE,
+      Parser::symbol_kind::S_WRITELN,
+      Parser::symbol_kind::S_TRUE,
+      Parser::symbol_kind::S_FALSE,
+      Parser::symbol_kind::S_EXIT,
+      Parser::symbol_kind::S_PLUS,
+      Parser::symbol_kind::S_MINUS,
+      Parser::symbol_kind::S_MUL,
+      Parser::symbol_kind::S_FDIV,
+      Parser::symbol_kind::S_EQ,
+      Parser::symbol_kind::S_GT,
+      Parser::symbol_kind::S_LT,
+      Parser::symbol_kind::S_NE,
+      Parser::symbol_kind::S_LE,
+      Parser::symbol_kind::S_GE,
+      Parser::symbol_kind::S_ASSIGN,
+      Parser::symbol_kind::S_LSB,
+      Parser::symbol_kind::S_RSB,
+      Parser::symbol_kind::S_LPAREN,
+      Parser::symbol_kind::S_RPAREN,
+      Parser::symbol_kind::S_PERIOD,
+      Parser::symbol_kind::S_COMMA,
+      Parser::symbol_kind::S_COLON,
+      Parser::symbol_kind::S_SEMICOLON,
+      Parser::symbol_kind::S_RANGE,
+      Parser::symbol_kind::S_ID,
+      Parser::symbol_kind::S_STR_LIT
+  };
+  std::vector<std::string> aaa(TSIZE);
   std::mt19937 rng{std::random_device{}()};
 
   for (int i = 0; i < TSIZE; i++) {
-    auto temp = rng() % 67 + 3;
-    const Parser::symbol_type temp2
-        src_data[i] = symbol_to_string(temp);
+    auto temp   = rng() % 64 + 3;
+    src_kind[i] = src_data[temp];
+    aaa[i]      = symbol_to_string(src_data[temp]);
   }
 
 
 
   std::string filename = "comprehensiveTest.txt";
-  create_data(src_data, filename);
+  create_data(aaa, filename);
 
   // scan file
   pascc::parse::ParserDriver drv(filename, true, false);
@@ -982,6 +1055,8 @@ TEST(LexerTest, comprehensiveTest)
     EXPECT_EQ(src_kind[i], actual_result[i]);
   }
   drv.scan_end();
-}*/
+}
+
+
 
 // TODO(mfz&zh): more lexer test???
