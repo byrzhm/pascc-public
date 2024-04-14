@@ -42,6 +42,10 @@ TEST(FMTTest, error)
 struct Point
 {
   double x_, y_;
+  Point(double x, double y)
+    : x_(x)
+    , y_(y)
+  {}
 };
 
 template<>
