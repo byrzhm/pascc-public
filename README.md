@@ -23,7 +23,7 @@ git clone git@github.com:byrzhm/pascc-private.git
 ### 搭建环境
 
 ``` shell
-sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git fp-compiler
+sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git fp-compiler graphviz doxygen
 git submodule update --init --recursive
 ```
 
@@ -41,6 +41,7 @@ git config pull.rebase false
 - clangd
 - c/c++ extension pack
 - cmake tools
+- C++ TestMate
 - git graph
 - code-runner
 - better comments
@@ -121,8 +122,5 @@ git config pull.rebase false
 
 ## References
 
-- [Jianxff PASCC](https://github.com/BUPT-CS-Assignment/PASCC)
-- [Jianxff PASCC BACK-END](https://github.com/BUPT-CS-Assignment/PASCC_BACKEND)
-- [Jianxff PASCC FRONT-END](https://github.com/BUPT-CS-Assignment/PASCC_ONLINE)
-- [Yorange0 pascal2c-compiler](https://github.com/Yorange0/pascal2c-compiler)
-- [XieWeikai Pascal2C](https://github.com/XieWeikai/Pascal2C)
+- [postgres](https://github.com/postgres/postgres/blob/master/src/backend/parser/scan.l#L409)
+- [graphviz dotguide](https://graphviz.org/pdf/dotguide.pdf)

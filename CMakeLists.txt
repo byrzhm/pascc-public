@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(pascc LANGUAGES C CXX)
@@ -54,6 +54,33 @@ message(STATUS "FLEX_LIBRARIES: ${FLEX_LIBRARIES}")
 message(STATUS "FLEX_INCLUDE_DIRS: ${FLEX_INCLUDE_DIRS}")
 message(STATUS "BISON_EXECUTABLE: ${BISON_EXECUTABLE}")
 message(STATUS "BISON_VERSION: ${BISON_VERSION}")
+
+# 生成文档
+find_package(Doxygen
+            REQUIRED dot
+            OPTIONAL_COMPONENTS mscgen dia)
+
+# 检查是否找到 Doxygen
+if(DOXYGEN_FOUND)
+    message("Doxygen found: ${DOXYGEN_EXECUTABLE}")
+    message("Doxygen version: ${DOXYGEN_VERSION}")
+
+    set(DOXYGEN_IN "${PROJECT_SOURCE_DIR}/docs/Doxyfile.in")
+    set(DOXYGEN_OUT "${PROJECT_BINARY_DIR}/docs/Doxyfile")
+
+    # Configure the Doxyfile
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    # Add a target to generate the documentation
+    add_custom_target(doxygen
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM
+    )
+else(DOXYGEN_FOUND)
+    message("Doxygen not found, cannot generate documentation")
+endif(DOXYGEN_FOUND)
 
 #########################################################
 #################   about compiler      #################

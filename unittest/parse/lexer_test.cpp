@@ -7,6 +7,188 @@
 
 using pascc::parse::Parser;
 
+auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
+{
+  switch (symbol.kind_) {
+    // token
+    case pascc::parse::Parser::symbol_kind::S_AND: return "and";
+    case pascc::parse::Parser::symbol_kind::S_ARRAY: return "array";
+    case pascc::parse::Parser::symbol_kind::S_BEGIN: return "begin";
+    case pascc::parse::Parser::symbol_kind::S_CASE: return "case";
+    case pascc::parse::Parser::symbol_kind::S_CONST: return "const";
+    case pascc::parse::Parser::symbol_kind::S_IDIV: return "div";
+    case pascc::parse::Parser::symbol_kind::S_DO: return "do";
+    case pascc::parse::Parser::symbol_kind::S_DOWNTO: return "downto";
+    case pascc::parse::Parser::symbol_kind::S_ELSE: return "else";
+    case pascc::parse::Parser::symbol_kind::S_END: return "end";
+    case pascc::parse::Parser::symbol_kind::S_FILE: return "file";
+    case pascc::parse::Parser::symbol_kind::S_FOR: return "for";
+    case pascc::parse::Parser::symbol_kind::S_FUNCTION: return "function";
+    case pascc::parse::Parser::symbol_kind::S_GOTO: return "goto";
+    case pascc::parse::Parser::symbol_kind::S_IF: return "if";
+    case pascc::parse::Parser::symbol_kind::S_IN: return "in";
+    case pascc::parse::Parser::symbol_kind::S_LABEL: return "label";
+    case pascc::parse::Parser::symbol_kind::S_MOD: return "mod";
+    case pascc::parse::Parser::symbol_kind::S_NIL: return "nil";
+    case pascc::parse::Parser::symbol_kind::S_NOT: return "not";
+    case pascc::parse::Parser::symbol_kind::S_OF: return "of";
+    case pascc::parse::Parser::symbol_kind::S_OR: return "or";
+    case pascc::parse::Parser::symbol_kind::S_PACKED: return "packed";
+    case pascc::parse::Parser::symbol_kind::S_PROCEDURE: return "procedure";
+    case pascc::parse::Parser::symbol_kind::S_PROGRAM: return "program";
+    case pascc::parse::Parser::symbol_kind::S_RECORD: return "record";
+    case pascc::parse::Parser::symbol_kind::S_REPEAT: return "repeat";
+    case pascc::parse::Parser::symbol_kind::S_SET: return "set";
+    case pascc::parse::Parser::symbol_kind::S_THEN: return "then";
+    case pascc::parse::Parser::symbol_kind::S_TO: return "to";
+    case pascc::parse::Parser::symbol_kind::S_TYPE: return "type";
+    case pascc::parse::Parser::symbol_kind::S_UNTIL: return "until";
+    case pascc::parse::Parser::symbol_kind::S_VAR: return "var";
+    case pascc::parse::Parser::symbol_kind::S_WHILE: return "while";
+    case pascc::parse::Parser::symbol_kind::S_WITH: return "with";
+    case pascc::parse::Parser::symbol_kind::S_READ: return "read";
+    case pascc::parse::Parser::symbol_kind::S_READLN: return "readln";
+    case pascc::parse::Parser::symbol_kind::S_WRITE: return "write";
+    case pascc::parse::Parser::symbol_kind::S_WRITELN: return "writeln";
+    case pascc::parse::Parser::symbol_kind::S_TRUE: return "true";
+    case pascc::parse::Parser::symbol_kind::S_FALSE: return "false";
+    case pascc::parse::Parser::symbol_kind::S_EXIT: return "exit";
+
+    case pascc::parse::Parser::symbol_kind::S_PLUS: return "+";
+    case pascc::parse::Parser::symbol_kind::S_MINUS: return "-";
+    case pascc::parse::Parser::symbol_kind::S_MUL: return "*";
+    case pascc::parse::Parser::symbol_kind::S_FDIV: return "/";
+    case pascc::parse::Parser::symbol_kind::S_EQ: return "=";
+    case pascc::parse::Parser::symbol_kind::S_GT: return ">";
+    case pascc::parse::Parser::symbol_kind::S_LT: return "<";
+    case pascc::parse::Parser::symbol_kind::S_NE: return "<>";
+    case pascc::parse::Parser::symbol_kind::S_LE: return "<=";
+    case pascc::parse::Parser::symbol_kind::S_GE: return ">=";
+    case pascc::parse::Parser::symbol_kind::S_ASSIGN: return ":=";
+
+
+    case pascc::parse::Parser::symbol_kind::S_LSB: return "[";
+    case pascc::parse::Parser::symbol_kind::S_RSB: return "]";
+    case pascc::parse::Parser::symbol_kind::S_LPAREN: return "(";
+    case pascc::parse::Parser::symbol_kind::S_RPAREN: return ")";
+    case pascc::parse::Parser::symbol_kind::S_PERIOD: return ".";
+    case pascc::parse::Parser::symbol_kind::S_COMMA: return ",";
+    case pascc::parse::Parser::symbol_kind::S_COLON: return ":";
+    case pascc::parse::Parser::symbol_kind::S_SEMICOLON: return ";";
+    case pascc::parse::Parser::symbol_kind::S_RANGE: return "..";
+
+
+    case pascc::parse::Parser::symbol_kind::S_ID:
+    case pascc::parse::Parser::symbol_kind::S_STR_LIT: return symbol.value.as<std::string>();
+
+    case pascc::parse::Parser::symbol_kind::YYNTOKENS:
+    case pascc::parse::Parser::symbol_kind::S_YYEMPTY:
+    case pascc::parse::Parser::symbol_kind::S_YYEOF:
+    case pascc::parse::Parser::symbol_kind::S_YYerror:
+    case pascc::parse::Parser::symbol_kind::S_YYUNDEF:
+    default: return "Unknown";
+  }
+}
+
+auto symbol_to_string(const Parser::symbol_kind_type &kind, const std::string &id = "identifier") -> std::string
+{
+  switch (kind) {
+    // token
+    case pascc::parse::Parser::symbol_kind::S_AND: return "and";
+    case pascc::parse::Parser::symbol_kind::S_ARRAY: return "array";
+    case pascc::parse::Parser::symbol_kind::S_BEGIN: return "begin";
+    case pascc::parse::Parser::symbol_kind::S_CASE: return "case";
+    case pascc::parse::Parser::symbol_kind::S_CONST: return "const";
+    case pascc::parse::Parser::symbol_kind::S_IDIV: return "div";
+    case pascc::parse::Parser::symbol_kind::S_DO: return "do";
+    case pascc::parse::Parser::symbol_kind::S_DOWNTO: return "downto";
+    case pascc::parse::Parser::symbol_kind::S_ELSE: return "else";
+    case pascc::parse::Parser::symbol_kind::S_END: return "end";
+    case pascc::parse::Parser::symbol_kind::S_FILE: return "file";
+    case pascc::parse::Parser::symbol_kind::S_FOR: return "for";
+    case pascc::parse::Parser::symbol_kind::S_FUNCTION: return "function";
+    case pascc::parse::Parser::symbol_kind::S_GOTO: return "goto";
+    case pascc::parse::Parser::symbol_kind::S_IF: return "if";
+    case pascc::parse::Parser::symbol_kind::S_IN: return "in";
+    case pascc::parse::Parser::symbol_kind::S_LABEL: return "label";
+    case pascc::parse::Parser::symbol_kind::S_MOD: return "mod";
+    case pascc::parse::Parser::symbol_kind::S_NIL: return "nil";
+    case pascc::parse::Parser::symbol_kind::S_NOT: return "not";
+    case pascc::parse::Parser::symbol_kind::S_OF: return "of";
+    case pascc::parse::Parser::symbol_kind::S_OR: return "or";
+    case pascc::parse::Parser::symbol_kind::S_PACKED: return "packed";
+    case pascc::parse::Parser::symbol_kind::S_PROCEDURE: return "procedure";
+    case pascc::parse::Parser::symbol_kind::S_PROGRAM: return "program";
+    case pascc::parse::Parser::symbol_kind::S_RECORD: return "record";
+    case pascc::parse::Parser::symbol_kind::S_REPEAT: return "repeat";
+    case pascc::parse::Parser::symbol_kind::S_SET: return "set";
+    case pascc::parse::Parser::symbol_kind::S_THEN: return "then";
+    case pascc::parse::Parser::symbol_kind::S_TO: return "to";
+    case pascc::parse::Parser::symbol_kind::S_TYPE: return "type";
+    case pascc::parse::Parser::symbol_kind::S_UNTIL: return "until";
+    case pascc::parse::Parser::symbol_kind::S_VAR: return "var";
+    case pascc::parse::Parser::symbol_kind::S_WHILE: return "while";
+    case pascc::parse::Parser::symbol_kind::S_WITH: return "with";
+    case pascc::parse::Parser::symbol_kind::S_READ: return "read";
+    case pascc::parse::Parser::symbol_kind::S_READLN: return "readln";
+    case pascc::parse::Parser::symbol_kind::S_WRITE: return "write";
+    case pascc::parse::Parser::symbol_kind::S_WRITELN: return "writeln";
+    case pascc::parse::Parser::symbol_kind::S_TRUE: return "true";
+    case pascc::parse::Parser::symbol_kind::S_FALSE: return "false";
+    case pascc::parse::Parser::symbol_kind::S_EXIT: return "exit";
+
+    case pascc::parse::Parser::symbol_kind::S_PLUS: return "+";
+    case pascc::parse::Parser::symbol_kind::S_MINUS: return "-";
+    case pascc::parse::Parser::symbol_kind::S_MUL: return "*";
+    case pascc::parse::Parser::symbol_kind::S_FDIV: return "/";
+    case pascc::parse::Parser::symbol_kind::S_EQ: return "=";
+    case pascc::parse::Parser::symbol_kind::S_GT: return ">";
+    case pascc::parse::Parser::symbol_kind::S_LT: return "<";
+    case pascc::parse::Parser::symbol_kind::S_NE: return "<>";
+    case pascc::parse::Parser::symbol_kind::S_LE: return "<=";
+    case pascc::parse::Parser::symbol_kind::S_GE: return ">=";
+    case pascc::parse::Parser::symbol_kind::S_ASSIGN: return ":=";
+
+
+    case pascc::parse::Parser::symbol_kind::S_LSB: return "[";
+    case pascc::parse::Parser::symbol_kind::S_RSB: return "]";
+    case pascc::parse::Parser::symbol_kind::S_LPAREN: return "(";
+    case pascc::parse::Parser::symbol_kind::S_RPAREN: return ")";
+    case pascc::parse::Parser::symbol_kind::S_PERIOD: return ".";
+    case pascc::parse::Parser::symbol_kind::S_COMMA: return ",";
+    case pascc::parse::Parser::symbol_kind::S_COLON: return ":";
+    case pascc::parse::Parser::symbol_kind::S_SEMICOLON: return ";";
+    case pascc::parse::Parser::symbol_kind::S_RANGE: return "..";
+
+    case pascc::parse::Parser::symbol_kind::S_ID: return id;
+    case pascc::parse::Parser::symbol_kind::S_STR_LIT: return "'string literal'";
+
+    case pascc::parse::Parser::symbol_kind::YYNTOKENS:
+    case pascc::parse::Parser::symbol_kind::S_YYEMPTY:
+    case pascc::parse::Parser::symbol_kind::S_YYEOF:
+    case pascc::parse::Parser::symbol_kind::S_YYerror:
+    case pascc::parse::Parser::symbol_kind::S_YYUNDEF:
+    default: return "Unknown";
+  }
+}
+
+void create_data(const std::vector<Parser::symbol_kind_type> &data, const std::string &filename)
+{
+  std::ofstream ofs(filename);
+  for (const auto &d : data) {
+    ofs << symbol_to_string(d) << '\n';
+  }
+}
+
+template<typename T>
+void create_data(const std::vector<T> &data, const std::string &filename)
+{
+  std::ofstream ofs(filename);
+  for (const auto &d : data) {
+    ofs << d << '\n';
+  }
+}
+
 /**
  * @brief 生成一个随机的pascal实数字符串
  * 
@@ -97,215 +279,10 @@ auto get_random_id_str() -> std::string
   return pascalString;
 }
 
-auto symbol_to_string(const Parser::symbol_type &symbol) -> std::string
-{
-  switch (symbol.kind_) {
-    // token
-    case Parser::symbol_kind::S_AND: return "and";
-    case Parser::symbol_kind::S_ARRAY: return "array";
-    case Parser::symbol_kind::S_BEGIN: return "begin";
-    case Parser::symbol_kind::S_CASE: return "case";
-    case Parser::symbol_kind::S_CONST: return "const";
-    case Parser::symbol_kind::S_IDIV: return "div";
-    case Parser::symbol_kind::S_DO: return "do";
-    case Parser::symbol_kind::S_DOWNTO: return "downto";
-    case Parser::symbol_kind::S_ELSE: return "else";
-    case Parser::symbol_kind::S_END: return "end";
-    case Parser::symbol_kind::S_FILE: return "file";
-    case Parser::symbol_kind::S_FOR: return "for";
-    case Parser::symbol_kind::S_FUNCTION: return "function";
-    case Parser::symbol_kind::S_GOTO: return "goto";
-    case Parser::symbol_kind::S_IF: return "if";
-    case Parser::symbol_kind::S_IN: return "in";
-    case Parser::symbol_kind::S_LABEL: return "label";
-    case Parser::symbol_kind::S_MOD: return "mod";
-    case Parser::symbol_kind::S_NIL: return "nil";
-    case Parser::symbol_kind::S_NOT: return "not";
-    case Parser::symbol_kind::S_OF: return "of";
-    case Parser::symbol_kind::S_OR: return "or";
-    case Parser::symbol_kind::S_PACKED: return "packed";
-    case Parser::symbol_kind::S_PROCEDURE: return "procedure";
-    case Parser::symbol_kind::S_PROGRAM: return "program";
-    case Parser::symbol_kind::S_RECORD: return "record";
-    case Parser::symbol_kind::S_REPEAT: return "repeat";
-    case Parser::symbol_kind::S_SET: return "set";
-    case Parser::symbol_kind::S_THEN: return "then";
-    case Parser::symbol_kind::S_TO: return "to";
-    case Parser::symbol_kind::S_TYPE: return "type";
-    case Parser::symbol_kind::S_UNTIL: return "until";
-    case Parser::symbol_kind::S_VAR: return "var";
-    case Parser::symbol_kind::S_WHILE: return "while";
-    case Parser::symbol_kind::S_WITH: return "with";
-    case Parser::symbol_kind::S_READ: return "read";
-    case Parser::symbol_kind::S_READLN: return "readln";
-    case Parser::symbol_kind::S_WRITE: return "write";
-    case Parser::symbol_kind::S_WRITELN: return "writeln";
-    case Parser::symbol_kind::S_TRUE: return "true";
-    case Parser::symbol_kind::S_FALSE: return "false";
-    case Parser::symbol_kind::S_EXIT: return "exit";
-
-    case Parser::symbol_kind::S_PLUS: return "+";
-    case Parser::symbol_kind::S_MINUS: return "-";
-    case Parser::symbol_kind::S_MUL: return "*";
-    case Parser::symbol_kind::S_FDIV: return "/";
-    case Parser::symbol_kind::S_EQ: return "=";
-    case Parser::symbol_kind::S_GT: return ">";
-    case Parser::symbol_kind::S_LT: return "<";
-    case Parser::symbol_kind::S_NE: return "<>";
-    case Parser::symbol_kind::S_LE: return "<=";
-    case Parser::symbol_kind::S_GE: return ">=";
-    case Parser::symbol_kind::S_ASSIGN: return ":=";
-
-
-    case Parser::symbol_kind::S_LSB: return "[";
-    case Parser::symbol_kind::S_RSB: return "]";
-    case Parser::symbol_kind::S_LPAREN: return "(";
-    case Parser::symbol_kind::S_RPAREN: return ")";
-    case Parser::symbol_kind::S_PERIOD: return ".";
-    case Parser::symbol_kind::S_COMMA: return ",";
-    case Parser::symbol_kind::S_COLON: return ":";
-    case Parser::symbol_kind::S_SEMICOLON: return ";";
-    case Parser::symbol_kind::S_RANGE: return "..";
-
-
-    case Parser::symbol_kind::S_ID:
-    case Parser::symbol_kind::S_STR_LIT: return symbol.value.as<std::string>();
-
-    // non-terminal
-    case Parser::symbol_kind::S_program:
-    case Parser::symbol_kind::S_program_head:
-    case Parser::symbol_kind::S_program_body:
-    case Parser::symbol_kind::S_statement_block:
-    case Parser::symbol_kind::S_statement:
-    case Parser::symbol_kind::S_procedure_statement: return "nonterminal";
-
-    case Parser::symbol_kind::YYNTOKENS:
-    case Parser::symbol_kind::S_YYEMPTY:
-    case Parser::symbol_kind::S_YYEOF:
-    case Parser::symbol_kind::S_YYerror:
-    case Parser::symbol_kind::S_YYUNDEF:
-    default: return "Unknown";
-  }
-}
-
-auto symbol_to_string(const Parser::symbol_kind_type &kind) -> std::string
-{
-  std::mt19937 rng{std::random_device{}()};
-  switch (kind) {
-    // token
-    case Parser::symbol_kind::S_AND: return "and";
-    case Parser::symbol_kind::S_ARRAY: return "array";
-    case Parser::symbol_kind::S_BEGIN: return "begin";
-    case Parser::symbol_kind::S_CASE: return "case";
-    case Parser::symbol_kind::S_CONST: return "const";
-    case Parser::symbol_kind::S_IDIV: return "div";
-    case Parser::symbol_kind::S_DO: return "do";
-    case Parser::symbol_kind::S_DOWNTO: return "downto";
-    case Parser::symbol_kind::S_ELSE: return "else";
-    case Parser::symbol_kind::S_END: return "end";
-    case Parser::symbol_kind::S_FILE: return "file";
-    case Parser::symbol_kind::S_FOR: return "for";
-    case Parser::symbol_kind::S_FUNCTION: return "function";
-    case Parser::symbol_kind::S_GOTO: return "goto";
-    case Parser::symbol_kind::S_IF: return "if";
-    case Parser::symbol_kind::S_IN: return "in";
-    case Parser::symbol_kind::S_LABEL: return "label";
-    case Parser::symbol_kind::S_MOD: return "mod";
-    case Parser::symbol_kind::S_NIL: return "nil";
-    case Parser::symbol_kind::S_NOT: return "not";
-    case Parser::symbol_kind::S_OF: return "of";
-    case Parser::symbol_kind::S_OR: return "or";
-    case Parser::symbol_kind::S_PACKED: return "packed";
-    case Parser::symbol_kind::S_PROCEDURE: return "procedure";
-    case Parser::symbol_kind::S_PROGRAM: return "program";
-    case Parser::symbol_kind::S_RECORD: return "record";
-    case Parser::symbol_kind::S_REPEAT: return "repeat";
-    case Parser::symbol_kind::S_SET: return "set";
-    case Parser::symbol_kind::S_THEN: return "then";
-    case Parser::symbol_kind::S_TO: return "to";
-    case Parser::symbol_kind::S_TYPE: return "type";
-    case Parser::symbol_kind::S_UNTIL: return "until";
-    case Parser::symbol_kind::S_VAR: return "var";
-    case Parser::symbol_kind::S_WHILE: return "while";
-    case Parser::symbol_kind::S_WITH: return "with";
-    case Parser::symbol_kind::S_READ: return "read";
-    case Parser::symbol_kind::S_READLN: return "readln";
-    case Parser::symbol_kind::S_WRITE: return "write";
-    case Parser::symbol_kind::S_WRITELN: return "writeln";
-    case Parser::symbol_kind::S_TRUE: return "true";
-    case Parser::symbol_kind::S_FALSE: return "false";
-    case Parser::symbol_kind::S_EXIT: return "exit";
-
-    case Parser::symbol_kind::S_PLUS: return "+";
-    case Parser::symbol_kind::S_MINUS: return "-";
-    case Parser::symbol_kind::S_MUL: return "*";
-    case Parser::symbol_kind::S_FDIV: return "/";
-    case Parser::symbol_kind::S_EQ: return "=";
-    case Parser::symbol_kind::S_GT: return ">";
-    case Parser::symbol_kind::S_LT: return "<";
-    case Parser::symbol_kind::S_NE: return "<>";
-    case Parser::symbol_kind::S_LE: return "<=";
-    case Parser::symbol_kind::S_GE: return ">=";
-    case Parser::symbol_kind::S_ASSIGN: return ":=";
-
-
-    case Parser::symbol_kind::S_LSB: return "[";
-    case Parser::symbol_kind::S_RSB: return "]";
-    case Parser::symbol_kind::S_LPAREN: return "(";
-    case Parser::symbol_kind::S_RPAREN: return ")";
-    case Parser::symbol_kind::S_PERIOD: return ".";
-    case Parser::symbol_kind::S_COMMA: return ",";
-    case Parser::symbol_kind::S_COLON: return ":";
-    case Parser::symbol_kind::S_SEMICOLON: return ";";
-    case Parser::symbol_kind::S_RANGE: return "..";
-
-    case Parser::symbol_kind::S_ID: return get_random_id_str();
-    case Parser::symbol_kind::S_STR_LIT: return gen_random_str();
-
-    case Parser::symbol_kind::S_INT_NUM: return std::to_string(rng() % std::numeric_limits<int>::max()); ;
-    case Parser::symbol_kind::S_REAL_NUM: return gen_real_num_str();
-
-    case Parser::symbol_kind::S_CHAR:
-      return get_random_char();
-      // non-terminal
-    case Parser::symbol_kind::S_program:
-    case Parser::symbol_kind::S_program_head:
-    case Parser::symbol_kind::S_program_body:
-    case Parser::symbol_kind::S_statement_block:
-    case Parser::symbol_kind::S_statement:
-    case Parser::symbol_kind::S_procedure_statement: return "nonterminal";
-
-    case Parser::symbol_kind::YYNTOKENS:
-    case Parser::symbol_kind::S_YYEMPTY:
-    case Parser::symbol_kind::S_YYEOF:
-    case Parser::symbol_kind::S_YYerror:
-    case Parser::symbol_kind::S_YYUNDEF:
-    default: return "Unknown";
-  }
-}
-
-void create_data(const std::vector<Parser::symbol_kind_type> &data, const std::string &filename)
-{
-  std::ofstream ofs(filename);
-  for (const auto &d : data) {
-    ofs << symbol_to_string(d) << '\n';
-  }
-}
-
-template<typename T>
-void create_data(const std::vector<T> &data, const std::string &filename)
-{
-  std::ofstream ofs(filename);
-  for (const auto &d : data) {
-    ofs << d << '\n';
-  }
-}
-
-
 
 // To Disable: add prefix DISABLED_
 
-TEST(LexerTest, DISABLED_keyword)
+TEST(LexerTest, keyword)
 {
   // keyword data
   std::vector<Parser::symbol_kind_type> src_data = {
@@ -382,7 +359,7 @@ TEST(LexerTest, DISABLED_keyword)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_id)
+TEST(LexerTest, id)
 {
   std::vector<std::string> src_data = {
       "a123",
@@ -414,7 +391,7 @@ TEST(LexerTest, DISABLED_id)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_idRandom)
+TEST(LexerTest, idRandom)
 {
   int TSIZE = 10;
   std::vector<std::string> src_data(TSIZE);
@@ -449,7 +426,7 @@ TEST(LexerTest, DISABLED_idRandom)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_string)
+TEST(LexerTest, string)
 {
   std::vector<std::string> src_data = {
       "'Its a quote within a string'",
@@ -482,7 +459,7 @@ TEST(LexerTest, DISABLED_string)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_stringRandom)
+TEST(LexerTest, stringRandom)
 {
   int TSIZE = 10;
   std::vector<std::string> src_data(TSIZE);
@@ -517,7 +494,7 @@ TEST(LexerTest, DISABLED_stringRandom)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_integerNumber)
+TEST(LexerTest, integerNumber)
 {
   std::mt19937 rng{std::random_device{}()};
   std::vector<int> src_data{1, 66, 888, 114514};
@@ -550,10 +527,9 @@ TEST(LexerTest, DISABLED_integerNumber)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_realNumber)
+TEST(LexerTest, realNumber)
 {
-  std::vector<std::string> real_nums{"1.1",     "2.",  ".6",
-                                     "114.514", "1e6", ".23e-9"};
+  std::vector<std::string> real_nums{"1.1", "2.", ".6", "114.514", "1e6", ".23e-9"};
   std::vector<double> src_data(real_nums.size());
   for (unsigned i = 0; i < real_nums.size(); ++i) {
     src_data[i] = std::stod(real_nums[i]);
@@ -587,7 +563,7 @@ TEST(LexerTest, DISABLED_realNumber)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_integerNumberRandom)
+TEST(LexerTest, integerNumberRandom)
 {
   std::mt19937 rng{std::random_device{}()};
   const int TSIZE = 10;
@@ -624,7 +600,7 @@ TEST(LexerTest, DISABLED_integerNumberRandom)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_realNumberRandom)
+TEST(LexerTest, realNumberRandom)
 {
   const int TSIZE = 10;
   std::vector<std::string> real_nums(TSIZE);
@@ -662,7 +638,7 @@ TEST(LexerTest, DISABLED_realNumberRandom)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_operator)
+TEST(LexerTest, operator)
 {
   std::vector<Parser::symbol_kind_type> src_data = {
       Parser::symbol_kind::S_PLUS,
@@ -707,7 +683,7 @@ TEST(LexerTest, DISABLED_operator)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_delimiter)
+TEST(LexerTest, delimiter)
 {
   std::vector<Parser::symbol_kind_type> src_data = {
       Parser::symbol_kind::S_LSB,
@@ -750,7 +726,7 @@ TEST(LexerTest, DISABLED_delimiter)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_lineComment)
+TEST(LexerTest, lineComment)
 {
   std::vector<std::string> src_data = {
       "// sd5545'('djnwnqkn",
@@ -783,7 +759,7 @@ TEST(LexerTest, DISABLED_lineComment)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_blockComment1)
+TEST(LexerTest, blockComment1)
 {
   // { comment }
 
@@ -817,7 +793,7 @@ TEST(LexerTest, DISABLED_blockComment1)
   drv.scan_end();
 }
 
-TEST(LexerTest, DISABLED_blockComment2)
+TEST(LexerTest, blockComment2)
 {
   // (* comment *)
 
@@ -852,7 +828,73 @@ TEST(LexerTest, DISABLED_blockComment2)
   drv.scan_end();
 }
 
-TEST(lexerTest, comprehensiveTest)
+TEST(LexerTest, location)
+{
+  std::vector<std::string> src_data = {
+      "(* sd5545'('djnwnqkn*)",
+      "(*\n\n\n*)",
+      "(*\n男人\tHAHA\n\tWhat can I say,\nMAMBA OUT!*)",
+      "(********)",
+      "x := 2"
+  };
+
+  std::vector<std::array<int, 4>> actual_locs;
+
+  // x := 2
+  // x 在 11 行 1 列到 11 行 2 列
+  // := 在 11 行 3 列到 11 行 5 列
+  // 2 在 11 行 6 列到 11 行 7 列
+  // ! 末尾位置是下一个 token 的开始位置, 其实不属于这个 token
+  std::vector<std::array<int, 4>> expected_locs;
+  expected_locs.emplace_back(std::array<int, 4>{11, 1, 11, 2});
+  expected_locs.emplace_back(std::array<int, 4>{11, 3, 11, 5});
+  expected_locs.emplace_back(std::array<int, 4>{11, 6, 11, 7});
+
+  std::string filename = "location.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+    std::cout << symbol.location << '\n';
+    actual_locs.emplace_back(
+        std::array<int, 4>{
+            symbol.location.begin.line,
+            symbol.location.begin.column,
+            symbol.location.end.line,
+            symbol.location.end.column
+        }
+    );
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare symbol kind
+  EXPECT_EQ(actual_result.size(), 3);
+
+  EXPECT_EQ(actual_result[0], pascc::parse::Parser::symbol_kind::S_ID);
+  EXPECT_EQ(actual_result[1], pascc::parse::Parser::symbol_kind::S_ASSIGN);
+  EXPECT_EQ(actual_result[2], pascc::parse::Parser::symbol_kind::S_INT_NUM);
+
+  // compare location
+  EXPECT_EQ(actual_locs.size(), expected_locs.size());
+  for (unsigned i = 0; i < actual_locs.size(); ++i) {
+    for (unsigned j = 0; j < 4; ++j) {
+      EXPECT_EQ(actual_locs[i].at(j), expected_locs[i].at(j)) << "i = " << i << ", j = " << j;
+    }
+  }
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, comprehensiveTest)
 {
   std::vector<std::string> src_data = {
       "(*\n男人\tHAHA\n\tWhat can I say,\nMAMBA OUT!*)",
