@@ -382,8 +382,7 @@ TEST(LexerTest, integerNumber)
 
 TEST(LexerTest, realNumber)
 {
-  std::vector<std::string> real_nums{"1.1",     "2.",  ".6",
-                                     "114.514", "1e6", ".23e-9"};
+  std::vector<std::string> real_nums{"1.1", "2.", ".6", "114.514", "1e6", ".23e-9"};
   std::vector<double> src_data(real_nums.size());
   for (unsigned i = 0; i < real_nums.size(); ++i) {
     src_data[i] = std::stod(real_nums[i]);
@@ -678,6 +677,72 @@ TEST(LexerTest, blockComment2)
 
   // compare
   EXPECT_EQ(actual_result.size(), 0);
+
+  drv.scan_end();
+}
+
+TEST(LexerTest, location)
+{
+  std::vector<std::string> src_data = {
+      "(* sd5545'('djnwnqkn*)",
+      "(*\n\n\n*)",
+      "(*\n男人\tHAHA\n\tWhat can I say,\nMAMBA OUT!*)",
+      "(********)",
+      "x := 2"
+  };
+
+  std::vector<std::array<int, 4>> actual_locs;
+
+  // x := 2
+  // x 在 11 行 1 列到 11 行 2 列
+  // := 在 11 行 3 列到 11 行 5 列
+  // 2 在 11 行 6 列到 11 行 7 列
+  // ! 末尾位置是下一个 token 的开始位置, 其实不属于这个 token
+  std::vector<std::array<int, 4>> expected_locs;
+  expected_locs.emplace_back(std::array<int, 4>{11, 1, 11, 2});
+  expected_locs.emplace_back(std::array<int, 4>{11, 3, 11, 5});
+  expected_locs.emplace_back(std::array<int, 4>{11, 6, 11, 7});
+
+  std::string filename = "location.txt";
+  create_data(src_data, filename);
+
+  // scan file
+  pascc::parse::ParserDriver drv(filename, true, false);
+  drv.location().initialize();
+  drv.scan_begin();
+
+  std::vector<Parser::symbol_kind_type> actual_result;
+  while (true) {
+    auto symbol = yylex(drv);
+    if (symbol.kind_ == pascc::parse::Parser::symbol_kind::S_YYEOF) {
+      break;
+    }
+    std::cout << symbol.location << '\n';
+    actual_locs.emplace_back(
+        std::array<int, 4>{
+            symbol.location.begin.line,
+            symbol.location.begin.column,
+            symbol.location.end.line,
+            symbol.location.end.column
+        }
+    );
+    actual_result.push_back(symbol.kind_);
+  }
+
+  // compare symbol kind
+  EXPECT_EQ(actual_result.size(), 3);
+
+  EXPECT_EQ(actual_result[0], pascc::parse::Parser::symbol_kind::S_ID);
+  EXPECT_EQ(actual_result[1], pascc::parse::Parser::symbol_kind::S_ASSIGN);
+  EXPECT_EQ(actual_result[2], pascc::parse::Parser::symbol_kind::S_INT_NUM);
+
+  // compare location
+  EXPECT_EQ(actual_locs.size(), expected_locs.size());
+  for (unsigned i = 0; i < actual_locs.size(); ++i) {
+    for (unsigned j = 0; j < 4; ++j) {
+      EXPECT_EQ(actual_locs[i].at(j), expected_locs[i].at(j)) << "i = " << i << ", j = " << j; 
+    }
+  }
 
   drv.scan_end();
 }
