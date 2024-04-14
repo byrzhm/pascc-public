@@ -218,18 +218,26 @@ program:
 program_head:
   PROGRAM ID LPAREN id_list RPAREN SEMICOLON {
     $$ = std::make_unique<ProgramHead>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @6.end;
   }
   | PROGRAM ID LPAREN RPAREN SEMICOLON {
     $$ = std::make_unique<ProgramHead>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @5.end;
   }
   | PROGRAM ID SEMICOLON {
     $$ = std::make_unique<ProgramHead>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
 program_block:
   block PERIOD {
     $$ = std::make_unique<ProgramBlock>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   ;
 
@@ -244,6 +252,8 @@ block:
       std::move($4),
       std::move($5)
     );
+    $$->location().begin = @1.begin;
+    $$->location().end = @5.end;
   }
   ;
 
@@ -263,6 +273,8 @@ constant_declaration_part:
   }
   | CONST constant_declarations SEMICOLON {
     $$ = std::make_unique<ConstDeclPart>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
@@ -279,51 +291,76 @@ constant_declarations:
 constant:
   PLUS ID {
     $$ = std::make_unique<Constant>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   | MINUS ID {
     $$ = std::make_unique<Constant>(std::move($2), -1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   | ID {
     $$ = std::make_unique<Constant>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | num {
     $$ = std::make_unique<Constant>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | PLUS num {
     $$ = std::make_unique<Constant>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   | MINUS num {
     $$ = std::make_unique<Constant>(std::move($2), -1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   | CHAR {
     $$ = std::make_unique<Constant>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | string_literal {
     $$ = std::make_unique<Constant>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
           
 string_literal:
   STR_LIT {
     $$ = std::make_unique<StringLiteral>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
           
 num:
   INT_NUM {
     $$ = std::make_unique<Number>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | REAL_NUM {
     $$ = std::make_unique<Number>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;                  
 
 type_declaration_part:
   %empty {
     $$ = nullptr;
+  
   }
   | TYPE type_declarations SEMICOLON {
     $$ = std::make_unique<TypeDeclPart>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
@@ -340,18 +377,26 @@ type_declarations:
 type_denoter:
   type_identifier {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | ARRAY LSB periods RSB OF type_denoter {
     $$ = std::make_unique<ArrayType>(std::move($6), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @6.end;
   }
   | RECORD field_list END {
     $$ = std::make_unique<RecordType>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
               
 type_identifier:
   ID {
     $$ = std::make_unique<TypeId>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
               
@@ -377,6 +422,8 @@ periods:
 period:
   constant RANGE constant {
     $$ = std::make_unique<Period>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
@@ -386,6 +433,8 @@ variable_declaration_part:
   }
   | VAR variable_declarations SEMICOLON {
     $$ = std::make_unique<VarDeclPart>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
                            
@@ -405,6 +454,8 @@ subprogram_declaration_part:
   }
   | subprogram_declarations SEMICOLON {
     $$ = std::make_unique<SubprogDeclPart>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   ;
 
@@ -421,24 +472,34 @@ subprogram_declarations:
 subprogram_declaration:
   procedure_declaration {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | function_declaration {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 procedure_declaration:
   procedure_head procedure_block {
     $$ = std::make_unique<ProcDecl>(std::move($1), std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   ;
 
 procedure_head:
   PROCEDURE ID SEMICOLON {
     $$ = std::make_unique<ProcHead>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   | PROCEDURE ID LPAREN formal_parameter_list RPAREN SEMICOLON {
     $$ = std::make_unique<ProcHead>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @6.end;
   }
   ;
 
@@ -455,33 +516,45 @@ formal_parameter_list:
 formal_parameter:
   value_parameter_specification {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | variable_parameter_specification {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 value_parameter_specification:
   id_list COLON type_identifier {
     $$ = std::make_unique<ValueParamSpec>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
 variable_parameter_specification:
   VAR id_list COLON type_identifier {
     $$ = std::make_unique<VarParamSpec>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
 procedure_block:
   block {
     $$ = std::make_unique<ProcBlock>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 function_declaration:
   function_head function_block {
     $$ = std::make_unique<FuncDecl>(std::move($1), std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   ;
 
@@ -489,28 +562,38 @@ function_head:
   FUNCTION ID COLON type_denoter SEMICOLON {
     drv.add_function($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @5.end;
   }
   | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON {
     drv.add_function($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4), std::move($7));
+    $$->location().begin = @1.begin;
+    $$->location().end = @8.end;
   }
   ;
 
 function_block:
   block {
     $$ = std::make_unique<FuncBlock>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 statement_part:
   compound_statement {
     $$ = std::make_unique<StmtPart>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 compound_statement:
   BEGIN statement_list END {
     $$ = std::make_unique<CompoundStmt>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
@@ -531,21 +614,31 @@ statement_list:
 statement:
   simple_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | structured_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 simple_statement:
   empty_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | assignment_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | procedure_call_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
@@ -558,6 +651,8 @@ empty_statement:
 assignment_statement:
   assignable ASSIGN expr {
     $$ = std::make_unique<AssignStmt>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
@@ -569,93 +664,137 @@ assignable:
     } else {
       $$ = std::make_unique<AssignableId>(std::move($1));
     }
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | indexed_variable {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | field_designator {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
                      
 indexed_variable:
   assignable LSB expr_list RSB {
     $$ = std::make_unique<IndexedVar>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
 field_designator:
   assignable PERIOD ID {
     $$ = std::make_unique<FieldDesignator>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
 procedure_call_statement:
   ID {
     $$ = std::make_unique<ProcCallStmt>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | ID LPAREN RPAREN {
     $$ = std::make_unique<ProcCallStmt>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   | ID LPAREN expr_list RPAREN {
     $$ = std::make_unique<ProcCallStmt>(std::move($1),std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   | write_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | writeln_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | read_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | readln_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | exit_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
                           
 write_statement:
   WRITE LPAREN expr_list RPAREN {
     $$ = std::make_unique<WriteStmt>(std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
 writeln_statement:
   WRITELN {
     $$ = std::make_unique<WritelnStmt>();
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | WRITELN LPAREN RPAREN {
     $$ = std::make_unique<WritelnStmt>();
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   | WRITELN LPAREN expr_list RPAREN {
     $$ = std::make_unique<WritelnStmt>(std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
                    
 read_statement:
   READ LPAREN assignable_list RPAREN {
     $$ = std::make_unique<ReadStmt>(std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
 readln_statement:
   READLN LPAREN assignable_list RPAREN {
     $$ = std::make_unique<ReadlnStmt>(std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
 exit_statement:
   EXIT {
     $$ = std::make_unique<ExitStmt>();
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | EXIT LPAREN RPAREN {
     $$ = std::make_unique<ExitStmt>();
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   | EXIT LPAREN expr_list RPAREN {
     $$ = std::make_unique<ExitStmt>(std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
@@ -672,33 +811,47 @@ assignable_list:
 structured_statement:
   compound_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | conditional_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | repetitive_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 conditional_statement:
   if_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | case_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 if_statement:
   IF bool_expr THEN statement else_part {
     $$ = std::make_unique<IfStmt>(std::move($2), std::move($4), std::move($5));
+    $$->location().begin = @1.begin;
+    $$->location().end = @5.end;
   }
   ;
 
 bool_expr:
   expr {
     $$ = std::make_unique<BoolExpr>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
@@ -708,12 +861,16 @@ else_part:
   }
   | ELSE statement {
     $$ = std::move($2);
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   ;
 
 case_statement:
   CASE expr OF case_list_elements opt_semicolon END {
     $$ = std::make_unique<CaseStmt>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @6.end;
   }
   ;
 
@@ -730,6 +887,8 @@ case_list_elements:
 case_list_element:
   case_constant_list COLON statement {
     $$ = std::make_unique<CaseListElement>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
@@ -755,24 +914,34 @@ opt_semicolon:
 repetitive_statement:
   repeat_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | while_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | for_statement {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 repeat_statement:
   REPEAT statement_list UNTIL bool_expr {
     $$ = std::make_unique<RepeatStmt>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
 while_statement:
   WHILE bool_expr DO statement {
     $$ = std::make_unique<WhileStmt>(std::move($2), std::move($4));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   }
   ;
 
@@ -785,6 +954,8 @@ for_statement:
       std::move($8),
       std::move($5)
     );
+    $$->location().begin = @1.begin;
+    $$->location().end = @8.end;
   }
   ;
                  
@@ -810,84 +981,126 @@ expr_list:
 expr:
   simple_expr {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | simple_expr relop simple_expr {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   | string_expr {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
       
 string_expr:
   STR_LIT {
     $$ = std::make_unique<StringLiteral>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
     
 simple_expr:
   term {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
  | PLUS term {
     $$ = std::make_unique<UnaryExpr>(UnaryOp::PLUS, std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
  }
  | MINUS term {
     $$ = std::make_unique<UnaryExpr>(UnaryOp::MINUS, std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
  }
  | simple_expr addop term {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
  }
  ;
              
 term:
   factor {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | term mulop factor {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
 
 factor:
   assignable {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | function_designator {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | LPAREN expr RPAREN  {
     $$ = std::move($2);
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   | NOT factor {
     $$ = std::make_unique<UnaryExpr>(UnaryOp::NOT, std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   | unsigned_constant {
     $$ = std::move($1);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
 function_designator:
   ID LPAREN RPAREN {
     $$ = std::make_unique<FuncCall>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   } 
   | ID LPAREN expr_list RPAREN {
     $$ = std::make_unique<FuncCall>(std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @4.end;
   } 
   ;       
         
 unsigned_constant:
   num {
     $$ = std::make_unique<UnsignedConstant>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | CHAR {
     $$ = std::make_unique<UnsignedConstant>(std::move($1));
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | TRUE {
     $$ = std::make_unique<UnsignedConstant>(true);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   | FALSE {
     $$ = std::make_unique<UnsignedConstant>(false);
+    $$->location().begin = @1.begin;
+    $$->location().end = @1.end;
   }
   ;
 
