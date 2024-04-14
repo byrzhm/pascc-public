@@ -14,6 +14,7 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
         ${pascc_test_name} 
         gtest_main 
         pascc_lib
+        fmt
     )
 
     set_target_properties(

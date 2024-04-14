@@ -41,6 +41,7 @@ git config pull.rebase false
 - clangd
 - c/c++ extension pack
 - cmake tools
+- C++ TestMate
 - git graph
 - code-runner
 - better comments

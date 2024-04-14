@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "location.hh"
 #include "parser.hpp"
 
@@ -34,6 +36,10 @@ public:
 
   auto program() -> std::unique_ptr<Program> { return std::move(program_); }
 
+  void add_function(std::string funcid);
+
+  auto is_function(const std::string &funcid) -> bool;
+
 private:
   class location loc_;
   std::string filename_;
@@ -41,6 +47,7 @@ private:
   bool trace_parsing_  = false;
 
   std::unique_ptr<Program> program_;
+  std::unordered_set<std::string> funcid_set_;
 };
 
 }  // namespace pascc::parse

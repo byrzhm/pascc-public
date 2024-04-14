@@ -1,6 +1,7 @@
 #include "driver/driver.hpp"
 #include "codegen/codegen.hpp"
 #include "parse/parser_driver.hpp"
+#include "semant/semant.hpp"
 
 namespace pascc::driver {
 
@@ -12,7 +13,7 @@ auto Driver::Get() -> Driver &
 
 auto Driver::parse(const std::string &filepath) -> Driver &
 {
-  parse::ParserDriver drv(filepath, true, true);
+  parse::ParserDriver drv(filepath, false, false);
   drv.parse();
   program_ = drv.program();
   return *this;
@@ -20,12 +21,14 @@ auto Driver::parse(const std::string &filepath) -> Driver &
 
 auto Driver::check() -> Driver &
 {
+  semant::SemantVisitor visitor;
+  program_->accept(visitor);
   return *this;
 }
 
-auto Driver::codegen() -> Driver &
+auto Driver::codegen(const std::string &filepath) -> Driver &
 {
-  codegen::CodegenVisitor visitor("test.c");
+  codegen::CodegenVisitor visitor(filepath);
   program_->accept(visitor);
   return *this;
 }
