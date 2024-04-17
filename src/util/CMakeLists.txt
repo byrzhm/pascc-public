@@ -2,7 +2,8 @@ add_library(
     pascc_util
     OBJECT
     symtab.cpp
-    painter.cpp
+    # painter.cpp
+    type/type_comparator.cpp
 )
 
 set(ALL_OBJECT_FILES

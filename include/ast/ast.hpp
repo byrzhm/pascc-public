@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "location.hh"
+#include "util/type/type.hpp"
 
 namespace pascc {
 
@@ -77,7 +78,7 @@ public:
    * @param subprog_decl_part 子程序声明部分，不存在时为 nullptr
    * @param stmt_part 语句部分，不存在时为 nullptr
    *
-   * @attention 如果 stmt_part 为空，那么源程序一定是错误的
+   * @attention 如果 stmt_part 为空，那么源程序语法一定是错误的，会卡在语法分析阶段
    */
   Block(
       std::unique_ptr<ConstDeclPart> const_decl_part,
@@ -203,7 +204,14 @@ public:
    *
    * @return std::string 表达式的类型
    */
-  [[nodiscard]] auto type() -> std::string & { return type_; }
+  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
+
+  /**
+   * @brief 设置 type
+   * 
+   * @param type 设置的类型
+   */
+  void setType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
 
   /**
    * @brief 是否是左值
@@ -221,8 +229,8 @@ public:
   void setIsLvalue(bool is_lvalue) { is_lvalue_ = is_lvalue; }
 
 private:
-  std::string type_{"no_type"};  ///< 表达式的类型
-  bool is_lvalue_{false};        ///< 是否是左值
+  std::unique_ptr<util::SymType> type_;  ///< 表达式的类型
+  bool is_lvalue_{false};                ///< 是否是左值
 };
 
 /**
@@ -240,7 +248,9 @@ public:
    */
   explicit BoolExpr(std::unique_ptr<Expr> expr)
     : expr_(std::move(expr))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -303,7 +313,9 @@ public:
     : binop_(binop)
     , lhs_(std::move(lhs))
     , rhs_(std::move(rhs))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -364,7 +376,9 @@ public:
   UnaryExpr(UnaryOp op, std::unique_ptr<Expr> expr)
     : op_(op)
     , expr_(std::move(expr))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -398,12 +412,16 @@ class Number: public ASTNode
 {
 public:
   explicit Number(int value)
-    : type_("integer")
+    : type_(
+          std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::INTEGER})
+      )
     , value_(value)
   {}
 
   explicit Number(double value)
-    : type_("real")
+    : type_(
+          std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::REAL})
+      )
     , value_(value)
   {}
 
@@ -412,12 +430,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto type() -> std::string & { return type_; }
+  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
 
   [[nodiscard]] auto value() -> std::variant<int, double> { return value_; }
 
 private:
-  std::string type_;                 ///< real 或 integer
+  std::unique_ptr<util::SymType> type_;  ///< real 或 integer
   std::variant<int, double> value_;  ///< 使用 std::get<int>(value_) 或 std::get<double>(value_) 获取值
 };
 
@@ -432,7 +450,7 @@ public:
   explicit StringLiteral(std::string string)
     : value_(std::move(string))
   {
-    type() = "string";
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::STRING}));
     setIsLvalue(false);
   }
 
@@ -461,12 +479,25 @@ class UnsignedConstant: public Expr
 public:
   explicit UnsignedConstant(std::unique_ptr<Number> number)
   {
-    if (number->type() == "integer") {
-      type() = "integer";
-      value_ = std::get<int>(number->value());
-    } else {
-      type() = "real";
-      value_ = std::get<double>(number->value());
+    if (number->type().type() != util::SymType::Type::BUILT_IN) {
+      throw std::runtime_error("Number type should be built-in type");
+    }
+
+    auto built_in_type = number->type().built_in_type();
+    switch (built_in_type.type()) {
+      case util::BasicType::INTEGER:
+        setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::INTEGER}));
+        value_ = std::get<int>(number->value());
+        break;
+
+      case util::BasicType::REAL:
+        setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::REAL}));
+        value_ = std::get<double>(number->value());
+        break;
+
+      default:
+        throw std::runtime_error("Number is neither a integer nor a real");
+        break;
     }
     setIsLvalue(false);
   }
@@ -474,14 +505,14 @@ public:
   explicit UnsignedConstant(char value)
     : value_(value)
   {
-    type() = "char";
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::CHAR}));
     setIsLvalue(false);
   }
 
   explicit UnsignedConstant(bool value)
     : value_(value)
   {
-    type() = "boolean";
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::BOOLEAN}));
     setIsLvalue(false);
   }
 
@@ -510,12 +541,16 @@ class FuncCall: public Expr
 public:
   explicit FuncCall(std::string funcid)
     : funcid_(std::move(funcid))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   FuncCall(std::string funcid, std::vector<std::unique_ptr<Expr>> actuals)
     : funcid_(std::move(funcid))
     , actuals_(std::move(actuals))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -674,12 +709,26 @@ public:
    */
   explicit Constant(std::unique_ptr<Number> number, int sign = 1)
     : sign_(sign)
-    , type_(number->type())
   {
-    if (number->type() == "integer") {
-      value_ = std::get<int>(number->value());
-    } else {
-      value_ = std::get<double>(number->value());
+    if (number->type().type() != util::SymType::Type::BUILT_IN) {
+      throw std::runtime_error("Number type should be built-in type");
+    }
+
+    auto built_in_type = number->type().built_in_type();
+    switch (built_in_type.type()) {
+      case util::BasicType::INTEGER:
+        type_  = "integer";
+        value_ = std::get<int>(number->value());
+        break;
+
+      case util::BasicType::REAL:
+        type_  = "real";
+        value_ = std::get<double>(number->value());
+        break;
+
+      default:
+        throw std::runtime_error("Number is neither a integer nor a real");
+        break;
     }
   }
 

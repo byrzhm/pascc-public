@@ -1,4 +1,5 @@
 #include "ast/ast.hpp"
+#include "ast/visitor.hpp"
 
 namespace pascc::ast {
 

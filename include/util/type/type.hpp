@@ -6,8 +6,6 @@
 #include <variant>
 #include <vector>
 
-#include "ast/visitor.hpp"
-
 namespace pascc::util {
 
 class SymType;
@@ -68,32 +66,32 @@ private:
 class SymType
 {
 public:
+  SymType() = delete;
+
+  explicit SymType(BuiltInType type)
+    : type_(Type::BUILT_IN)
+    , actual_type_(type)
+  {}
+
+  explicit SymType(ArrayType type)
+    : type_(Type::ARRAY)
+    , actual_type_(std::move(type))
+  {}
+
+  explicit SymType(RecordType type)
+    : type_(Type::RECORD)
+    , actual_type_(std::move(type))
+  {}
+
   enum class Type
   {
+    NO_TYPE,
     BUILT_IN,
     ARRAY,
     RECORD
   };
 
   [[nodiscard]] auto type() const -> Type { return type_; }
-
-  void set_type(BuiltInType type)
-  {
-    type_        = Type::BUILT_IN;
-    actual_type_ = type;
-  }
-
-  void set_type(ArrayType type)
-  {
-    type_        = Type::ARRAY;
-    actual_type_ = std::move(type);
-  }
-
-  void set_type(RecordType type)
-  {
-    type_        = Type::RECORD;
-    actual_type_ = std::move(type);
-  }
 
   [[nodiscard]] auto built_in_type() const -> const BuiltInType & { return std::get<BuiltInType>(actual_type_); }
 
@@ -102,30 +100,55 @@ public:
   [[nodiscard]] auto record_type() const -> const RecordType & { return std::get<RecordType>(actual_type_); }
 
 private:
-  Type type_;
+  Type type_{Type::NO_TYPE};
   std::variant<BuiltInType, ArrayType, RecordType> actual_type_;
 };
 
-
-class TypeVisitor: public Visitor
+class VarType
 {
 public:
-  SHARED_VISITOR_METHODS
+  VarType(bool is_ref, SymType type)
+    : is_ref_(is_ref)
+    , type_(std::move(type))
+  {}
 
-  [[nodiscard]] auto type() -> SymType { return std::move(type_); }
+  [[nodiscard]] auto is_ref() const -> bool { return is_ref_; }
+
+  [[nodiscard]] auto type() const -> const SymType & { return type_; }
 
 private:
+  bool is_ref_;
   SymType type_;
 };
 
-class TypeComparator
+class SubprogType
 {
 public:
-  // TODO(): Implement this
-  auto operator()(const SymType &lhs, const SymType &rhs) -> bool;
+  using FormalVector = std::vector<std::pair<std::string, std::unique_ptr<VarType>>>;
 
-  // TODO(): Implement this
-  static auto cast(const SymType &from, const SymType &to) -> bool;
+  SubprogType(bool is_func, SymType return_type, FormalVector formal_params)
+    : is_func_(is_func)
+    , return_type_(std::make_unique<SymType>(std::move(return_type)))
+    , formal_params_(std::move(formal_params))
+  {}
+
+
+  SubprogType(bool is_func, std::unique_ptr<SymType> return_type, FormalVector formal_params)
+    : is_func_(is_func)
+    , return_type_(std::move(return_type))
+    , formal_params_(std::move(formal_params))
+  {}
+
+  [[nodiscard]] auto is_func() const -> bool { return is_func_; }
+
+  [[nodiscard]] auto return_type() const -> const SymType & { return *return_type_; }
+
+  [[nodiscard]] auto formal_params() const -> const FormalVector & { return formal_params_; }
+
+private:
+  bool is_func_;
+  std::unique_ptr<SymType> return_type_;
+  FormalVector formal_params_;
 };
 
 }  // namespace pascc::util

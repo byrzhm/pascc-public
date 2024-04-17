@@ -1,7 +1,7 @@
 #include <string>
 
 #include "util/symtab.hpp"
-#include "util/type.hpp"  // IWYU pragma: keep
+#include "util/type/type.hpp"
 
 
 namespace pascc::util {
@@ -56,6 +56,8 @@ void SymTab<SYM, DAT>::exitScope()
 }
 
 template class SymTab<std::string, SymType>;
+template class SymTab<std::string, VarType>;
+template class SymTab<std::string, SubprogType>;
 template class SymTab<std::string, int>;  // for testing
 
 }  // namespace pascc::util
