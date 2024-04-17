@@ -56,9 +56,7 @@ message(STATUS "BISON_EXECUTABLE: ${BISON_EXECUTABLE}")
 message(STATUS "BISON_VERSION: ${BISON_VERSION}")
 
 # 生成文档
-find_package(Doxygen
-            REQUIRED dot
-            OPTIONAL_COMPONENTS mscgen dia)
+find_package(Doxygen) # 生成文档还需要安装 dot (graphviz)
 
 # 检查是否找到 Doxygen
 if(DOXYGEN_FOUND)
