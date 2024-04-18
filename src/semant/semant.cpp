@@ -5,7 +5,6 @@
 
 namespace pascc::semant {
 
-
 auto SemantVisitor::isOk() -> bool
 {
   return context_.error_msgs_.empty();
@@ -214,10 +213,15 @@ void SemantVisitor::visit(ast::ConstDeclPart &node)
 void SemantVisitor::visit([[maybe_unused]] ast::TypeId &node)
 {
   /**
-   检测 type 是否在符号表中
-   赋值给父类 TypeDenoter 的 type
+   * 检测 type 是否在符号表中
+   * 赋值给父类 TypeDenoter 的 type
    */
-  throw std::runtime_error("Not implemented");
+  auto* found = context_.typetab_.probe(node.id());
+  if (found == nullptr) {
+    context_.genErrorMsg(node.location(), "undefined type identifier ", node.id());
+    return;
+  }
+  node.setSymType(found->clone());
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::Period &node)
@@ -261,7 +265,7 @@ void SemantVisitor::visit(ast::TypeDecl &node)
     return;
   }
   node.typeDenoter().accept(*this);
-  context_.typetab_.insert(node.typeId(), &node.typeDenoter().type());
+  context_.typetab_.insert(node.typeId(), &node.typeDenoter().symType());
 }
 
 void SemantVisitor::visit(ast::TypeDeclPart &node)
@@ -289,7 +293,7 @@ void SemantVisitor::visit(ast::ValueParamSpec &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<util::VarType>(true, &node.type().type()));
+  node.setVarType(std::make_unique<util::VarType>(true, &node.type().symType()));
   for (auto &id : node.idList()) {
     if (context_.vartab_.probe(id) != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
@@ -304,7 +308,7 @@ void SemantVisitor::visit(ast::VarParamSpec &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<util::VarType>(true, &node.type().type()));
+  node.setVarType(std::make_unique<util::VarType>(true, &node.type().symType()));
   for (auto &id : node.idList()) {
     if (context_.vartab_.probe(id) != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
@@ -323,20 +327,20 @@ void SemantVisitor::visit(ast::VarDecl &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<util::VarType>(true, &node.type().type()));
+  node.setVarType(std::make_unique<util::VarType>(false, &node.type().symType()));
   for (const auto &id : node.idList()) {
     const auto *tmp = context_.typetab_.probe(id);
-    if (tmp == nullptr) {
+    if (tmp != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
       return;
     }
     tmp = context_.consttab_.probe(id);
-    if (tmp == nullptr) {
+    if (tmp != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
       return;
     }
     const auto *tmp1 = context_.vartab_.probe(id);
-    if (tmp1 == nullptr) {
+    if (tmp1 != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
       return;
     }
@@ -437,7 +441,7 @@ void SemantVisitor::visit(ast::FuncHead &node)
   node.setFuncIdType(
       std::make_unique<util::VarType>(
           false,
-          &node.returnType().type()
+          &node.returnType().symType()
       )
   );
   context_.formal_params_.clear();
@@ -447,7 +451,7 @@ void SemantVisitor::visit(ast::FuncHead &node)
   node.setFuncType(
       std::make_unique<util::SubprogType>(
           true,
-          &node.returnType().type(),
+          &node.returnType().symType(),
           std::move(context_.formal_params_)
       )
   );
@@ -599,7 +603,7 @@ void SemantVisitor::visit(ast::WhileStmt &node)
   node.body().accept(*this);
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::ForStmt &node)
+void SemantVisitor::visit(ast::ForStmt &node)
 {
   /** 
   如果ctrl_var和init_val类型不一致则返回错误，程序终止。
@@ -702,9 +706,9 @@ void SemantVisitor::visit(ast::ReadStmt &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::WriteStmt &node)
 {
-  /**
-  * do nothing
-  */
+  for (const auto &actual : node.actuals()) {
+    actual->accept(*this);
+  }
 }
 
 void SemantVisitor::visit(ast::ReadlnStmt &node)
@@ -726,9 +730,9 @@ void SemantVisitor::visit(ast::ReadlnStmt &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
 {
-  /**
-  * do nothing
-  */
+  for (const auto &actual : node.actuals()) {
+    actual->accept(*this);
+  }
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::ExitStmt &node)

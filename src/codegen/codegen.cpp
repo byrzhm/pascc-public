@@ -146,7 +146,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
   throw std::runtime_error("Block should not be visited directly");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::Number &node)
+void CodegenVisitor::visit(ast::Number &node)
 {
   /**
    * print value_ 即可
@@ -164,7 +164,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Number &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::Constant &node)
+void CodegenVisitor::visit(ast::Constant &node)
 {
   /*
     * 1. 如果sign是-1，才print '-'
@@ -206,7 +206,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Constant &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
+void CodegenVisitor::visit(ast::StringLiteral &node)
 {
   /*
     print value_即可
@@ -221,7 +221,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
   print('"');
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
+void CodegenVisitor::visit(ast::UnsignedConstant &node)
 {
   /* 
     1. 通过type_判断是integer，real，boolean，char
@@ -261,7 +261,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::BoolExpr &node)
+void CodegenVisitor::visit(ast::BoolExpr &node)
 {
   /*
     布尔类型表达式
@@ -274,7 +274,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::BoolExpr &node)
   node.expr().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::BinaryExpr &node)
+void CodegenVisitor::visit(ast::BinaryExpr &node)
 {
   /*
     print lhs_左值
@@ -291,7 +291,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::BinaryExpr &node)
   node.rhs().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
+void CodegenVisitor::visit(ast::UnaryExpr &node)
 {
   /*
     print unaryop运算符，为UnaryOp枚举类型，需要转换成对应的运算符
@@ -306,7 +306,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
   node.expr().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::FuncCall &node)
+void CodegenVisitor::visit(ast::FuncCall &node)
 {
   /*
     1. 从符号表查找func_id_，判断是否是函数名，该步由语义检查完成。
@@ -336,13 +336,18 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncCall &node)
   print(");\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
+void CodegenVisitor::visit(ast::AssignableId &node)
 {
   /*
     1. 从符号表查找id_，判断是否是函数名。
     2. 如果是函数名，表明是函数返回语句，需要print 'return'
     3. 如果不是函数名，直接print 'id_ = '
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   auto *found = context_.vartab_.probe(node.id());
   if (found != nullptr && !context_.in_field_designator_) {
     print("*");
@@ -354,7 +359,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
   print(node.id());
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
+void CodegenVisitor::visit(ast::IndexedVar &node)
 {
   /*
     1. 从符号表查找assignable_，判断是否是函数名。是函数名是错的，应该在语义中检查出来。
@@ -375,7 +380,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
+void CodegenVisitor::visit(ast::FieldDesignator &node)
 {
   /*
     1. 从符号表查找assignable_，判断是指针
@@ -397,7 +402,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
   context_.in_field_designator_ = false;
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ConstDecl &node)
+void CodegenVisitor::visit(ast::ConstDecl &node)
 {
   /*
     1. 获取ConstDecl的const_中的type_，并加入符号表。如果过type_是reference，那么需要从符号表中获取reference存的type。
@@ -431,7 +436,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ConstDecl &node)
   print(";\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ConstDeclPart &node)
+void CodegenVisitor::visit(ast::ConstDeclPart &node)
 {
   /*
     遍历ConstDecl vector列表
@@ -442,7 +447,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ConstDeclPart &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::TypeId &node)
+void CodegenVisitor::visit(ast::TypeId &node)
 {
   /*
     1. 如果是基本类型
@@ -498,7 +503,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::RecordType &node)
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::TypeDecl &node)
+void CodegenVisitor::visit(ast::TypeDecl &node)
 {
   /*
     1. 先printf typedef
@@ -512,13 +517,13 @@ void CodegenVisitor::visit([[maybe_unused]] ast::TypeDecl &node)
   */
   printIndent();
   print("typedef ");
-  print(node.typeDenoter().type());
+  print(node.typeDenoter().symType());
   print(" ");
   print(node.typeId());
   print(";\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::TypeDeclPart &node)
+void CodegenVisitor::visit(ast::TypeDeclPart &node)
 {
   /*
     遍历TypeDecl vector列表
@@ -529,7 +534,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::TypeDeclPart &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::VarDeclPart &node)
+void CodegenVisitor::visit(ast::VarDeclPart &node)
 {
   /*
     1. 遍历var_decl_list_，对每一个var_decl_调用accept，做代码生成
@@ -561,7 +566,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::VarParamSpec &node)
   throw std::runtime_error("Should not be visited by codegen visitor");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::VarDecl &node)
+void CodegenVisitor::visit(ast::VarDecl &node)
 {
   /*
     1. 先对type denoter做代码生成。print type denoter（判断是否是基本类，如果不是，需要从类型符号表里面找）
@@ -576,7 +581,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::VarDecl &node)
   print(";\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ProcHead &node)
+void CodegenVisitor::visit(ast::ProcHead &node)
 {
   /*
     1. 先print 'void'
@@ -608,7 +613,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcHead &node)
   print(")");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ProcBlock &node)
+void CodegenVisitor::visit(ast::ProcBlock &node)
 {
   /* 
     print('{')
@@ -638,7 +643,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcBlock &node)
   context_.exitScope();
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ProcDecl &node)
+void CodegenVisitor::visit(ast::ProcDecl &node)
 {
   /*
     1. 在全局符号表中插入proc_head_的proc_id_和proc标识
@@ -651,7 +656,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcDecl &node)
   node.block().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::FuncHead &node)
+void CodegenVisitor::visit(ast::FuncHead &node)
 {
   /*
     1. 先print return_type_
@@ -684,7 +689,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncHead &node)
   print(")");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::FuncBlock &node)
+void CodegenVisitor::visit(ast::FuncBlock &node)
 {
   /*
     print('{')
@@ -716,7 +721,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncBlock &node)
   context_.exitScope();
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
+void CodegenVisitor::visit(ast::FuncDecl &node)
 {
   /*
     1. 在全局符号表中插入func_head_的func_id_和func标识
@@ -730,7 +735,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
   node.block().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
+void CodegenVisitor::visit(ast::SubprogDeclPart &node)
 {
   /*
     遍历subprog_decl_list_，对每一个subprog_decl_调用accept，做代码生成
@@ -740,7 +745,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
   }
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::IfStmt &node)
+void CodegenVisitor::visit(ast::IfStmt &node)
 {
   /*
     1. print 'if (' 
@@ -749,11 +754,13 @@ void CodegenVisitor::visit([[maybe_unused]] ast::IfStmt &node)
     4. 对then_stmt_做代码生成
     5. 如果有else_stmt_，对else_stmt_做代码生成
   */
+  printIndent();
   print("if (");
   node.cond().accept(*this);
   print(") ");
   node.then().accept(*this);
   if (node.hasElse()) {
+    printIndent();
     print("else ");
     node.Else().accept(*this);
   }
@@ -783,7 +790,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
   throw std::runtime_error("Not implemented");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::RepeatStmt &node)
+void CodegenVisitor::visit(ast::RepeatStmt &node)
 {
   /*
     1. print 'do {'，换行
@@ -791,6 +798,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::RepeatStmt &node)
     3. print '} while(' 
     4. print cond，然后print ');'
   */
+  printIndent();
   print("do {\n");
   {
     IndentGuard ig(&indent_, INDENT_SIZE);
@@ -798,12 +806,13 @@ void CodegenVisitor::visit([[maybe_unused]] ast::RepeatStmt &node)
       stmt->accept(*this);
     }
   }
+  printIndent();
   print("} while (");
   node.cond().accept(*this);
   print(")\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::WhileStmt &node)
+void CodegenVisitor::visit(ast::WhileStmt &node)
 {
   /*
     1. print 'while('
@@ -813,13 +822,14 @@ void CodegenVisitor::visit([[maybe_unused]] ast::WhileStmt &node)
     5. 缩进，对stmt_做代码生成
     6. print '}'
   */
+  printIndent();
   print("while (");
   node.cond().accept(*this);
   print(") ");
   node.body().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
+void CodegenVisitor::visit(ast::ForStmt &node)
 {
   /*
     1. print 'for('
@@ -837,6 +847,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
     9. 缩进，对stmt_做代码生成
     10. print '}'
   */
+  printIndent();
   print("for (");
   node.ctrlVar().accept(*this);
   print(" = ");
@@ -860,7 +871,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
   node.body().accept(*this);
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
+void CodegenVisitor::visit(ast::AssignStmt &node)
 {
   /*
     print AssignStmt的lhs_
@@ -868,13 +879,14 @@ void CodegenVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
     print AssignStmt的rhs_
     print ';'
   */
+  printIndent();
   node.lhs().accept(*this);
   print(" = ");
   node.rhs().accept(*this);
   print(";\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
+void CodegenVisitor::visit(ast::ProcCallStmt &node)
 {
   /*
     1. 从符号表查找proc_id_，判断是否是过程名，该步由语义检查完成。
@@ -899,7 +911,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
   print(");\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ReadStmt &node)
+void CodegenVisitor::visit(ast::ReadStmt &node)
 {
   /* 和ReadlnStmt一样 */
   print("scanf(\"");
@@ -916,9 +928,10 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ReadStmt &node)
   print(");\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::WriteStmt &node)
+void CodegenVisitor::visit(ast::WriteStmt &node)
 {
   /* 去除WritelnStmt的尾部''\n即可 */
+  printIndent();
   print("printf(\"");
   context_.build_format_string_ = true;
   for (const auto &actual : node.actuals()) {
@@ -933,7 +946,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::WriteStmt &node)
   print(");\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ReadlnStmt &node)
+void CodegenVisitor::visit(ast::ReadlnStmt &node)
 {
   // 1. 首先需要遍历actuals_，对每一个actual，用一个vector存储每一个actual的类型。
   // 2. 遍历上述的类型vector, 输出scanf("%1%2%3\n", 其中%1%2%3是根据类型来的，例如%1是%d，%2是%f，%3是%c)
@@ -953,12 +966,13 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ReadlnStmt &node)
   print(");\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
+void CodegenVisitor::visit(ast::WritelnStmt &node)
 {
   // 1. 首先需要遍历actuals_，对每一个actual，用一个vector存储每一个actual的类型。
   // 2. 遍历上述的类型vector，print("%1%2%3\n", 其中%1%2%3是根据类型来的，例如%1是%d，%2是%f，%3是%c)
   // 3. 然后对每一个actual做codegen，并用','隔开
   // 4. 最后print ');'
+  printIndent();
   print("printf(\"");
   context_.build_format_string_ = true;
   for (const auto &actual : node.actuals()) {
@@ -973,7 +987,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
   print(");\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
+void CodegenVisitor::visit(ast::ExitStmt &node)
 {
   /*
     ExitStmt继承自ProcallStmt，直接调用accept即可。
@@ -988,7 +1002,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
   print(";\n");
 }
 
-void CodegenVisitor::visit([[maybe_unused]] ast::CompoundStmt &node)
+void CodegenVisitor::visit(ast::CompoundStmt &node)
 {
   /*
     1. 复合语句，先print '{'，并缩进

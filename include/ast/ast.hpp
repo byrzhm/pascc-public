@@ -877,7 +877,14 @@ public:
    * 
    * @return util::SymType& 类型
    */
-  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
+  [[nodiscard]] auto symType() -> util::SymType & { return *type_; }
+
+  /**
+   * @brief 设置类型
+   * 
+   * @param type 类型
+   */
+  void setSymType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
 
 private:
   // TODO(): 语义分析时，将 type_ 设置为具体的类型
