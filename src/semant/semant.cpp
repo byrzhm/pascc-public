@@ -17,10 +17,8 @@ void SemantVisitor::visit([[maybe_unused]] ast::Block &node)
   throw std::runtime_error("Block should not be visited directly");
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::Number &node)
-{
-  // do nothing
-}
+// do nothing
+void SemantVisitor::visit([[maybe_unused]] ast::Number &node) {}
 
 void SemantVisitor::visit(ast::Constant &node)
 {
@@ -28,16 +26,12 @@ void SemantVisitor::visit(ast::Constant &node)
     当 type == "reference" 且 sign = -1 时查符号表(找不到则返回未定义的错误)，若为字符串类型，则返回错误，程序终止。
    */
   if (node.sign() == -1 && (node.type() != "integer" && node.type() != "real")) {
-    context_.gen_error_msg(node.location(), "invaild constant type.");
+    context_.genErrorMsg(node.location(), "invaild constant type.");
   }
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
-{
-  /**
-   * do nothing
-   */
-}
+// do nothing
+void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node) {}
 
 void SemantVisitor::visit(ast::BoolExpr &node)
 {
@@ -47,21 +41,18 @@ void SemantVisitor::visit(ast::BoolExpr &node)
   node.expr().accept(*this);
   util::TypeComparator cmp;
   if (!cmp(node.expr().type(), util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)))) {
-    context_.gen_error_msg(node.location(), "boolean type expected.");
+    context_.genErrorMsg(node.location(), "boolean type expected.");
   }
   auto ptr = std::make_unique<util::SymType>(util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)));
   node.setType(std::move(ptr));
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
-{
-  /**
-   * do nothing
-   */
-}
+// do nothing
+void SemantVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node) {}
 
 void SemantVisitor::visit([[maybe_unused]] ast::BinaryExpr &node)
 {
+  // TODO(): implement this
   /**
     (type 判等时忽略 const)
     当二元运算符为 'and' 或 'or', 左右两侧必然同时为 bool，否则返回错误，程序终止。
@@ -81,6 +72,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::BinaryExpr &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
 {
+  // TODO(): implement this
   /**
    当一元运算符为 '-' 或 '+'，则 expr_ 必然是 integer 或 real 类型，否则返回错误，程序终止。
    当一元运算符为 'not' 时，则 expr_ 必然是 bool 类型，否则返回错误，程序终止。
@@ -92,6 +84,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
 {
+  // TODO(): implement this
   /**
    在符号表中查找声明，若找不到，则返回错误，程序终止。
    获取FuncCall类型表达式。
@@ -104,6 +97,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::AssignableId &node)
 {
+  // TODO(): implement this
   /*
    在符号表中查找声明，若找不到，则返回错误，程序终止。
   */
@@ -112,6 +106,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::AssignableId &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
 {
+  // TODO(): implement this
   /**
     1. 获取 assignable 的类型表达式。
     2. 获取每一个维度上的上下界
@@ -128,6 +123,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
 {
+  // TODO(): implement this
   /**
     1. 获取 assignable_ 的类型表达式。
     2. 在符号表中匹配 field_
@@ -136,18 +132,18 @@ void SemantVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
       (这表示整个表达式的类型，将会用在后续的类型检查中)。
    */
 
-
   throw std::runtime_error("Not implemented");
 }
 
 void SemantVisitor::visit(ast::ConstDecl &node)
 {
   /**
-   判断有无重定义。
-   向符号表中插入<id , constant->type()>
+   * 判断有无重定义。
+   * 向符号表中插入 <id , constant->type()>
    */
-  const auto *tmp = context_.consttab_.probe(node.constId());
-  if (tmp != nullptr) {
+  const auto *found = context_.consttab_.probe(node.constId());
+  if (found != nullptr) {
+    // TODO(张新博): refactor this
     std::stringstream sstr;
     sstr << node.location() << ": "
          << "duplicate identifier "
@@ -156,11 +152,13 @@ void SemantVisitor::visit(ast::ConstDecl &node)
     return;
   }
 
-  std::unique_ptr<util::SymType> type;
+  const util::SymType *type = nullptr;
 
+  // 如果是引用别的常量，查找引用的常量的类型
   if (node.constant().type() == "reference") {
-    tmp = context_.consttab_.lookup(std::get<std::string>(node.constant().value()));
-    if (tmp == nullptr) {
+    found = context_.consttab_.lookup(std::get<std::string>(node.constant().value()));
+    if (found == nullptr) {
+      // TODO(张新博): refactor this
       std::stringstream sstr;
       sstr << node.location() << ": "
            << "undefined constant identifier "
@@ -168,32 +166,31 @@ void SemantVisitor::visit(ast::ConstDecl &node)
       context_.error_msgs_.emplace_back(sstr.str());
       return;
     }
-
-    type = std::make_unique<util::SymType>(tmp->built_in_type());
+    type = found;
   }
 
   if (type == nullptr) {
     if (node.constant().type() == "integer") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::INTEGER});
+      type = &util::SymType::IntegerType();
     } else if (node.constant().type() == "real") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::REAL});
+      type = &util::SymType::RealType();
     } else if (node.constant().type() == "boolean") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::BOOLEAN});
+      type = &util::SymType::BooleanType();
     } else if (node.constant().type() == "char") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::CHAR});
+      type = &util::SymType::CharType();
     } else {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::STRING});
+      type = &util::SymType::StringType();
     }
   }
 
-  context_.consttab_.insert(node.constId(), std::move(*type));
+  context_.consttab_.insert(node.constId(), const_cast<util::SymType *>(type));
 }
 
 void SemantVisitor::visit(ast::ConstDeclPart &node)
 {
-  /*
-   访问各个 ConstDecl
-  */
+  /**
+   * 访问各个 ConstDecl
+   */
   for (auto &constDecl : node.constDecls()) {
     constDecl->accept(*this);
   }
@@ -366,28 +363,36 @@ void SemantVisitor::visit(ast::VarDecl &node)
 void SemantVisitor::visit(ast::ProcHead &node)
 {
   /**
-   把每一个 FormalParam 组装起来，再和id组装，插入符号表
-   符号表进入下一级。
-   对于每一个FormalParam 符号表判断重定义，再加入<id_list, typedenoter>
-  */
+   * 把每一个 FormalParam 组装起来，再和id组装，插入符号表
+   * 符号表进入下一级。
+   * 对于每一个FormalParam 符号表判断重定义，再加入<id_list, typedenoter>
+   */
   // TODO(): 过程重名的情况
 
   context_.formal_params_.clear();
-
   for (const auto &formalParam : node.formalParams()) {
     formalParam->accept(*this);  // 填充 context_.formal_params_
   }
-  // TODO(): 通过returntype 是否为nullptr 判断是func 还是 proc
+
+  // 设置proc_type_
+  node.setProcType(
+      std::make_unique<util::SubprogType>(
+          false,
+          nullptr,
+          std::move(context_.formal_params_)
+      )
+  );
+
+  // TODO(): 通过 returntype 是否为 nullptr 判断是 func 还是 proc
   // 构造 SubprogType 插入到 subprogtab
-  context_.subprogtab_.insert(node.procId(), util::SubprogType{false, nullptr, std::move(context_.formal_params_)});
-  // TODO(): 这下context_.formal_params没了。得想个办法。
-  context_.pushfunc(node.procId());
+  context_.subprogtab_.insert(node.procId(), &node.procType());
+  context_.pushFunc(node.procId());
   context_.enterScope();
 
   // 遍历 context_.formal_params_ 插入到 vartab_
-  for (auto &[varid, vartype] : context_.formal_params_) {
+  for (const auto &[varid, vartype] : node.procType().formalParams()) {
     // TODO(): 每次都要检查重复声明的情况
-    context_.vartab_.insert(varid, std::move(*vartype));
+    context_.vartab_.insert(varid, vartype);
   }
 }
 
@@ -413,7 +418,7 @@ void SemantVisitor::visit(ast::ProcBlock &node)
   if (node.hasStmtPart()) {
     node.stmtPart().accept(*this);
   }
-  context_.popfunc();
+  context_.popFunc();
   context_.exitScope();
 }
 
@@ -436,27 +441,42 @@ void SemantVisitor::visit(ast::FuncHead &node)
 
   // TODO(): 函数重名的情况
 
-  context_.formal_params_.clear();
-  // TODO() : 修改
-  // node.returnType().accept(typeVisitor);
-  // context_.vartab_.insert(node.funcId(), util::VarType{false, typeVisitor.type()});
+  // 将函数的名字作为变量加入到符号表里
+  node.returnType().accept(*this);
+  node.setFuncIdType(
+      std::make_unique<util::VarType>(
+          false,
+          &node.returnType().type()
+      )
+  );
+  context_.vartab_.insert(node.funcId(), &node.funcIdType());
 
+  context_.formal_params_.clear();
   for (const auto &formalParam : node.formalParams()) {
     formalParam->accept(*this);  // 填充 context_.formal_params_
   }
 
-  // 构造 SubprogType 插入到 subprogtab
-  // TODO() : 修改
-  // node.returnType().accept(typeVisitor);
-  // context_.subprogtab_.insert(node.funcId(), util::SubprogType{true, typeVisitor.type(), std::move(context_.formal_params_)});
+  node.setFuncType(
+      std::make_unique<util::SubprogType>(
+          true,
+          &node.returnType().type(),
+          std::move(context_.formal_params_)
+      )
+  );
 
-  context_.pushfunc(node.funcId());
+  // 构造 SubprogType 插入到 subprogtab
+  context_.subprogtab_.insert(
+      node.funcId(),
+      &node.funcType()
+  );
+
+  context_.pushFunc(node.funcId());
   context_.enterScope();
 
   // 遍历 context_.formal_params_ 插入到 vartab_
-  for (auto &[varid, vartype] : context_.formal_params_) {
+  for (const auto &[varid, vartype] : node.funcType().formalParams()) {
     // TODO(): 每次都要检查重复声明的情况
-    context_.vartab_.insert(varid, std::move(*vartype));
+    context_.vartab_.insert(varid, vartype);
   }
 }
 
@@ -482,7 +502,7 @@ void SemantVisitor::visit(ast::FuncBlock &node)
     node.stmtPart().accept(*this);
   }
   context_.exitScope();
-  context_.popfunc();
+  context_.popFunc();
 }
 
 void SemantVisitor::visit(ast::FuncDecl &node)
@@ -664,7 +684,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
     context_.error_msgs_.emplace_back(sstr.str());
     return;
   }
-  const auto &actuals_expected = proc->formal_params();
+  const auto &actuals_expected = proc->formalParams();
   if (actuals_expected.size() != node.actuals().size()) {
     std::stringstream sstr;
     sstr << node.location() << ": "
@@ -676,7 +696,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
   for (int i = 0; i < static_cast<int>(node.actuals().size()); i++) {
     util::TypeComparator comparator;
     node.actuals()[i]->accept(*this);
-    if (!node.actuals()[i]->isLvalue() && actuals_expected[i].second->is_ref()) {
+    if (!node.actuals()[i]->isLvalue() && actuals_expected[i].second->isRef()) {
       std::stringstream sstr;
       sstr << node.location() << ": "
            << "actual list do not match.";
@@ -745,9 +765,9 @@ void SemantVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
 void SemantVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
 {
   // TODO() : process的size是0。function的size是1
-  auto nowfunc                    = context_.nowfunc();
-  const auto canreturn            = context_.subprogtab_.probe(nowfunc)->is_func();
-  const util::SymType &returntype = context_.subprogtab_.probe(nowfunc)->return_type();
+  auto nowfunc                    = context_.topFunc();
+  const auto canreturn            = context_.subprogtab_.probe(nowfunc)->isFunc();
+  const util::SymType &returntype = context_.subprogtab_.probe(nowfunc)->returnType();
   util::TypeComparator comparator;
   if (node.actuals().empty() && !canreturn) {
     return;
@@ -756,11 +776,11 @@ void SemantVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
     node.actuals()[0]->accept(*this);
     const auto &thistype = node.actuals()[0]->type();
     if (!comparator(thistype, returntype) && !util::TypeComparator::cast(thistype, returntype)) {
-      context_.gen_error_msg(node.location(), "return value type doesn't match.");
+      context_.genErrorMsg(node.location(), "return value type doesn't match.");
     }
     return;
   }
-  context_.gen_error_msg(node.location(), "invaild use of exit.");
+  context_.genErrorMsg(node.location(), "invaild use of exit.");
 }
 
 void SemantVisitor::visit(ast::CompoundStmt &node)
@@ -807,7 +827,7 @@ void SemantVisitor::visit(ast::ProgramBlock &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)
 {
-  context_.pushfunc(node.programName());
+  context_.pushFunc(node.programName());
   // TODO(): 上次写到这里了
   // do nothing
 }

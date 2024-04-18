@@ -25,8 +25,6 @@ private:
   auto print(const std::string &str) -> void;
   auto print(const int &x) -> void;
   auto print(const double &d) -> void;
-  auto to_string(const ast::BinOp &op) -> std::string;
-  auto to_string(const ast::UnaryOp &op) -> std::string;
 
   bool file_output_ = false;
   std::ofstream fout_;

@@ -12,6 +12,7 @@ class SymType;
 
 enum class BasicType
 {
+  NO_TYPE,
   INTEGER,
   REAL,
   BOOLEAN,
@@ -35,14 +36,14 @@ private:
 class ArrayType
 {
 public:
-  void add_period(int lower, int upper)
+  void addPeriod(int lower, int upper)
   {
     periods_.emplace_back(lower, upper);
   }
 
   [[nodiscard]] auto periods() const -> const std::vector<std::pair<int, int>> & { return periods_; }
 
-  [[nodiscard]] auto base_type() const -> const SymType & { return *base_type_; }
+  [[nodiscard]] auto baseType() const -> const SymType & { return *base_type_; }
 
 private:
   std::vector<std::pair<int, int>> periods_;
@@ -54,7 +55,7 @@ class RecordType
 public:
   [[nodiscard]] auto fields() const -> const std::unordered_map<std::string, std::unique_ptr<SymType>> & { return fields_; }
 
-  void add_field(std::string name, std::unique_ptr<SymType> type)
+  void addField(std::string name, std::unique_ptr<SymType> type)
   {
     fields_.emplace(std::move(name), std::move(type));
   }
@@ -66,7 +67,9 @@ private:
 class SymType
 {
 public:
-  SymType() = delete;
+  SymType()
+    : actual_type_(BuiltInType{BasicType::NO_TYPE})
+  {}
 
   explicit SymType(BuiltInType type)
     : type_(Type::BUILT_IN)
@@ -93,11 +96,18 @@ public:
 
   [[nodiscard]] auto type() const -> Type { return type_; }
 
-  [[nodiscard]] auto built_in_type() const -> const BuiltInType & { return std::get<BuiltInType>(actual_type_); }
+  [[nodiscard]] auto builtInType() const -> const BuiltInType & { return std::get<BuiltInType>(actual_type_); }
 
-  [[nodiscard]] auto array_type() const -> const ArrayType & { return std::get<ArrayType>(actual_type_); }
+  [[nodiscard]] auto arrayType() const -> const ArrayType & { return std::get<ArrayType>(actual_type_); }
 
-  [[nodiscard]] auto record_type() const -> const RecordType & { return std::get<RecordType>(actual_type_); }
+  [[nodiscard]] auto recordType() const -> const RecordType & { return std::get<RecordType>(actual_type_); }
+
+  // Built-in types
+  [[nodiscard]] static auto IntegerType() -> SymType &;
+  [[nodiscard]] static auto RealType() -> SymType &;
+  [[nodiscard]] static auto BooleanType() -> SymType &;
+  [[nodiscard]] static auto CharType() -> SymType &;
+  [[nodiscard]] static auto StringType() -> SymType &;
 
 private:
   Type type_{Type::NO_TYPE};
@@ -107,47 +117,39 @@ private:
 class VarType
 {
 public:
-  VarType(bool is_ref, SymType type)
+  VarType(bool is_ref, SymType *type)
     : is_ref_(is_ref)
-    , type_(std::move(type))
+    , type_(type)
   {}
 
-  [[nodiscard]] auto is_ref() const -> bool { return is_ref_; }
+  [[nodiscard]] auto isRef() const -> bool { return is_ref_; }
 
-  [[nodiscard]] auto type() const -> const SymType & { return type_; }
+  [[nodiscard]] auto type() const -> const SymType & { return *type_; }
 
 private:
   bool is_ref_;
-  SymType type_;
+  SymType *type_;
 };
 
 class SubprogType
 {
 public:
-  using FormalVector = std::vector<std::pair<std::string, std::unique_ptr<VarType>>>;
-
-  SubprogType(bool is_func, SymType return_type, FormalVector formal_params)
+  using FormalVector = std::vector<std::pair<std::string, VarType *>>;
+  SubprogType(bool is_func, SymType *return_type, FormalVector formal_params)
     : is_func_(is_func)
-    , return_type_(std::make_unique<SymType>(std::move(return_type)))
+    , return_type_(return_type)
     , formal_params_(std::move(formal_params))
   {}
 
+  [[nodiscard]] auto isFunc() const -> bool { return is_func_; }
 
-  SubprogType(bool is_func, std::unique_ptr<SymType> return_type, FormalVector formal_params)
-    : is_func_(is_func)
-    , return_type_(std::move(return_type))
-    , formal_params_(std::move(formal_params))
-  {}
+  [[nodiscard]] auto returnType() const -> const SymType & { return *return_type_; }
 
-  [[nodiscard]] auto is_func() const -> bool { return is_func_; }
-
-  [[nodiscard]] auto return_type() const -> const SymType & { return *return_type_; }
-
-  [[nodiscard]] auto formal_params() const -> const FormalVector & { return formal_params_; }
+  [[nodiscard]] auto formalParams() const -> const FormalVector & { return formal_params_; }
 
 private:
-  bool is_func_;
-  std::unique_ptr<SymType> return_type_;
+  bool is_func_{false};
+  SymType *return_type_{nullptr};
   FormalVector formal_params_;
 };
 

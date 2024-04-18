@@ -20,27 +20,26 @@ public:
 
   void exitScope();
 
-  auto nowfunc() -> std::string;
+  auto topFunc() -> std::string;
 
-  void pushfunc(const std::string &func_name);
+  void pushFunc(const std::string &func_name);
 
-  void popfunc();
+  void popFunc();
 
-  void gen_error_msg(const parse::location &loc, const std::string &error_msg, const std::string &id = "");
-
+  void genErrorMsg(const parse::location &loc, const std::string &error_msg, const std::string &id = "");
 
 
 private:
   std::vector<std::string> error_msgs_;
 
-  util::SymTab<std::string, util::SymType> typetab_;
-  util::SymTab<std::string, util::SymType> consttab_;
-  util::SymTab<std::string, util::VarType> vartab_;
-  util::SymTab<std::string, util::SubprogType> subprogtab_;
+  util::SymTab<std::string, util::SymType *> typetab_;
+  util::SymTab<std::string, util::SymType *> consttab_;
+  util::SymTab<std::string, util::VarType *> vartab_;
+  util::SymTab<std::string, util::SubprogType*> subprogtab_;
 
   util::SubprogType::FormalVector formal_params_;
   std::stack<std::string> functions_;
-  util::SymType *case_stmt_type_;
+  util::SymType *case_stmt_type_{nullptr};
 };
 
 }  // namespace pascc::semant

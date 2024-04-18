@@ -26,6 +26,37 @@ private:
   int indent_size_;
 };
 
+auto to_string(const pascc::ast::BinOp &op) -> std::string
+{
+  switch (op) {
+    case pascc::ast::BinOp::PLUS: return "+";
+    case pascc::ast::BinOp::MINUS: return "-";
+    case pascc::ast::BinOp::MUL: return "*";
+    case pascc::ast::BinOp::FDIV:
+    case pascc::ast::BinOp::IDIV: return "/";
+    case pascc::ast::BinOp::MOD: return "%";
+    case pascc::ast::BinOp::AND: return "&&";
+    case pascc::ast::BinOp::OR: return "||";
+    case pascc::ast::BinOp::EQ: return "==";
+    case pascc::ast::BinOp::NE: return "!=";
+    case pascc::ast::BinOp::LT: return "<";
+    case pascc::ast::BinOp::GT: return ">";
+    case pascc::ast::BinOp::LE: return "<=";
+    case pascc::ast::BinOp::GE: return ">=";
+  }
+  return "";
+}
+
+auto to_string(const pascc::ast::UnaryOp &op) -> std::string
+{
+  switch (op) {
+    case pascc::ast::UnaryOp::NOT: return "!";
+    case pascc::ast::UnaryOp::MINUS: return "-";
+    case pascc::ast::UnaryOp::PLUS: return "+";
+  }
+  return "";
+}
+
 }  // namespace
 
 namespace pascc::codegen {
@@ -60,37 +91,6 @@ auto CodegenVisitor::print(const double &d) -> void
   (file_output_ ? fout_ : std::cout) << d;
 }
 
-auto to_string(const ast::BinOp &op) -> std::string
-{
-  switch (op) {
-    case ast::BinOp::PLUS: return "+";
-    case ast::BinOp::MINUS: return "-";
-    case ast::BinOp::MUL: return "*";
-    case ast::BinOp::FDIV:
-    case ast::BinOp::IDIV: return "/";
-    case ast::BinOp::MOD: return "%";
-    case ast::BinOp::AND: return "&&";
-    case ast::BinOp::OR: return "||";
-    case ast::BinOp::EQ: return "==";
-    case ast::BinOp::NE: return "!=";
-    case ast::BinOp::LT: return "<";
-    case ast::BinOp::GT: return ">";
-    case ast::BinOp::LE: return "<=";
-    case ast::BinOp::GE: return ">=";
-  }
-  return "";
-}
-
-auto to_string(const ast::UnaryOp &op) -> std::string
-{
-  switch (op) {
-    case ast::UnaryOp::NOT: return "!";
-    case ast::UnaryOp::MINUS: return "-";
-    case ast::UnaryOp::PLUS: return "+";
-  }
-  return "";
-}
-
 void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
 {
   throw std::runtime_error("Block should not be visited directly");
@@ -98,15 +98,19 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Number &node)
 {
-  /*
-    print value_即可
-  */
-  if (node.type() == "integer") {
-    print(std::get<int>(node.value()));
-  } else if (node.type() == "real") {
-    print(std::get<double>(node.value()));
-  } else {
-    throw std::runtime_error("Unexpected type");
+  /**
+   * print value_ 即可
+   */
+
+  switch (node.type().builtInType().type()) {
+    case util::BasicType::INTEGER:
+      print(std::get<int>(node.value()));
+      break;
+    case util::BasicType::REAL:
+      print(std::get<double>(node.value()));
+      break;
+    default:
+      throw std::runtime_error("Unexpected type");
   }
 }
 
@@ -165,20 +169,29 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
           如果是char，需要转换打印''
           integer和real直接打印即可
   */
-  if (node.type() == "integer") {
-    print(std::get<int>(node.value()));
-  } else if (node.type() == "real") {
-    print(std::get<double>(node.value()));
-  } else if (node.type() == "char") {
-    print("'" + std::string(1, std::get<char>(node.value())) + "'");
-  } else if (node.type() == "boolean") {
-    if (std::get<bool>(node.value())) {
-      print("true");
-    } else {
-      print("false");
-    }
-  } else {
-    throw std::runtime_error("Unexpected type");
+  switch (node.type().builtInType().type()) {
+    case util::BasicType::INTEGER:
+      print(std::get<int>(node.value()));
+      break;
+
+    case util::BasicType::REAL:
+      print(std::get<double>(node.value()));
+      break;
+
+    case util::BasicType::BOOLEAN:
+      if (std::get<bool>(node.value())) {
+        print("true");
+      } else {
+        print("false");
+      }
+      break;
+
+    case util::BasicType::CHAR:
+      print("'" + std::string(1, std::get<char>(node.value())) + "'");
+      break;
+
+    default:
+      throw std::runtime_error("Unexpected type");
   }
 }
 
