@@ -71,24 +71,16 @@ auto CodegenVisitor::println(const std::string &str) -> void
   printIndent();
   print(str + "\n");
 }
+
 auto CodegenVisitor::printIndent() -> void
 {
   (file_output_ ? fout_ : std::cout) << indent(indent_);
 }
 
-auto CodegenVisitor::print(const std::string &str) -> void
+template<typename T>
+void CodegenVisitor::print(const T &t)
 {
-  (file_output_ ? fout_ : std::cout) << str;
-}
-
-auto CodegenVisitor::print(const int &x) -> void
-{
-  (file_output_ ? fout_ : std::cout) << x;
-}
-
-auto CodegenVisitor::print(const double &d) -> void
-{
-  (file_output_ ? fout_ : std::cout) << d;
+  (file_output_ ? fout_ : std::cout) << t;
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)

@@ -22,9 +22,9 @@ public:
 private:
   auto println(const std::string &str) -> void;
   auto printIndent() -> void;
-  auto print(const std::string &str) -> void;
-  auto print(const int &x) -> void;
-  auto print(const double &d) -> void;
+
+  template<typename T>
+  void print(const T &t);
 
   bool file_output_ = false;
   std::ofstream fout_;
