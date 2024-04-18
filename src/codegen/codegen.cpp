@@ -58,6 +58,30 @@ auto to_string(const pascc::ast::UnaryOp &op) -> std::string
   return "";
 }
 
+auto placeholder(pascc::ast::Expr &expr) -> std::string
+{
+  const auto &type = expr.type();
+  if (type.actualType() != pascc::util::SymType::Type::BUILT_IN) {
+    throw std::runtime_error("unexpected expr type");
+  }
+
+  switch (type.builtInType().type()) {
+    case pascc::util::BasicType::INTEGER:
+      return "%d";
+    case pascc::util::BasicType::REAL:
+      return "%lf";
+    case pascc::util::BasicType::BOOLEAN:
+      return "%d";
+    case pascc::util::BasicType::CHAR:
+      return "%c";
+    case pascc::util::BasicType::STRING:
+      return "%s";
+    default:
+      throw std::runtime_error("unexpected expr type");
+  }
+  return {};
+}
+
 }  // namespace
 
 namespace pascc::codegen {
@@ -187,7 +211,14 @@ void CodegenVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
   /*
     print value_即可
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
+  print('"');
   print(node.value());
+  print('"');
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
@@ -199,6 +230,11 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node)
           如果是char，需要转换打印''
           integer和real直接打印即可
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   switch (node.type().builtInType().type()) {
     case util::BasicType::INTEGER:
       print(std::get<int>(node.value()));
@@ -230,6 +266,11 @@ void CodegenVisitor::visit([[maybe_unused]] ast::BoolExpr &node)
   /*
     布尔类型表达式
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   node.expr().accept(*this);
 }
 
@@ -240,6 +281,11 @@ void CodegenVisitor::visit([[maybe_unused]] ast::BinaryExpr &node)
     print binop运算符，为BinOp枚举类型，需要转换成对应的运算符
     print rhs_右值
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   node.lhs().accept(*this);
   print(" " + to_string(node.op()) + " ");
   node.rhs().accept(*this);
@@ -251,6 +297,11 @@ void CodegenVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
     print unaryop运算符，为UnaryOp枚举类型，需要转换成对应的运算符
     print expr_表达式
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   print(to_string(node.op()) + " ");
   node.expr().accept(*this);
 }
@@ -263,8 +314,26 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncCall &node)
     3. 遍历actuals_，对每一个actual调用accept，做代码生成（由语义检查检查函数传参与函数定义的匹配）
     4. print ')'
   */
-  // todo end here
-  throw std::runtime_error("Not implemented");
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
+  print(node.funcid() + "(");
+  auto *subprog_type  = context_.subprogtab_.probe(node.funcid());
+  const auto &formals = subprog_type->formalParams();
+  const auto &actuals = node.actuals();
+  auto size           = actuals.size();
+  for (unsigned i = 0; i < size; i++) {
+    if (i != 0) {
+      print(", ");
+    }
+    if (formals[i].second->isRef()) {
+      print('&');
+    }
+    actuals[i]->accept(*this);
+  }
+  print(");\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
@@ -274,7 +343,15 @@ void CodegenVisitor::visit([[maybe_unused]] ast::AssignableId &node)
     2. 如果是函数名，表明是函数返回语句，需要print 'return'
     3. 如果不是函数名，直接print 'id_ = '
   */
-  throw std::runtime_error("Not implemented");
+  auto *found = context_.vartab_.probe(node.id());
+  if (found != nullptr && !context_.in_field_designator_) {
+    print("*");
+  } else if (found != nullptr && context_.in_field_designator_) {
+    context_.in_field_designator_ = true;
+  } else if (node.id() == context_.current_subprog_) {
+    print("__");
+  }
+  print(node.id());
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
@@ -285,7 +362,17 @@ void CodegenVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
     3. print expr，如果是expr是变量名，语义检查中会检查是否在符号表中。
     4. print ']'
   */
-  throw std::runtime_error("Not implemented");
+  node.assignable().accept(*this);
+  const auto &indices = node.indices();
+  const auto &periods = node.assignable().type().arrayType().periods();
+  auto size           = indices.size();
+  for (unsigned i = 0; i < size; i++) {
+    print("[");
+    indices[i]->accept(*this);
+    print(" - ");
+    print(periods[i].first);
+    print("]");
+  }
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
@@ -298,7 +385,16 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
           然后print field_id_
     3. print '=' (和Funcion的返回值的Assignable情况区分开)
   */
-  throw std::runtime_error("Not implemented");
+  context_.in_field_designator_ = true;
+  context_.field_is_ref_        = false;
+  node.assignable().accept(*this);
+  if (context_.field_is_ref_) {
+    print("->");
+  } else {
+    print('.');
+  }
+  print(node.field());
+  context_.in_field_designator_ = false;
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ConstDecl &node)
@@ -388,7 +484,6 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ArrayType &node)
     1. print typedenoter（目前只能是typeid）
     2. 调用periods_的accept，做代码生成
   */
-  throw std::runtime_error("Not implemented");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::RecordType &node)
@@ -412,12 +507,14 @@ void CodegenVisitor::visit([[maybe_unused]] ast::TypeDecl &node)
     4. 然后print TypeDecl里面的typeid（需要全局变量传递）
     5. 最后print ';'
     6. 类型符号表添加type id和type denoter类型
+
+    eg. `typedef int i32;`
   */
   printIndent();
   print("typedef ");
-  print(node.typeId());
+  print(node.typeDenoter().type());
   print(" ");
-  node.typeDenoter().accept(*this);
+  print(node.typeId());
   print(";\n");
 }
 
@@ -488,6 +585,10 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcHead &node)
           对每一个FormalParam做代码生成，用','分隔。然后print ')'
           需要将每一个FormalParam存入符号表中，供后续代码生成使用
   */
+  context_.current_subprog_      = node.procId();
+  context_.current_subprog_type_ = &node.procType();
+  context_.subprogtab_.insert(node.procId(), context_.current_subprog_type_);
+  context_.enterScope();
   print("void " + node.procId() + "(");
   bool first = true;
   for (const auto &[id, type] : node.procType().formalParams()) {
@@ -534,6 +635,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcBlock &node)
     node.stmtPart().accept(*this);
   }
   println("}");
+  context_.exitScope();
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcDecl &node)
@@ -558,6 +660,10 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncHead &node)
           对每一个FormalParam做代码生成，用','分隔。然后print ')'
           需要将每一个FormalParam存入符号表中，供后续代码生成使用
   */
+  context_.current_subprog_      = node.funcId();
+  context_.current_subprog_type_ = &node.funcType();
+  context_.subprogtab_.insert(node.funcId(), context_.current_subprog_type_);
+  context_.enterScope();
   print(node.funcType().returnType());
   print(" " + node.funcId() + "(");
   bool first = true;
@@ -602,9 +708,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncBlock &node)
     if (node.hasVarDeclPart()) {
       node.varDeclPart().accept(*this);
     }
+    print(context_.current_subprog_type_->returnType());
+    print(" __" + context_.current_subprog_ + ";\n");
     node.stmtPart().accept(*this);
   }
   println("}");
+  context_.exitScope();
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
@@ -616,6 +725,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
     4. 再对func_block_做代码生成
     5. 退出func的符号表
   */
+
   node.head().accept(*this);
   node.block().accept(*this);
 }
@@ -773,15 +883,18 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
     4. print ')'
   */
   print(node.procId() + "(");
-  bool first = true;
-  for (const auto &actual : node.actuals()) {
-    if (!first) {
+  auto *subprog_type  = context_.subprogtab_.probe(node.procId());
+  const auto &formals = subprog_type->formalParams();
+  const auto &actuals = node.actuals();
+  auto size           = actuals.size();
+  for (unsigned i = 0; i < size; i++) {
+    if (i != 0) {
       print(", ");
     }
-    actual->accept(*this);
-    if (first) {
-      first = false;
+    if (formals[i].second->isRef()) {
+      print('&');
     }
+    actuals[i]->accept(*this);
   }
   print(");\n");
 }
