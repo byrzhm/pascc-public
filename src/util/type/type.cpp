@@ -39,6 +39,7 @@ auto SymType::clone() const -> std::unique_ptr<SymType>
     case Type::BUILT_IN: return std::make_unique<SymType>(builtInType());
     case Type::ARRAY: return std::make_unique<SymType>(arrayType());
     case Type::RECORD: return std::make_unique<SymType>(recordType());
+    case Type::USER_DEFINED: return std::make_unique<SymType>(userDefinedType());
   }
   return {};
 }
