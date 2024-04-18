@@ -94,7 +94,7 @@ public:
     RECORD
   };
 
-  [[nodiscard]] auto type() const -> Type { return type_; }
+  [[nodiscard]] auto actualType() const -> Type { return type_; }
 
   [[nodiscard]] auto builtInType() const -> const BuiltInType & { return std::get<BuiltInType>(actual_type_); }
 
@@ -124,7 +124,7 @@ public:
 
   [[nodiscard]] auto isRef() const -> bool { return is_ref_; }
 
-  [[nodiscard]] auto type() const -> const SymType & { return *type_; }
+  [[nodiscard]] auto symType() const -> const SymType & { return *type_; }
 
 private:
   bool is_ref_;

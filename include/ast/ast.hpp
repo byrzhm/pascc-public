@@ -475,7 +475,7 @@ class UnsignedConstant: public Expr
 public:
   explicit UnsignedConstant(std::unique_ptr<Number> number)
   {
-    if (number->type().type() != util::SymType::Type::BUILT_IN) {
+    if (number->type().actualType() != util::SymType::Type::BUILT_IN) {
       throw std::runtime_error("Number type should be built-in type");
     }
 
@@ -706,7 +706,7 @@ public:
   explicit Constant(std::unique_ptr<Number> number, int sign = 1)
     : sign_(sign)
   {
-    if (number->type().type() != util::SymType::Type::BUILT_IN) {
+    if (number->type().actualType() != util::SymType::Type::BUILT_IN) {
       throw std::runtime_error("Number type should be built-in type");
     }
 

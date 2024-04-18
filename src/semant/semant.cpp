@@ -651,7 +651,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
       context_.genErrorMsg(node.location(), "actual list do not match.");
       return;
     }
-    if (!context_.cmp_(actuals_expected[i].second->type(), node.actuals()[i]->type()) && !util::TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->type())) {
+    if (!context_.cmp_(actuals_expected[i].second->symType(), node.actuals()[i]->type()) && !util::TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->symType())) {
       context_.genErrorMsg(node.location(), "actual list do not match.");
       return;
     }
