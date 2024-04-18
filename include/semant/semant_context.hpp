@@ -28,14 +28,13 @@ public:
 
   void genErrorMsg(const parse::location &loc, const std::string &error_msg, const std::string &id = "");
 
-
 private:
   std::vector<std::string> error_msgs_;
 
   util::SymTab<std::string, util::SymType *> typetab_;
   util::SymTab<std::string, util::SymType *> consttab_;
   util::SymTab<std::string, util::VarType *> vartab_;
-  util::SymTab<std::string, util::SubprogType*> subprogtab_;
+  util::SymTab<std::string, util::SubprogType *> subprogtab_;
 
   util::SubprogType::FormalVector formal_params_;
   std::stack<std::string> functions_;

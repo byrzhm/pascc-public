@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 
 #include "codegen/codegen.hpp"
 
@@ -83,6 +84,39 @@ void CodegenVisitor::print(const T &t)
   (file_output_ ? fout_ : std::cout) << t;
 }
 
+template<>
+void CodegenVisitor::print(const util::SymType &t)
+{
+  std::stringstream sstr;
+  (file_output_ ? fout_ : std::cout) << sstr.str();
+  switch (t.actualType()) {
+    case util::SymType::Type::BUILT_IN:
+      switch (t.builtInType().type()) {
+        case util::BasicType::INTEGER:
+          sstr << "int";
+          break;
+        case util::BasicType::REAL:
+          sstr << "double";
+          break;
+        case util::BasicType::BOOLEAN:
+          sstr << "bool";
+          break;
+        case util::BasicType::CHAR:
+          sstr << "char";
+          break;
+        default:
+          // 暂不支持 字符串 类型
+          throw std::runtime_error("Unexpected type");
+      }
+    case util::SymType::Type::USER_DEFINED:
+      sstr << t.userDefinedType();
+      break;
+    default:
+      // 暂不支持 数组 记录 类型
+      throw std::runtime_error("Not implemented");
+  }
+}
+
 void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
 {
   throw std::runtime_error("Block should not be visited directly");
@@ -124,8 +158,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Constant &node)
     * 如果是char，加''。
     * 如果是string，加""。
   */
-  if (node.type() == "string" || node.type() == "reference") {
-    // todo: reference?
+  if (node.type() == "string") {
     print('"' + std::get<std::string>(node.value()) + '"');
   } else if (node.type() == "integer") {
     if (node.sign() == -1) {
@@ -139,6 +172,11 @@ void CodegenVisitor::visit([[maybe_unused]] ast::Constant &node)
     print(std::get<double>(node.value()));
   } else if (node.type() == "char") {
     print("'" + std::string(1, std::get<char>(node.value())) + "'");
+  } else if (node.type() == "reference") {
+    if (node.sign() == -1) {
+      print("-");
+    }
+    print(std::get<std::string>(node.value()));
   } else {
     throw std::runtime_error("Unexpected type");
   }
@@ -272,9 +310,29 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ConstDecl &node)
   */
   printIndent();
   print("const ");
+  if (node.constant().type() == "string") {
+    print("char * ");
+    context_.consttab_.insert(node.constId(), "char *");
+  } else if (node.constant().type() == "integer") {
+    print("int");
+    context_.consttab_.insert(node.constId(), "int");
+  } else if (node.constant().type() == "real") {
+    print("double");
+    context_.consttab_.insert(node.constId(), "double");
+  } else if (node.constant().type() == "char") {
+    print("char");
+    context_.consttab_.insert(node.constId(), "char");
+  } else if (node.constant().type() == "reference") {
+    auto type = context_.consttab_.lookup(node.constId());
+    print(type);
+    context_.consttab_.insert(node.constId(), type);
+  } else {
+    throw std::runtime_error("Unexpected type");
+  }
   print(node.constId());
   print(" = ");
-  // todo: 查类型符号表 存符号表
+  node.constant().accept(*this);
+  print(";\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ConstDeclPart &node)
@@ -298,7 +356,17 @@ void CodegenVisitor::visit([[maybe_unused]] ast::TypeId &node)
       1.4 如果是boolean，print 'bool'
     2. 如果是自定义类型，直接print类型符号即可
   */
-  print(node.id());
+  if (node.id() == "integer") {
+    print("int");
+  } else if (node.id() == "real") {
+    print("double");
+  } else if (node.id() == "char") {
+    print("char");
+  } else if (node.id() == "boolean") {
+    print("bool");
+  } else {
+    print(node.id());
+  }
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Period &node)
@@ -351,8 +419,6 @@ void CodegenVisitor::visit([[maybe_unused]] ast::TypeDecl &node)
   print(" ");
   node.typeDenoter().accept(*this);
   print(";\n");
-
-  // todo: 存typeid 添加符号表
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::TypeDeclPart &node)
@@ -384,7 +450,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ValueParamSpec &node)
     3. 注意：Pascal支持proc(a,b,c : Integer)，C语言必须是proc(int a, int b, int c)。
     4. 每一个id和type对插入类型符号表中
   */
-  throw std::runtime_error("Not implemented");
+  throw std::runtime_error("Should not be visited by codegen visitor");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::VarParamSpec &node)
@@ -395,7 +461,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::VarParamSpec &node)
     3. 注意：Pascal支持proc(var a,b,c : Integer)，C语言必须是proc(int* a, int* b, int* c)。
     4. 每一个id和type*对插入类型符号表中 
   */
-  throw std::runtime_error("Not implemented");
+  throw std::runtime_error("Should not be visited by codegen visitor");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::VarDecl &node)
@@ -404,7 +470,13 @@ void CodegenVisitor::visit([[maybe_unused]] ast::VarDecl &node)
     1. 先对type denoter做代码生成。print type denoter（判断是否是基本类，如果不是，需要从类型符号表里面找）
     2. 遍历id_list，print每一个id，用','隔开
   */
-  throw std::runtime_error("Not implemented");
+  node.type().accept(*this);
+  print(" ");
+  print(node.idList().front());
+  for (auto iter = node.idList().begin() + 1; iter != node.idList().end(); ++iter) {
+    print(", " + *iter);
+  }
+  print(";\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcHead &node)
@@ -416,7 +488,23 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcHead &node)
           对每一个FormalParam做代码生成，用','分隔。然后print ')'
           需要将每一个FormalParam存入符号表中，供后续代码生成使用
   */
-  throw std::runtime_error("Not implemented");
+  print("void " + node.procId() + "(");
+  bool first = true;
+  for (const auto &[id, type] : node.procType().formalParams()) {
+    if (!first) {
+      print(", ");
+    }
+    print(type->symType());
+    if (type->isRef()) {
+      print(" *");
+      context_.vartab_.insert(id, type);
+    }
+    print(" " + id);
+    if (first) {
+      first = false;
+    }
+  }
+  print(")");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcBlock &node)
@@ -431,7 +519,21 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcBlock &node)
       一定有stmt_part_，否则语义检查报错
     print '}'
   */
-  throw std::runtime_error("Not implemented");
+  println(" {");
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    if (node.hasConstDeclPart()) {
+      node.constDeclPart().accept(*this);
+    }
+    if (node.hasTypeDeclPart()) {
+      node.typeDeclPart().accept(*this);
+    }
+    if (node.hasVarDeclPart()) {
+      node.varDeclPart().accept(*this);
+    }
+    node.stmtPart().accept(*this);
+  }
+  println("}");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcDecl &node)
@@ -443,7 +545,8 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcDecl &node)
     4. 再对proc_block_做代码生成
     5. 退出process的符号表
   */
-  throw std::runtime_error("Not implemented");
+  node.head().accept(*this);
+  node.block().accept(*this);
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::FuncHead &node)
@@ -455,7 +558,24 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncHead &node)
           对每一个FormalParam做代码生成，用','分隔。然后print ')'
           需要将每一个FormalParam存入符号表中，供后续代码生成使用
   */
-  throw std::runtime_error("Not implemented");
+  print(node.funcType().returnType());
+  print(" " + node.funcId() + "(");
+  bool first = true;
+  for (const auto &[id, type] : node.funcType().formalParams()) {
+    if (!first) {
+      print(", ");
+    }
+    print(type->symType());
+    if (type->isRef()) {
+      print(" *");
+      context_.vartab_.insert(id, type);
+    }
+    print(" " + id);
+    if (first) {
+      first = false;
+    }
+  }
+  print(")");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::FuncBlock &node)
@@ -470,7 +590,21 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncBlock &node)
       一定有stmt_part_，否则语义检查报错
     print '}'
   */
-  throw std::runtime_error("Not implemented");
+  println(" {");
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    if (node.hasConstDeclPart()) {
+      node.constDeclPart().accept(*this);
+    }
+    if (node.hasTypeDeclPart()) {
+      node.typeDeclPart().accept(*this);
+    }
+    if (node.hasVarDeclPart()) {
+      node.varDeclPart().accept(*this);
+    }
+    node.stmtPart().accept(*this);
+  }
+  println("}");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
@@ -482,7 +616,8 @@ void CodegenVisitor::visit([[maybe_unused]] ast::FuncDecl &node)
     4. 再对func_block_做代码生成
     5. 退出func的符号表
   */
-  throw std::runtime_error("Not implemented");
+  node.head().accept(*this);
+  node.block().accept(*this);
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
@@ -490,7 +625,9 @@ void CodegenVisitor::visit([[maybe_unused]] ast::SubprogDeclPart &node)
   /*
     遍历subprog_decl_list_，对每一个subprog_decl_调用accept，做代码生成
   */
-  throw std::runtime_error("Not implemented");
+  for (const auto &subprogDecl : node.subprogDecls()) {
+    subprogDecl->accept(*this);
+  }
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::IfStmt &node)
@@ -499,12 +636,17 @@ void CodegenVisitor::visit([[maybe_unused]] ast::IfStmt &node)
     1. print 'if (' 
     2. print cond_
     3. print ')'
-    4. print ' {' 
-    5. 缩进，对then_stmt_做代码生成
-    6. print '}'
-    7. 如果有else_stmt_，print 'else {'，缩进，对else_stmt_做代码生成，print '}'
+    4. 对then_stmt_做代码生成
+    5. 如果有else_stmt_，对else_stmt_做代码生成
   */
-  throw std::runtime_error("Not implemented");
+  print("if (");
+  node.cond().accept(*this);
+  print(") ");
+  node.then().accept(*this);
+  if (node.hasElse()) {
+    print("else ");
+    node.Else().accept(*this);
+  }
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::CaseStmt &node)
@@ -517,6 +659,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseStmt &node)
     5. print '}'
     6. 我们的pascal-S到C语言暂不支持case中的default语法
   */
+  // TODO (fpy & dly): implement this
   throw std::runtime_error("Not implemented");
 }
 
@@ -526,6 +669,7 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
     1. 遍历constants，对constants中每一个constant，print ‘case’， print constant，print ':\n' 
     2. 缩进，对stmt_做代码生成
   */
+  // TODO (fpy & dly): implement this
   throw std::runtime_error("Not implemented");
 }
 
@@ -537,7 +681,16 @@ void CodegenVisitor::visit([[maybe_unused]] ast::RepeatStmt &node)
     3. print '} while(' 
     4. print cond，然后print ');'
   */
-  throw std::runtime_error("Not implemented");
+  print("do {\n");
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    for (const auto &stmt : node.body()) {
+      stmt->accept(*this);
+    }
+  }
+  print("} while (");
+  node.cond().accept(*this);
+  print(")\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::WhileStmt &node)
@@ -550,7 +703,10 @@ void CodegenVisitor::visit([[maybe_unused]] ast::WhileStmt &node)
     5. 缩进，对stmt_做代码生成
     6. print '}'
   */
-  throw std::runtime_error("Not implemented");
+  print("while (");
+  node.cond().accept(*this);
+  print(") ");
+  node.body().accept(*this);
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
@@ -571,7 +727,27 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ForStmt &node)
     9. 缩进，对stmt_做代码生成
     10. print '}'
   */
-  throw std::runtime_error("Not implemented");
+  print("for (");
+  node.ctrlVar().accept(*this);
+  print(" = ");
+  node.initVal().accept(*this);
+  print("; ");
+  node.ctrlVar().accept(*this);
+  if (node.updown()) {
+    print(" <= ");
+  } else {
+    print(" >= ");
+  }
+  node.endVal().accept(*this);
+  print("; ");
+  node.ctrlVar().accept(*this);
+  if (node.updown()) {
+    print("++");
+  } else {
+    print("--");
+  }
+  print(") ");
+  node.body().accept(*this);
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
@@ -582,10 +758,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::AssignStmt &node)
     print AssignStmt的rhs_
     print ';'
   */
-  throw std::runtime_error("Not implemented");
+  node.lhs().accept(*this);
+  print(" = ");
+  node.rhs().accept(*this);
+  print(";\n");
 }
 
-// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
 {
   /*
@@ -594,46 +772,92 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ProcCallStmt &node)
     3. 遍历actuals_，对每一个actual调用accept，做代码生成（由语义检查检查函数传参与函数定义的匹配）
     4. print ')'
   */
-  throw std::runtime_error("Not implemented");
+  print(node.procId() + "(");
+  bool first = true;
+  for (const auto &actual : node.actuals()) {
+    if (!first) {
+      print(", ");
+    }
+    actual->accept(*this);
+    if (first) {
+      first = false;
+    }
+  }
+  print(");\n");
 }
 
-// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ReadStmt &node)
 {
   /* 和ReadlnStmt一样 */
-  throw std::runtime_error("Not implemented");
+  print("scanf(\"");
+  context_.build_format_string_ = true;
+  for (const auto &actual : node.actuals()) {
+    actual->accept(*this);
+  }
+  context_.build_format_string_ = false;
+  print("\"");
+  for (const auto &actual : node.actuals()) {
+    print(", &");
+    actual->accept(*this);
+  }
+  print(");\n");
 }
 
-// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::WriteStmt &node)
 {
   /* 去除WritelnStmt的尾部''\n即可 */
-  throw std::runtime_error("Not implemented");
+  print("printf(\"");
+  context_.build_format_string_ = true;
+  for (const auto &actual : node.actuals()) {
+    actual->accept(*this);
+  }
+  context_.build_format_string_ = false;
+  print("\"");
+  for (const auto &actual : node.actuals()) {
+    print(", ");
+    actual->accept(*this);
+  }
+  print(");\n");
 }
 
-// TODO(fpy&dly): implement this
 void CodegenVisitor::visit([[maybe_unused]] ast::ReadlnStmt &node)
 {
   // 1. 首先需要遍历actuals_，对每一个actual，用一个vector存储每一个actual的类型。
   // 2. 遍历上述的类型vector, 输出scanf("%1%2%3\n", 其中%1%2%3是根据类型来的，例如%1是%d，%2是%f，%3是%c)
   // 3. 然后对每一个actual，先print '&'， 然后对该actual做codegen，并用','隔开
   // 4. 最后print ');'
-  throw std::runtime_error("Not implemented");
+  print("scanf(\"");
+  context_.build_format_string_ = true;
+  for (const auto &actual : node.actuals()) {
+    actual->accept(*this);
+  }
+  context_.build_format_string_ = false;
+  print("\\n\"");
+  for (const auto &actual : node.actuals()) {
+    print(", &");
+    actual->accept(*this);
+  }
+  print(");\n");
 }
 
-// TODO(fpy&dly): writeln arguments and remove [[maybe_unused]]
 void CodegenVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
 {
   // 1. 首先需要遍历actuals_，对每一个actual，用一个vector存储每一个actual的类型。
   // 2. 遍历上述的类型vector，print("%1%2%3\n", 其中%1%2%3是根据类型来的，例如%1是%d，%2是%f，%3是%c)
   // 3. 然后对每一个actual做codegen，并用','隔开
   // 4. 最后print ');'
-  printIndent();
   print("printf(\"");
+  context_.build_format_string_ = true;
   for (const auto &actual : node.actuals()) {
     actual->accept(*this);
   }
-  print("\\n\");\n");
+  context_.build_format_string_ = false;
+  print("\\n\"");
+  for (const auto &actual : node.actuals()) {
+    print(", ");
+    actual->accept(*this);
+  }
+  print(");\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
@@ -643,7 +867,12 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
     1. exit()，无参数，和exit(0)一个效果
     2. exit(0)或其他参数，需要在语义检查中检查参数是否是整数
   */
-  node.accept(*this);
+  print("return");
+  if (!node.actuals().empty()) {
+    print(" ");
+    node.actuals().front()->accept(*this);
+  }
+  print(";\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::CompoundStmt &node)
@@ -661,14 +890,15 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CompoundStmt &node)
     }
   }
   println("}");
-  throw std::runtime_error("Not implemented");
 }
 
 void CodegenVisitor::visit(ast::StmtPart &node)
 {
-  IndentGuard ig(&indent_, INDENT_SIZE);
-  for (const auto &stmt : node.stmts()) {
-    stmt->accept(*this);
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    for (const auto &stmt : node.stmts()) {
+      stmt->accept(*this);
+    }
   }
 }
 

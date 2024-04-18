@@ -703,7 +703,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
       context_.error_msgs_.emplace_back(sstr.str());
       return;
     }
-    if (!comparator(actuals_expected[i].second->type(), node.actuals()[i]->type()) && !util::TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->type())) {
+    if (!comparator(actuals_expected[i].second->symType(), node.actuals()[i]->type()) && !util::TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->symType())) {
       std::stringstream sstr;
       sstr << node.location() << ": "
            << "actual list do not match.";

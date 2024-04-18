@@ -55,6 +55,7 @@ void SymTab<SYM, DAT>::exitScope()
   symtab_.pop_back();
 }
 
+template class SymTab<std::string, std::string>;
 template class SymTab<std::string, SymType *>;
 template class SymTab<std::string, VarType *>;
 template class SymTab<std::string, SubprogType *>;

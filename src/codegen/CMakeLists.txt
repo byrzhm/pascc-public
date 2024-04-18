@@ -2,6 +2,7 @@ add_library(
     pascc_codegen
     OBJECT
     codegen.cpp
+    codegen_context.cpp
 )
 
 set(ALL_OBJECT_FILES
