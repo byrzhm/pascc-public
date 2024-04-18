@@ -148,7 +148,12 @@ public:
     , return_type_(return_type)
     , formal_params_(std::move(formal_params))
   {}
-
+  SubprogType(bool is_func, SymType *return_type)
+    : is_func_(is_func)
+    , return_type_(return_type)
+  {
+    formal_params_ = {{}};
+  }
   [[nodiscard]] auto isFunc() const -> bool { return is_func_; }
 
   [[nodiscard]] auto returnType() const -> const SymType & { return *return_type_; }

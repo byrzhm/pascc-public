@@ -35,7 +35,6 @@ auto SemantContext::topFunc() -> std::string
   }
   return functions_.top();
 }
-
 void SemantContext::pushFunc(const std::string &func_name)
 {
   functions_.emplace(func_name);

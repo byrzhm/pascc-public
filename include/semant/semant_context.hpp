@@ -4,6 +4,7 @@
 #include "location.hh"
 #include "util/symtab.hpp"
 #include "util/type/type.hpp"
+#include "util/type/type_comparator.hpp"
 #include <stack>
 
 
@@ -39,6 +40,8 @@ private:
   util::SubprogType::FormalVector formal_params_;
   std::stack<std::string> functions_;
   util::SymType *case_stmt_type_{nullptr};
+
+  util::TypeComparator cmp_;
 };
 
 }  // namespace pascc::semant

@@ -1070,9 +1070,17 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
+  [[nodiscard]] auto varType() -> util::VarType & { return *var_type_; };
+
+  void setVarType(std::unique_ptr<util::VarType> var_type)
+  {
+    var_type_ = std::move(var_type);
+  }
+
 private:
   std::vector<std::string> id_list_;
   std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<util::VarType> var_type_;
 };
 
 /**
@@ -1128,6 +1136,11 @@ public:
    * @return util::VarType& 参数的类型
    */
   [[nodiscard]] auto varType() -> util::VarType & { return *var_type_; }
+
+  void setVarType(std::unique_ptr<util::VarType> var_type)
+  {
+    var_type_ = std::move(var_type);
+  }
 
 private:
   // TODO(夏博焕): 语义分析时，将 var_type_ 设置为具体的类型
@@ -1191,9 +1204,12 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
+  [[nodiscard]] auto varType() -> util::VarType & { return *vartype_; }
+
 private:
   std::vector<std::string> id_list_;
   std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<util::VarType> vartype_;
 };
 
 /**
