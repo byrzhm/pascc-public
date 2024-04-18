@@ -100,7 +100,7 @@ public:
     USER_DEFINED
   };
 
-  [[nodiscard]] auto actualType() const -> Type { return type_; }
+  [[nodiscard]] auto eType() const -> Type { return type_; }
 
   [[nodiscard]] auto builtInType() const -> const BuiltInType & { return std::get<BuiltInType>(actual_type_); }
 
@@ -116,6 +116,7 @@ public:
   [[nodiscard]] static auto BooleanType() -> SymType &;
   [[nodiscard]] static auto CharType() -> SymType &;
   [[nodiscard]] static auto StringType() -> SymType &;
+  [[nodiscard]] static auto NoType() -> SymType &;
 
   [[nodiscard]] auto clone() const -> std::unique_ptr<SymType>;
 

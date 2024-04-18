@@ -32,6 +32,12 @@ auto SymType::StringType() -> SymType &
   return string_type;
 }
 
+auto SymType::NoType() -> SymType &
+{
+  static SymType no_type;
+  return no_type;
+}
+
 auto SymType::clone() const -> std::unique_ptr<SymType>
 {
   switch (type_) {

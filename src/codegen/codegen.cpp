@@ -61,7 +61,7 @@ auto to_string(const pascc::ast::UnaryOp &op) -> std::string
 auto placeholder(pascc::ast::Expr &expr) -> std::string
 {
   const auto &type = expr.type();
-  if (type.actualType() != pascc::util::SymType::Type::BUILT_IN) {
+  if (type.eType() != pascc::util::SymType::Type::BUILT_IN) {
     throw std::runtime_error("unexpected expr type");
   }
 
@@ -113,7 +113,7 @@ void CodegenVisitor::print(const util::SymType &t)
 {
   std::stringstream sstr;
   (file_output_ ? fout_ : std::cout) << sstr.str();
-  switch (t.actualType()) {
+  switch (t.eType()) {
     case util::SymType::Type::BUILT_IN:
       switch (t.builtInType().type()) {
         case util::BasicType::INTEGER:

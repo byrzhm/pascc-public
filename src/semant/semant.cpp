@@ -3,6 +3,13 @@
 #include "semant/semant.hpp"
 #include "util/type/type_comparator.hpp"
 
+using pascc::util::BasicType;
+using pascc::util::BuiltInType;
+using pascc::util::SubprogType;
+using pascc::util::SymType;
+using pascc::util::TypeComparator;
+using pascc::util::VarType;
+
 namespace pascc::semant {
 
 auto SemantVisitor::isOk() -> bool
@@ -29,8 +36,10 @@ void SemantVisitor::visit(ast::Constant &node)
   }
 }
 
-// do nothing
-void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node) {}
+void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
+{
+  node.setType(SymType::StringType().clone());
+}
 
 void SemantVisitor::visit(ast::BoolExpr &node)
 {
@@ -38,34 +47,179 @@ void SemantVisitor::visit(ast::BoolExpr &node)
    * 表示式应当为 bool 类型
    */
   node.expr().accept(*this);
-  if (!context_.cmp_(node.expr().type(), util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)))) {
+  if (!context_.cmp_(node.expr().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
     return;
   }
-  node.setType(util::SymType::BooleanType().clone());
+  node.setType(SymType::BooleanType().clone());
 }
 
 // do nothing
 void SemantVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node) {}
 
-void SemantVisitor::visit([[maybe_unused]] ast::BinaryExpr &node)
+void SemantVisitor::visitLogicBinaryExpr(ast::BinaryExpr &node)
 {
-  // TODO(): implement this
+  if (!context_.cmp_(node.lhs().type(), SymType::BooleanType()) || !context_.cmp_(node.rhs().type(), SymType::BooleanType())) {
+    context_.genErrorMsg(node.location(), "boolean type expected");
+    node.setType(SymType::NoType().clone());
+  } else {
+    node.setType(SymType::BooleanType().clone());
+  }
+}
+
+void SemantVisitor::visitComparisonBinaryExpr(ast::BinaryExpr &node)
+{
+  if (
+      !context_.cmp_(node.lhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.lhs().type(), SymType::RealType())
+  ) {  // 左侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else if (
+      !context_.cmp_(node.rhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.rhs().type(), SymType::RealType())
+  ) {  // 右侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else {
+    node.setType(SymType::BooleanType().clone());
+  }
+}
+
+void SemantVisitor::visitArithmeticBinaryExpr(ast::BinaryExpr &node)
+{
+  if (
+      !context_.cmp_(node.lhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.lhs().type(), SymType::RealType())
+  ) {  // 左侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else if (
+      !context_.cmp_(node.rhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.rhs().type(), SymType::RealType())
+  ) {  // 右侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else {
+    if (context_.cmp_(
+            node.lhs().type(),
+            SymType::IntegerType()
+        ) &&
+        context_.cmp_(
+            node.rhs().type(),
+            SymType::IntegerType()
+        )) {  // 两侧都是整数
+      node.setType(SymType::IntegerType().clone());
+    } else {  // 至少有一个是实数
+      node.setType(SymType::RealType().clone());
+    }
+  }
+}
+
+void SemantVisitor::visitFDivBinaryExpr(ast::BinaryExpr &node)
+{
+  if (
+      !context_.cmp_(node.lhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.lhs().type(), SymType::RealType())
+  ) {  // 左侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else if (
+      !context_.cmp_(node.rhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.rhs().type(), SymType::RealType())
+  ) {  // 右侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else {
+    node.setType(SymType::RealType().clone());
+  }
+}
+
+void SemantVisitor::visitIntOpBinaryExpr(ast::BinaryExpr &node)
+{
+  if (
+      !context_.cmp_(node.lhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.lhs().type(), SymType::RealType())
+  ) {  // 左侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else if (
+      !context_.cmp_(node.rhs().type(), SymType::IntegerType()) &&
+      !context_.cmp_(node.rhs().type(), SymType::RealType())
+  ) {  // 右侧不是整数或实数
+    context_.genErrorMsg(node.location(), "integer or real type expected");
+    node.setType(SymType::NoType().clone());
+  } else {
+    if (context_.cmp_(
+            node.lhs().type(),
+            SymType::IntegerType()
+        ) &&
+        context_.cmp_(
+            node.rhs().type(),
+            SymType::IntegerType()
+        )) {  // 两侧都是整数
+      if (node.op() == ast::BinOp::MOD) {
+        node.setType(SymType::IntegerType().clone());
+      } else {
+        node.setType(SymType::RealType().clone());
+      }
+    } else {  // 至少有一个是实数
+      context_.genErrorMsg(node.location(), "integer type expected");
+      node.setType(SymType::NoType().clone());
+    }
+  }
+}
+
+void SemantVisitor::visit(ast::BinaryExpr &node)
+{
   /**
-    (type 判等时忽略 const)
-    当二元运算符为 'and' 或 'or', 左右两侧必然同时为 bool，否则返回错误，程序终止。
-      type 赋值为 bool
-    当二元运算符为 ‘/’ 、'mod' 、 '+' 、'-'、'*'，左右两侧必须为integer或real，否则返回错误，程序终止。
-      只有全为 integer 时，type 赋值为 integer，其余情况均为real。
-    当二元运算符为 ‘/’或'mod' , 右侧的Exp若为 const，则不能为0，否则返回错误，程序终止。
-    当二元运算符为 '=' ，左侧的Exp必然是可赋值的，否则返回错误，程序终止。
-      当左右两侧类型表达式不相等，且不满足左边是real，右边是int，返回错误，程序终止。
-      当左侧是 real，右侧是 int， type 赋值为 real。
-      否则 type 赋值为左侧的类型表达式
-    
-    只有当二元运算符为 '=' 时，isAssignable = 1 其余情况为 0;
-    按照运算规则处理value。
+   * * 当二元运算符为 'and' 或 'or'， 
+   * * 左右两侧必然同时为 bool，否则错误， type 赋值为 bool
+   * 
+   * * 当二元运算符为 '<' 、'>' 、'<=' 、'>=' 、'=' 、'<>'，
+   * * 左右两侧必然为 integer 或 real，否则错误，type 赋值为 bool
+   * 
+   * * 当二元运算符为 ‘/’、'div' 、'mod' 、 '+' 、'-'、'*'，
+   * * 左右两侧必须为 integer 或 real，否则返回错误，程序终止。
+   * ! 只有全为 integer 时，type 赋值为 integer，其余情况均为real。
+   * ! 当二元运算符为 ‘div' 或 'mod' , 右侧的 expr 若在编译时可求得其值，则其值不应为0，否则错误
+   * ! 若为 'mod'，则左右两侧必须为 integer
+   * ! 若为 'div'，则左右两侧必须为 integer
    */
+
+  node.lhs().accept(*this);
+  node.rhs().accept(*this);
+
+  switch (node.op()) {
+    case ast::BinOp::AND:
+    case ast::BinOp::OR:
+      visitLogicBinaryExpr(node);
+      break;
+
+    case ast::BinOp::EQ:
+    case ast::BinOp::NE:
+    case ast::BinOp::LT:
+    case ast::BinOp::GT:
+    case ast::BinOp::LE:
+    case ast::BinOp::GE:
+      visitComparisonBinaryExpr(node);
+      break;
+
+    case ast::BinOp::PLUS:
+    case ast::BinOp::MINUS:
+    case ast::BinOp::MUL:
+      visitArithmeticBinaryExpr(node);
+      break;
+
+    case ast::BinOp::FDIV:
+      visitFDivBinaryExpr(node);
+      break;
+
+    case ast::BinOp::IDIV:
+    case ast::BinOp::MOD:
+      visitIntOpBinaryExpr(node);
+      break;
+  }
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
@@ -122,7 +276,7 @@ void SemantVisitor::visit(ast::IndexedVar &node)
    */
   node.assignable().accept(*this);
   const auto &periods = node.assignable().type().arrayType().periods();
-  if (node.assignable().type().actualType() != util::SymType::Type::ARRAY) {
+  if (node.assignable().type().eType() != SymType::Type::ARRAY) {
     context_.genErrorMsg(node.location(), "array type expected.");
     return;
   }
@@ -131,7 +285,7 @@ void SemantVisitor::visit(ast::IndexedVar &node)
   }
   for (const auto &index : node.indices()) {
     index->accept(*this);
-    if (!context_.cmp_(index->type(), util::SymType::IntegerType())) {
+    if (!context_.cmp_(index->type(), SymType::IntegerType())) {
       context_.genErrorMsg(node.location(), "index must be integer.");
       return;
     }
@@ -150,7 +304,7 @@ void SemantVisitor::visit(ast::FieldDesignator &node)
       (这表示整个表达式的类型，将会用在后续的类型检查中)。
    */
   node.assignable().accept(*this);
-  if (node.assignable().type().actualType() != util::SymType::Type::RECORD) {
+  if (node.assignable().type().eType() != SymType::Type::RECORD) {
     context_.genErrorMsg(node.location(), "should be a record type");
     return;
   }
@@ -173,7 +327,7 @@ void SemantVisitor::visit(ast::ConstDecl &node)
     context_.genErrorMsg(node.location(), "duplicate identifier ", node.constId());
     return;
   }
-  const util::SymType *type = nullptr;
+  const SymType *type = nullptr;
   // 如果是引用别的常量，查找引用的常量的类型
   if (node.constant().type() == "reference") {
     found = context_.consttab_.lookup(std::get<std::string>(node.constant().value()));
@@ -186,18 +340,18 @@ void SemantVisitor::visit(ast::ConstDecl &node)
 
   if (type == nullptr) {
     if (node.constant().type() == "integer") {
-      type = &util::SymType::IntegerType();
+      type = &SymType::IntegerType();
     } else if (node.constant().type() == "real") {
-      type = &util::SymType::RealType();
+      type = &SymType::RealType();
     } else if (node.constant().type() == "boolean") {
-      type = &util::SymType::BooleanType();
+      type = &SymType::BooleanType();
     } else if (node.constant().type() == "char") {
-      type = &util::SymType::CharType();
+      type = &SymType::CharType();
     } else {
-      type = &util::SymType::StringType();
+      type = &SymType::StringType();
     }
   }
-  context_.consttab_.insert(node.constId(), const_cast<util::SymType *>(type));
+  context_.consttab_.insert(node.constId(), const_cast<SymType *>(type));
 }
 
 void SemantVisitor::visit(ast::ConstDeclPart &node)
@@ -216,7 +370,7 @@ void SemantVisitor::visit([[maybe_unused]] ast::TypeId &node)
    * 检测 type 是否在符号表中
    * 赋值给父类 TypeDenoter 的 type
    */
-  auto* found = context_.typetab_.probe(node.id());
+  auto *found = context_.typetab_.probe(node.id());
   if (found == nullptr) {
     context_.genErrorMsg(node.location(), "undefined type identifier ", node.id());
     return;
@@ -293,7 +447,7 @@ void SemantVisitor::visit(ast::ValueParamSpec &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<util::VarType>(true, &node.type().symType()));
+  node.setVarType(std::make_unique<VarType>(true, &node.type().symType()));
   for (auto &id : node.idList()) {
     if (context_.vartab_.probe(id) != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
@@ -308,7 +462,7 @@ void SemantVisitor::visit(ast::VarParamSpec &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<util::VarType>(true, &node.type().symType()));
+  node.setVarType(std::make_unique<VarType>(true, &node.type().symType()));
   for (auto &id : node.idList()) {
     if (context_.vartab_.probe(id) != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
@@ -327,7 +481,7 @@ void SemantVisitor::visit(ast::VarDecl &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<util::VarType>(false, &node.type().symType()));
+  node.setVarType(std::make_unique<VarType>(false, &node.type().symType()));
   for (const auto &id : node.idList()) {
     const auto *tmp = context_.typetab_.probe(id);
     if (tmp != nullptr) {
@@ -368,7 +522,7 @@ void SemantVisitor::visit(ast::ProcHead &node)
 
   // 设置proc_type_
   node.setProcType(
-      std::make_unique<util::SubprogType>(
+      std::make_unique<SubprogType>(
           false,
           nullptr,
           std::move(context_.formal_params_)
@@ -439,7 +593,7 @@ void SemantVisitor::visit(ast::FuncHead &node)
   }
   node.returnType().accept(*this);
   node.setFuncIdType(
-      std::make_unique<util::VarType>(
+      std::make_unique<VarType>(
           false,
           &node.returnType().symType()
       )
@@ -449,7 +603,7 @@ void SemantVisitor::visit(ast::FuncHead &node)
     formalParam->accept(*this);  // 填充 context_.formal_params_
   }
   node.setFuncType(
-      std::make_unique<util::SubprogType>(
+      std::make_unique<SubprogType>(
           true,
           &node.returnType().symType(),
           std::move(context_.formal_params_)
@@ -524,7 +678,7 @@ void SemantVisitor::visit(ast::IfStmt &node)
   /**
     访问 then, 访问 else
    */
-  if (!context_.cmp_(node.cond().type(), util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)))) {
+  if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     std::stringstream sstr;
     sstr << node.location() << ": "
          << "boolean type expected.";
@@ -557,19 +711,19 @@ void SemantVisitor::visit(ast::CaseListElement &node)
   */
   for (const auto &cons : node.constants()) {
     cons->accept(*this);
-    std::unique_ptr<util::SymType> type;
+    std::unique_ptr<SymType> type;
     if (cons->type() == "integer") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::INTEGER});
+      type = std::make_unique<SymType>(BuiltInType{BasicType::INTEGER});
     } else if (cons->type() == "real") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::REAL});
+      type = std::make_unique<SymType>(BuiltInType{BasicType::REAL});
     } else if (cons->type() == "boolean") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::BOOLEAN});
+      type = std::make_unique<SymType>(BuiltInType{BasicType::BOOLEAN});
     } else if (cons->type() == "char") {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::CHAR});
+      type = std::make_unique<SymType>(BuiltInType{BasicType::CHAR});
     } else {
-      type = std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::STRING});
+      type = std::make_unique<SymType>(BuiltInType{BasicType::STRING});
     }
-    if (!context_.cmp_(*context_.case_stmt_type_, *type) && !util::TypeComparator::cast(*type, *context_.case_stmt_type_)) {
+    if (!context_.cmp_(*context_.case_stmt_type_, *type) && !TypeComparator::cast(*type, *context_.case_stmt_type_)) {
       context_.genErrorMsg(node.location(), "case type doesn't match expr's type.");
     }
   }
@@ -582,7 +736,7 @@ void SemantVisitor::visit(ast::RepeatStmt &node)
   访问body
   */
   node.cond().accept(*this);
-  if (!context_.cmp_(node.cond().type(), util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)))) {
+  if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
   }
   for (const auto &stmt : node.body()) {
@@ -596,7 +750,7 @@ void SemantVisitor::visit(ast::WhileStmt &node)
   访问body
   */
   node.cond().accept(*this);
-  if (!context_.cmp_(node.cond().type(), util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)))) {
+  if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     // 条件不是bool
     context_.genErrorMsg(node.location(), "boolean type expected.");
   }
@@ -618,7 +772,7 @@ void SemantVisitor::visit(ast::ForStmt &node)
               node.ctrlVar().type(),
               node.initVal().type()
           ) &&
-          !util::TypeComparator::cast(
+          !TypeComparator::cast(
               node.ctrlVar().type(),
               node.initVal().type()
           )
@@ -627,7 +781,7 @@ void SemantVisitor::visit(ast::ForStmt &node)
            node.ctrlVar().type(),
            node.endVal().type()
        ) &&
-       !util::TypeComparator::cast(
+       !TypeComparator::cast(
            node.ctrlVar().type(),
            node.endVal().type()
        ))
@@ -652,7 +806,7 @@ void SemantVisitor::visit(ast::AssignStmt &node)
   if (context_.cmp_(node.lhs().type(), node.rhs().type())) {
     return;
   }
-  if (util::TypeComparator::cast(node.rhs().type(), node.lhs().type())) {
+  if (TypeComparator::cast(node.rhs().type(), node.lhs().type())) {
     return;
   }
   // TODO(): 重载type的流运算符
@@ -683,7 +837,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
       context_.genErrorMsg(node.location(), "actual list do not match.");
       return;
     }
-    if (!context_.cmp_(actuals_expected[i].second->symType(), node.actuals()[i]->type()) && !util::TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->symType())) {
+    if (!context_.cmp_(actuals_expected[i].second->symType(), node.actuals()[i]->type()) && !TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->symType())) {
       context_.genErrorMsg(node.location(), "actual list do not match.");
       return;
     }
@@ -737,16 +891,16 @@ void SemantVisitor::visit([[maybe_unused]] ast::WritelnStmt &node)
 
 void SemantVisitor::visit([[maybe_unused]] ast::ExitStmt &node)
 {
-  auto nowfunc                    = context_.topFunc();
-  const auto canreturn            = context_.subprogtab_.probe(nowfunc)->isFunc();
-  const util::SymType &returntype = context_.subprogtab_.probe(nowfunc)->returnType();
+  auto nowfunc              = context_.topFunc();
+  const auto canreturn      = context_.subprogtab_.probe(nowfunc)->isFunc();
+  const SymType &returntype = context_.subprogtab_.probe(nowfunc)->returnType();
   if (node.actuals().empty() && !canreturn) {
     return;
   }
   if (node.actuals().size() == 1 && canreturn) {
     node.actuals()[0]->accept(*this);
     const auto &thistype = node.actuals()[0]->type();
-    if (!context_.cmp_(thistype, returntype) && !util::TypeComparator::cast(thistype, returntype)) {
+    if (!context_.cmp_(thistype, returntype) && !TypeComparator::cast(thistype, returntype)) {
       context_.genErrorMsg(node.location(), "return value type doesn't match.");
     }
     return;
@@ -799,7 +953,7 @@ void SemantVisitor::visit(ast::ProgramBlock &node)
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)
 {
   context_.pushFunc(node.programName());
-  util::SubprogType basic(true, &util::SymType::IntegerType());
+  SubprogType basic(true, &SymType::IntegerType());
   context_.subprogtab_.insert(node.programName(), &basic);
 }
 

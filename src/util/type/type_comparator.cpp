@@ -2,15 +2,32 @@
 
 
 namespace pascc::util {
+
 auto TypeComparator::operator()(
     const SymType &lhs,
     const SymType &rhs
 ) -> bool
 {
-  // TODO(): Implement this
-  (void)lhs;
-  (void)rhs;
-  return false;
+  if (lhs.eType() != rhs.eType()) {
+    return false;
+  }
+
+  switch (lhs.eType()) {
+    case SymType::Type::BUILT_IN:
+      return lhs.builtInType().type() == rhs.builtInType().type();
+
+    case SymType::Type::ARRAY:
+      // TODO(): Implement this
+    case SymType::Type::RECORD:
+      // TODO(): Implement this
+      return false;
+
+    case SymType::Type::USER_DEFINED:
+      return lhs.userDefinedType() == rhs.userDefinedType();
+
+    case SymType::Type::NO_TYPE:
+      return false;
+  }
 }
 
 auto TypeComparator::cast(
