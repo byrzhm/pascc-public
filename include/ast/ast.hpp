@@ -1902,7 +1902,7 @@ private:
   std::unique_ptr<Expr> init_val_;
   std::unique_ptr<Expr> end_val_;
   std::unique_ptr<Stmt> body_;
-  bool updown_;
+  bool updown_;  ///< to: true, downto: false
 };
 
 /**

@@ -86,12 +86,18 @@ public:
     , actual_type_(std::move(type))
   {}
 
+  explicit SymType(std::string type)
+    : type_(Type::USER_DEFINED)
+    , actual_type_(std::move(type))
+  {}
+
   enum class Type
   {
     NO_TYPE,
     BUILT_IN,
     ARRAY,
-    RECORD
+    RECORD,
+    USER_DEFINED
   };
 
   [[nodiscard]] auto actualType() const -> Type { return type_; }
@@ -101,6 +107,8 @@ public:
   [[nodiscard]] auto arrayType() const -> const ArrayType & { return std::get<ArrayType>(actual_type_); }
 
   [[nodiscard]] auto recordType() const -> const RecordType & { return std::get<RecordType>(actual_type_); }
+
+  [[nodiscard]] auto userDefinedType() const -> const std::string & { return std::get<std::string>(actual_type_); }
 
   // Built-in types
   [[nodiscard]] static auto IntegerType() -> SymType &;
@@ -113,7 +121,7 @@ public:
 
 private:
   Type type_{Type::NO_TYPE};
-  std::variant<BuiltInType, ArrayType, RecordType> actual_type_;
+  std::variant<BuiltInType, ArrayType, RecordType, std::string> actual_type_;
 };
 
 class VarType

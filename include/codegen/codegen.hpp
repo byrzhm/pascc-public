@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "ast/visitor.hpp"
+#include "codegen/codegen_context.hpp"
 
 namespace pascc::codegen {
 
@@ -29,6 +30,8 @@ private:
   bool file_output_ = false;
   std::ofstream fout_;
   int indent_ = 0;
+
+  CodegenContext context_;
 };
 
 }  // namespace pascc::codegen
