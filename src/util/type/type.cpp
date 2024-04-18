@@ -32,4 +32,15 @@ auto SymType::StringType() -> SymType &
   return string_type;
 }
 
+auto SymType::clone() const -> std::unique_ptr<SymType>
+{
+  switch (type_) {
+    case Type::NO_TYPE: return std::make_unique<SymType>();
+    case Type::BUILT_IN: return std::make_unique<SymType>(builtInType());
+    case Type::ARRAY: return std::make_unique<SymType>(arrayType());
+    case Type::RECORD: return std::make_unique<SymType>(recordType());
+  }
+  return {};
+}
+
 }  // namespace pascc::util

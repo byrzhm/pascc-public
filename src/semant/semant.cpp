@@ -36,15 +36,14 @@ void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node) {}
 void SemantVisitor::visit(ast::BoolExpr &node)
 {
   /**
-    表示式应当为 bool 类型
+   * 表示式应当为 bool 类型
    */
   node.expr().accept(*this);
   if (!context_.cmp_(node.expr().type(), util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)))) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
     return;
   }
-  auto ptr = std::make_unique<util::SymType>(util::SymType(util::BuiltInType(util::BasicType::BOOLEAN)));
-  node.setType(std::move(ptr));
+  node.setType(util::SymType::BooleanType().clone());
 }
 
 // do nothing
@@ -95,16 +94,20 @@ void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
   throw std::runtime_error("Not implemented");
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::AssignableId &node)
+void SemantVisitor::visit(ast::AssignableId &node)
 {
   // TODO(): implement this
   /*
    在符号表中查找声明，若找不到，则返回错误，程序终止。
   */
-  throw std::runtime_error("Not implemented");
+  const auto *vartype = context_.vartab_.lookup(node.id());
+  if (vartype == nullptr) {
+    context_.genErrorMsg(node.location(), "undefined identifier");
+  }
+  node.setType(vartype->symType().clone());
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
+void SemantVisitor::visit(ast::IndexedVar &node)
 {
   // TODO(): implement this
   /**
@@ -118,10 +121,26 @@ void SemantVisitor::visit([[maybe_unused]] ast::IndexedVar &node)
           则返回错误，程序终止。
     2. 获取 assignable 数组元素的类型表达式，记录在父类 Expr 的 type 中。
    */
-  throw std::runtime_error("Not implemented");
+  node.assignable().accept(*this);
+  const auto &periods = node.assignable().type().arrayType().periods();
+  if (node.assignable().type().actualType() != util::SymType::Type::ARRAY) {
+    context_.genErrorMsg(node.location(), "array type expected.");
+    return;
+  }
+  if (periods.size() != node.indices().size()) {
+    context_.genErrorMsg(node.location(), "count of index doesn't match.");
+  }
+  for (const auto &index : node.indices()) {
+    index->accept(*this);
+    if (!context_.cmp_(index->type(), util::SymType::IntegerType())) {
+      context_.genErrorMsg(node.location(), "index must be integer.");
+      return;
+    }
+  }
+  node.setType(node.assignable().type().arrayType().baseType().clone());
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
+void SemantVisitor::visit(ast::FieldDesignator &node)
 {
   // TODO(): implement this
   /**
@@ -131,8 +150,16 @@ void SemantVisitor::visit([[maybe_unused]] ast::FieldDesignator &node)
     3. 获取 field_ 的类型表达式并记录在父类 Expr 的 type 中。
       (这表示整个表达式的类型，将会用在后续的类型检查中)。
    */
-
-  throw std::runtime_error("Not implemented");
+  node.assignable().accept(*this);
+  if (node.assignable().type().actualType() != util::SymType::Type::RECORD) {
+    context_.genErrorMsg(node.location(), "should be a record type");
+    return;
+  }
+  if (!node.assignable().type().recordType().fields().contains(node.field())) {
+    context_.genErrorMsg(node.location(), "record does not have this field.");
+    return;
+  }
+  node.setType(node.assignable().type().recordType().fields().at(node.field())->clone());
 }
 
 void SemantVisitor::visit(ast::ConstDecl &node)
@@ -141,6 +168,7 @@ void SemantVisitor::visit(ast::ConstDecl &node)
    * 判断有无重定义。
    * 向符号表中插入 <id , constant->type()>
    */
+  node.constant().accept(*this);
   const auto *found = context_.consttab_.probe(node.constId());
   if (found != nullptr) {
     context_.genErrorMsg(node.location(), "duplicate identifier ", node.constId());

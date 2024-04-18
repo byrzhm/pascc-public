@@ -47,21 +47,21 @@ public:
 
 private:
   std::vector<std::pair<int, int>> periods_;
-  std::unique_ptr<SymType> base_type_;
+  SymType *base_type_;
 };
 
 class RecordType
 {
 public:
-  [[nodiscard]] auto fields() const -> const std::unordered_map<std::string, std::unique_ptr<SymType>> & { return fields_; }
+  [[nodiscard]] auto fields() const -> const std::unordered_map<std::string, SymType *> & { return fields_; }
 
-  void addField(std::string name, std::unique_ptr<SymType> type)
+  void addField(std::string name, SymType *type)
   {
-    fields_.emplace(std::move(name), std::move(type));
+    fields_.emplace(std::move(name), type);
   }
 
 private:
-  std::unordered_map<std::string, std::unique_ptr<SymType>> fields_;
+  std::unordered_map<std::string, SymType *> fields_;
 };
 
 class SymType
@@ -108,6 +108,8 @@ public:
   [[nodiscard]] static auto BooleanType() -> SymType &;
   [[nodiscard]] static auto CharType() -> SymType &;
   [[nodiscard]] static auto StringType() -> SymType &;
+
+  [[nodiscard]] auto clone() const -> std::unique_ptr<SymType>;
 
 private:
   Type type_{Type::NO_TYPE};
