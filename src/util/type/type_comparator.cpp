@@ -36,9 +36,7 @@ auto TypeComparator::cast(
 ) -> bool
 {
   // TODO(): Implement this
-  (void)from;
-  (void)to;
-  return false;
+  return from.eType() == util::SymType::Type::BUILT_IN && from.builtInType().type() == util::BasicType::INTEGER && to.eType() == util::SymType::Type::BUILT_IN && to.builtInType().type() == util::BasicType::REAL;
 }
 
 }  // namespace pascc::util
