@@ -21,10 +21,13 @@ char get_char();
 %option debug
 %option case-insensitive
 
-NON_NEWLINE             [^\n\r]
+%x xblk1
+%x xblk2
+
+NON_NEWLINE             [^\n]
 DIGIT		                [0-9]
 DIGITS		              {DIGIT}+
-NUMERIC			            (({DIGITS}\.{DIGITS}?)|(\.{DIGITS}))
+NUMERIC			            ({DIGITS}\.{DIGITS}+)
 
 BLANK                   [ \t\r]
 ID                      [A-Za-z_][A-Za-z0-9_]*
@@ -34,8 +37,14 @@ REAL                    ({DIGITS}|{NUMERIC})[Ee][-+]?{DIGITS}
 CHAR                    '[^'\n]' 
 
 LINE_COMMENT			      ("//"{NON_NEWLINE}*)
-BLOCK_COMMENT1          (\{[^}]*\})
-BLOCK_COMMENT2          \(\*([^\*]|(\*)*[^\*\)])*(\*)*\*\)
+
+XBLK1_START             \{
+XBLK1_STOP              \}
+XBLK1_INSIDE            [^\n}]
+
+XBLK2_START             \(\*
+XBLK2_STOP              \*+\)
+XBLK2_INSIDE            [^\n*)]
 
 %{
   // Code run each time a pattern is matched.
@@ -51,8 +60,40 @@ BLOCK_COMMENT2          \(\*([^\*]|(\*)*[^\*\)])*(\*)*\*\)
 
 {BLANK}+         loc.step();
 {LINE_COMMENT}   loc.step();
-{BLOCK_COMMENT1} loc.step();
-{BLOCK_COMMENT2} loc.step();
+
+{XBLK1_START}    loc.step(); BEGIN(xblk1);
+
+<xblk1>{
+
+{XBLK1_INSIDE}+  loc.step();
+
+\n+              loc.lines(yyleng); loc.step();
+
+{XBLK1_STOP}     loc.step(); BEGIN(INITIAL);
+
+<<EOF>>          {
+                    throw Parser::syntax_error(loc, "unterminated { comment");
+                 }
+} /* xblk1 */
+
+{XBLK2_START}    loc.step(); BEGIN(xblk2);
+
+<xblk2>{
+
+{XBLK2_INSIDE}+  loc.step();
+
+\n+              loc.lines(yyleng); loc.step();
+
+{XBLK2_STOP}     loc.step(); BEGIN(INITIAL);
+
+\*+              loc.step();
+
+<<EOF>>          {
+                    throw Parser::syntax_error(loc, "unterminated (* comment");
+                 }
+
+} /* xblk2 */
+
 \n+              loc.lines(yyleng); loc.step();
 
 AND              return Parser::make_AND(loc);
@@ -173,6 +214,7 @@ char get_char()
   std::string str = std::string(yytext);
   return str[1];
 } // namespace
+
 }
 namespace pascc::parse {
   

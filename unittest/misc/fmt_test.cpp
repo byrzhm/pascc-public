@@ -42,6 +42,10 @@ TEST(FMTTest, error)
 struct Point
 {
   double x_, y_;
+  Point(double x, double y)
+    : x_(x)
+    , y_(y)
+  {}
 };
 
 template<>
@@ -73,7 +77,7 @@ TEST(FMTTest, sstream)
   Point p(1, 2);
   std::stringstream ss;
   ss << p;
-  
+
   fmt::println(
       stderr,
       "this is {}!",

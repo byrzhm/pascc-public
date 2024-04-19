@@ -163,7 +163,7 @@
 %nterm <std::unique_ptr<Stmt>> simple_statement
 %nterm <std::unique_ptr<Stmt>> empty_statement
 %nterm <std::unique_ptr<Stmt>> assignment_statement
-%nterm <std::unique_ptr<Expr>> assignable
+%nterm <std::unique_ptr<Expr>> var_access
 %nterm <std::unique_ptr<Expr>> indexed_variable
 %nterm <std::unique_ptr<Expr>> field_designator
 %nterm <std::unique_ptr<ProcCallStmt>>procedure_call_statement
@@ -172,7 +172,7 @@
 %nterm <std::unique_ptr<ReadStmt>> read_statement
 %nterm <std::unique_ptr<ReadlnStmt>> readln_statement
 %nterm <std::unique_ptr<ExitStmt>> exit_statement
-%nterm <std::vector<std::unique_ptr<Expr>>> assignable_list
+%nterm <std::vector<std::unique_ptr<Expr>>> var_access_list
 %nterm <std::unique_ptr<Stmt>> structured_statement
 %nterm <std::unique_ptr<Stmt>> conditional_statement
 %nterm <std::unique_ptr<IfStmt>> if_statement
@@ -193,6 +193,7 @@
 %nterm <std::unique_ptr<Expr>> simple_expr
 %nterm <std::unique_ptr<Expr>> term
 %nterm <std::unique_ptr<Expr>> factor
+%nterm <std::unique_ptr<Expr>> signed_factor
 %nterm <std::unique_ptr<FuncCall>> function_designator
 %nterm <std::unique_ptr<UnsignedConstant>> unsigned_constant
 %nterm <BinOp> relop
@@ -496,6 +497,12 @@ procedure_head:
     $$->location().begin = @1.begin;
     $$->location().end = @3.end;
   }
+  | PROCEDURE ID LPAREN RPAREN SEMICOLON {
+    $$ = std::make_unique<ProcHead>(std::move($2));
+  }
+  | PROCEDURE ID LPAREN RPAREN SEMICOLON {
+    $$ = std::make_unique<ProcHead>(std::move($2));
+  }
   | PROCEDURE ID LPAREN formal_parameter_list RPAREN SEMICOLON {
     $$ = std::make_unique<ProcHead>(std::move($2), std::move($4));
     $$->location().begin = @1.begin;
@@ -560,13 +567,15 @@ function_declaration:
 
 function_head:
   FUNCTION ID COLON type_denoter SEMICOLON {
-    drv.add_function($2);
+    drv.addFunction($2);
+    drv.pushCurrentFunction($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4));
     $$->location().begin = @1.begin;
     $$->location().end = @5.end;
   }
   | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON {
-    drv.add_function($2);
+    drv.addFunction($2);
+    drv.pushCurrentFunction($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4), std::move($7));
     $$->location().begin = @1.begin;
     $$->location().end = @8.end;
@@ -576,6 +585,7 @@ function_head:
 function_block:
   block {
     $$ = std::make_unique<FuncBlock>(std::move($1));
+    drv.popCurrentFunction();
     $$->location().begin = @1.begin;
     $$->location().end = @1.end;
   }
@@ -649,20 +659,20 @@ empty_statement:
   ;
 
 assignment_statement:
-  assignable ASSIGN expr {
+  var_access ASSIGN expr {
     $$ = std::make_unique<AssignStmt>(std::move($1), std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @3.end;
   }
   ;
 
-assignable:
+var_access:
   ID {
-    if (drv.is_function($1)) {
-      // assignable 可能不能被赋值的情况, foo()是函数调用，那么foo也是函数调用
+    if (drv.isFunction($1) && $1 != drv.currentFunction()) {
+      // var_access 可能不能被赋值的情况, foo()是函数调用，那么foo也是函数调用
       $$ = std::make_unique<FuncCall>(std::move($1));
     } else {
-      $$ = std::make_unique<AssignableId>(std::move($1));
+      $$ = std::make_unique<VarId>(std::move($1));
     }
     $$->location().begin = @1.begin;
     $$->location().end = @1.end;
@@ -680,7 +690,7 @@ assignable:
   ;
                      
 indexed_variable:
-  assignable LSB expr_list RSB {
+  var_access LSB expr_list RSB {
     $$ = std::make_unique<IndexedVar>(std::move($1), std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @4.end;
@@ -688,7 +698,7 @@ indexed_variable:
   ;
 
 field_designator:
-  assignable PERIOD ID {
+  var_access PERIOD ID {
     $$ = std::make_unique<FieldDesignator>(std::move($1), std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @3.end;
@@ -765,7 +775,7 @@ writeln_statement:
   ;
                    
 read_statement:
-  READ LPAREN assignable_list RPAREN {
+  READ LPAREN var_access_list RPAREN {
     $$ = std::make_unique<ReadStmt>(std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @4.end;
@@ -773,7 +783,7 @@ read_statement:
   ;
 
 readln_statement:
-  READLN LPAREN assignable_list RPAREN {
+  READLN LPAREN var_access_list RPAREN {
     $$ = std::make_unique<ReadlnStmt>(std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @4.end;
@@ -798,12 +808,12 @@ exit_statement:
   }
   ;
 
-assignable_list:
-  assignable_list COMMA assignable {
+var_access_list:
+  var_access_list COMMA var_access {
     $$.swap($1);
     $$.emplace_back(std::move($3));
   }
-  | assignable {
+  | var_access {
     $$.emplace_back(std::move($1));
   }
   ;
@@ -946,7 +956,7 @@ while_statement:
   ;
 
 for_statement:
-  FOR assignable ASSIGN expr updown expr DO statement {
+  FOR var_access ASSIGN expr updown expr DO statement {
     $$ = std::make_unique<ForStmt>(
       std::move($2),
       std::move($4),
@@ -1007,33 +1017,19 @@ string_expr:
 simple_expr:
   term {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
- | PLUS term {
-    $$ = std::make_unique<UnaryExpr>(UnaryOp::PLUS, std::move($2));
-    $$->location().begin = @1.begin;
-    $$->location().end = @2.end;
- }
- | MINUS term {
-    $$ = std::make_unique<UnaryExpr>(UnaryOp::MINUS, std::move($2));
-    $$->location().begin = @1.begin;
-    $$->location().end = @2.end;
- }
- | simple_expr addop term {
+  | simple_expr addop term {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
-    $$->location().begin = @1.begin;
-    $$->location().end = @3.end;
- }
- ;
+  }
+  ;
              
 term:
-  factor {
+  signed_factor {
     $$ = std::move($1);
     $$->location().begin = @1.begin;
     $$->location().end = @1.end;
   }
-  | term mulop factor {
+  | term mulop signed_factor {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @3.end;
@@ -1041,7 +1037,7 @@ term:
   ;
 
 factor:
-  assignable {
+  var_access {
     $$ = std::move($1);
     $$->location().begin = @1.begin;
     $$->location().end = @1.end;
@@ -1063,8 +1059,18 @@ factor:
   }
   | unsigned_constant {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
+  }
+  ;
+
+signed_factor:
+  factor {
+    $$ = std::move($1);
+  }
+  | PLUS signed_factor {
+    $$ = std::make_unique<UnaryExpr>(UnaryOp::PLUS, std::move($2));
+  }
+  | MINUS signed_factor {
+    $$ = std::make_unique<UnaryExpr>(UnaryOp::MINUS, std::move($2));
   }
   ;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stack>
 #include <unordered_set>
 
 #include "location.hh"
@@ -22,6 +23,7 @@ public:
     , trace_scanning_(trace_scanning)
     , trace_parsing_(trace_parsing)
   {
+    pushCurrentFunction("");
   }
 
   auto location() -> location & { return loc_; }
@@ -36,9 +38,15 @@ public:
 
   auto program() -> std::unique_ptr<Program> { return std::move(program_); }
 
-  void add_function(std::string funcid);
+  void addFunction(std::string funcid);
 
-  auto is_function(const std::string &funcid) -> bool;
+  auto isFunction(const std::string &funcid) -> bool;
+
+  void pushCurrentFunction(const std::string &funcid);
+
+  void popCurrentFunction();
+
+  auto currentFunction() -> const std::string &;
 
 private:
   class location loc_;
@@ -48,6 +56,7 @@ private:
 
   std::unique_ptr<Program> program_;
   std::unordered_set<std::string> funcid_set_;
+  std::stack<std::string> function_stack_;
 };
 
 }  // namespace pascc::parse

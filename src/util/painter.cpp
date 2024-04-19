@@ -10,12 +10,15 @@ void PaintVisitor::visit([[maybe_unused]] ast::Block &node)
 void PaintVisitor::visit(ast::Number &node)
 {
   auto number = reinterpret_cast<uint64_t>(&node);
-  if (node.type() == "real") {
-    out_ << "   " << number << " [label=\"Number: " << std::get<double>(node.value()) << "\"]\n";
-  } else if (node.type() == "integer") {
-    out_ << "   " << number << " [label=\"Number: " << std::get<int>(node.value()) << "\"]\n";
-  } else {
-    throw std::runtime_error("Unknown number type");
+  switch (node.type().builtInType().type()) {
+    case BasicType::INTEGER:
+      out_ << "   " << number << " [label=\"Number: " << std::get<int>(node.value()) << "\"]\n";
+      break;
+    case BasicType::REAL:
+      out_ << "   " << number << " [label=\"Number: " << std::get<double>(node.value()) << "\"]\n";
+      break;
+    default:
+      throw std::runtime_error("Unknown number type");
   }
 }
 
@@ -60,20 +63,29 @@ void PaintVisitor::visit(ast::UnsignedConstant &node)
 {
   auto unsigned_constant = reinterpret_cast<uint64_t>(&node);
   const auto &type       = node.type();
-  if (type == "real") {
-    out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
-         << std::get<double>(node.value()) << "\"]\n";
-  } else if (type == "integer") {
-    out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
-         << std::get<int>(node.value()) << "\"]\n";
-  } else if (type == "char") {
-    out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
-         << std::get<char>(node.value()) << "\"]\n";
-  } else if (type == "boolean") {
-    out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
-         << (std::get<bool>(node.value()) ? "true" : "false") << "\"]\n";
-  } else {
-    throw std::runtime_error("Unknown unsigned constant type");
+  switch (type.builtInType().type()) {
+    case BasicType::REAL:
+      out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
+           << std::get<double>(node.value()) << "\"]\n";
+      break;
+
+    case BasicType::INTEGER:
+      out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
+           << std::get<int>(node.value()) << "\"]\n";
+      break;
+
+    case BasicType::CHAR:
+      out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
+           << std::get<char>(node.value()) << "\"]\n";
+      break;
+
+    case BasicType::BOOLEAN:
+      out_ << "   " << unsigned_constant << " [label=\"UnsignedConstant: "
+           << (std::get<bool>(node.value()) ? "true" : "false") << "\"]\n";
+      break;
+
+    default:
+      throw std::runtime_error("Unknown unsigned constant type");
   }
 }
 
@@ -117,7 +129,7 @@ void PaintVisitor::visit(ast::FuncCall &node)
   }
 }
 
-void PaintVisitor::visit(ast::AssignableId &node)
+void PaintVisitor::visit(ast::VarId &node)
 {
   auto assignable_id = reinterpret_cast<uint64_t>(&node);
 
@@ -127,11 +139,11 @@ void PaintVisitor::visit(ast::AssignableId &node)
 void PaintVisitor::visit(ast::IndexedVar &node)
 {
   auto indexed_var = reinterpret_cast<uint64_t>(&node);
-  auto assignable  = reinterpret_cast<uint64_t>(&node.assignable());
+  auto assignable  = reinterpret_cast<uint64_t>(&node.varAccess());
 
   out_ << "   " << indexed_var << " [label=\"IndexedVar\"]\n";
   out_ << "   " << indexed_var << " -> " << assignable << "\n";
-  node.assignable().accept(*this);
+  node.varAccess().accept(*this);
 
   for (const auto &index : node.indices()) {
     auto index_ptr = reinterpret_cast<uint64_t>(index.get());
@@ -143,12 +155,12 @@ void PaintVisitor::visit(ast::IndexedVar &node)
 void PaintVisitor::visit(ast::FieldDesignator &node)
 {
   auto field_designator = reinterpret_cast<uint64_t>(&node);
-  auto assignable       = reinterpret_cast<uint64_t>(&node.assignable());
+  auto assignable       = reinterpret_cast<uint64_t>(&node.varAccess());
 
   out_ << "   " << field_designator << " [label=\"FieldDesignator: " << node.field() << "\"]\n";
   out_ << "   " << field_designator << " -> " << assignable << "\n";
 
-  node.assignable().accept(*this);
+  node.varAccess().accept(*this);
 }
 
 
@@ -204,12 +216,12 @@ void PaintVisitor::visit(ast::Period &node)
 void PaintVisitor::visit(ast::ArrayType &node)
 {
   auto array_type = reinterpret_cast<uint64_t>(&node);
-  auto type       = reinterpret_cast<uint64_t>(&node.type());
+  auto type       = reinterpret_cast<uint64_t>(&node.ofType());
 
   out_ << "   " << array_type << " [label=\"ArrayType\"]\n";
   out_ << "   " << array_type << " -> " << type << "\n";
 
-  node.type().accept(*this);
+  node.ofType().accept(*this);
 
   for (const auto &period : node.periods()) {
     auto period_ptr = reinterpret_cast<uint64_t>(period.get());
