@@ -340,15 +340,28 @@ void SemantVisitor::visit(ast::IndexedVar &node)
     context_.genErrorMsg(node.location(), "array type expected.");
     return;
   }
-  if (periods.size() != node.indices().size()) {
+  if (periods.size() < node.indices().size()) {
     context_.genErrorMsg(node.location(), "count of index doesn't match.");
+    return;
   }
-  for (const auto &index : node.indices()) {
+  unsigned i = 0;
+  for (; i < node.indices().size(); i++) {
+    const auto &index = node.indices()[i];
     index->accept(*this);
     if (!context_.cmp_(index->type(), SymType::IntegerType())) {
       context_.genErrorMsg(node.location(), "index must be integer.");
       return;
     }
+  }
+  if (node.indices().size() < periods.size()) {
+    ArrayType arraytype;
+    arraytype.setBaseType(const_cast<SymType *>(&node.varAccess().type().arrayType().baseType()));
+    for (; i < periods.size(); i++) {
+      const auto &[lb, ub] = periods[i];
+      arraytype.addPeriod(lb, ub);
+    }
+    node.setType(std::make_unique<SymType>(arraytype));
+    return;
   }
   node.setType(node.varAccess().type().arrayType().baseType().clone());
 }
