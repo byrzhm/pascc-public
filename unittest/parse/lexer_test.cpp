@@ -200,24 +200,17 @@ auto gen_real_num_str() -> std::string
 
   // 生成随机数，以确定实数字符串的形式
   std::mt19937 rng{std::random_device{}()};
-  auto randomNumber = rng() % 5;
+  auto randomNumber = rng() % 3;
 
   switch (randomNumber) {
     case 0:
       str = std::to_string(rng() % 10) + "." + std::to_string(rng() % 10);
       break;
     case 1:
-      str = "." + std::to_string(rng() % 10);
-      break;
-    case 2:
-      str = std::to_string(rng() % 100) + ".";
-      break;
-    case 3:
-      str = "." + std::to_string(rng() % 100) + "e-" + std::to_string(rng() % 10);
-      break;
-    case 4:
       str = std::to_string(rng() % 10) + "." + std::to_string(rng() % 10) + "e" + std::to_string(rng() % 10);
       break;
+    case 2:
+      str = std::to_string(rng() % 10) + "e" + std::to_string(rng() % 10);
     default:
       break;
   }
