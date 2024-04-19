@@ -19,14 +19,29 @@ auto ParserDriver::parse() -> int
   return parse(filename_);
 }
 
-void ParserDriver::add_function(std::string funcid)
+void ParserDriver::addFunction(std::string funcid)
 {
   funcid_set_.insert(std::move(funcid));
 }
 
-auto ParserDriver::is_function(const std::string &funcid) -> bool
+auto ParserDriver::isFunction(const std::string &funcid) -> bool
 {
   return funcid_set_.find(funcid) != funcid_set_.end();
+}
+
+void ParserDriver::pushCurrentFunction(const std::string &funcid)
+{
+  function_stack_.push(funcid);
+}
+
+void ParserDriver::popCurrentFunction()
+{
+  function_stack_.pop();
+}
+
+auto ParserDriver::currentFunction() -> const std::string &
+{
+  return function_stack_.top();
 }
 
 }  // namespace pascc::parse
