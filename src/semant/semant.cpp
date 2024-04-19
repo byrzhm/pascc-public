@@ -17,6 +17,11 @@ auto SemantVisitor::isOk() -> bool
   return context_.error_msgs_.empty();
 }
 
+auto SemantVisitor::error_msgs() const -> const std::vector<std::string> &
+{
+  return context_.error_msgs_;
+}
+
 void SemantVisitor::visit([[maybe_unused]] ast::Block &node)
 {
   // ! Block 不应该被直接访问，而是以 ProgramBlock、ProcBlock、FuncBlock 的形式出现
@@ -409,12 +414,12 @@ void SemantVisitor::visit(ast::TypeDecl &node)
    * 符号表中新增一项<type_id_, type_denoter_.type()>
    */
   const auto *tmp = context_.typetab_.probe(node.typeId());
-  if (tmp == nullptr) {
+  if (tmp != nullptr) {
     context_.genErrorMsg(node.location(), "duplicated identifier ", node.typeId());
     return;
   }
   tmp = context_.consttab_.probe(node.typeId());
-  if (tmp == nullptr) {
+  if (tmp != nullptr) {
     context_.genErrorMsg(node.location(), "duplicated identifier ", node.typeId());
     return;
   }

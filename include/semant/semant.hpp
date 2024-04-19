@@ -14,6 +14,8 @@ public:
 
   auto isOk() -> bool;
 
+  [[nodiscard]] auto error_msgs() const -> const std::vector<std::string> &;
+
 private:
   /**
    * @brief and or
