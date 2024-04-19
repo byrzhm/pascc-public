@@ -163,7 +163,7 @@
 %nterm <std::unique_ptr<Stmt>> simple_statement
 %nterm <std::unique_ptr<Stmt>> empty_statement
 %nterm <std::unique_ptr<Stmt>> assignment_statement
-%nterm <std::unique_ptr<Expr>> assignable
+%nterm <std::unique_ptr<Expr>> var_access
 %nterm <std::unique_ptr<Expr>> indexed_variable
 %nterm <std::unique_ptr<Expr>> field_designator
 %nterm <std::unique_ptr<ProcCallStmt>>procedure_call_statement
@@ -172,7 +172,7 @@
 %nterm <std::unique_ptr<ReadStmt>> read_statement
 %nterm <std::unique_ptr<ReadlnStmt>> readln_statement
 %nterm <std::unique_ptr<ExitStmt>> exit_statement
-%nterm <std::vector<std::unique_ptr<Expr>>> assignable_list
+%nterm <std::vector<std::unique_ptr<Expr>>> var_access_list
 %nterm <std::unique_ptr<Stmt>> structured_statement
 %nterm <std::unique_ptr<Stmt>> conditional_statement
 %nterm <std::unique_ptr<IfStmt>> if_statement
@@ -487,11 +487,13 @@ function_declaration:
 
 function_head:
   FUNCTION ID COLON type_denoter SEMICOLON {
-    drv.add_function($2);
+    drv.addFunction($2);
+    drv.pushCurrentFunction($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4));
   }
   | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON {
-    drv.add_function($2);
+    drv.addFunction($2);
+    drv.pushCurrentFunction($2);
     $$ = std::make_unique<FuncHead>(std::move($2), std::move($4), std::move($7));
   }
   ;
@@ -499,6 +501,7 @@ function_head:
 function_block:
   block {
     $$ = std::make_unique<FuncBlock>(std::move($1));
+    drv.popCurrentFunction();
   }
   ;
 
@@ -556,18 +559,18 @@ empty_statement:
   ;
 
 assignment_statement:
-  assignable ASSIGN expr {
+  var_access ASSIGN expr {
     $$ = std::make_unique<AssignStmt>(std::move($1), std::move($3));
   }
   ;
 
-assignable:
+var_access:
   ID {
-    if (drv.is_function($1)) {
-      // assignable 可能不能被赋值的情况, foo()是函数调用，那么foo也是函数调用
+    if (drv.isFunction($1) && $1 != drv.currentFunction()) {
+      // var_access 可能不能被赋值的情况, foo()是函数调用，那么foo也是函数调用
       $$ = std::make_unique<FuncCall>(std::move($1));
     } else {
-      $$ = std::make_unique<AssignableId>(std::move($1));
+      $$ = std::make_unique<VarId>(std::move($1));
     }
   }
   | indexed_variable {
@@ -579,13 +582,13 @@ assignable:
   ;
                      
 indexed_variable:
-  assignable LSB expr_list RSB {
+  var_access LSB expr_list RSB {
     $$ = std::make_unique<IndexedVar>(std::move($1), std::move($3));
   }
   ;
 
 field_designator:
-  assignable PERIOD ID {
+  var_access PERIOD ID {
     $$ = std::make_unique<FieldDesignator>(std::move($1), std::move($3));
   }
   ;
@@ -636,13 +639,13 @@ writeln_statement:
   ;
                    
 read_statement:
-  READ LPAREN assignable_list RPAREN {
+  READ LPAREN var_access_list RPAREN {
     $$ = std::make_unique<ReadStmt>(std::move($3));
   }
   ;
 
 readln_statement:
-  READLN LPAREN assignable_list RPAREN {
+  READLN LPAREN var_access_list RPAREN {
     $$ = std::make_unique<ReadlnStmt>(std::move($3));
   }
   ;
@@ -659,12 +662,12 @@ exit_statement:
   }
   ;
 
-assignable_list:
-  assignable_list COMMA assignable {
+var_access_list:
+  var_access_list COMMA var_access {
     $$.swap($1);
     $$.emplace_back(std::move($3));
   }
-  | assignable {
+  | var_access {
     $$.emplace_back(std::move($1));
   }
   ;
@@ -777,7 +780,7 @@ while_statement:
   ;
 
 for_statement:
-  FOR assignable ASSIGN expr updown expr DO statement {
+  FOR var_access ASSIGN expr updown expr DO statement {
     $$ = std::make_unique<ForStmt>(
       std::move($2),
       std::move($4),
@@ -850,7 +853,7 @@ term:
   ;
 
 factor:
-  assignable {
+  var_access {
     $$ = std::move($1);
   }
   | function_designator {

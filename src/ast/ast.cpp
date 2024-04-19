@@ -74,7 +74,7 @@ void FuncCall::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
-void AssignableId::accept(Visitor &visitor)
+void VarId::accept(Visitor &visitor)
 {
   visitor.visit(*this);
 }

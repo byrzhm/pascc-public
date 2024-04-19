@@ -31,6 +31,8 @@ private:
   util::SubprogType *current_subprog_type_{nullptr};
 
   std::vector<int> array_bounds_;
+
+  bool in_structure_stmt_{false};
 };
 
 }  // namespace pascc::codegen

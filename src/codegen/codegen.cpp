@@ -27,6 +27,24 @@ private:
   int indent_size_;
 };
 
+class FlagGuard
+{
+public:
+  explicit FlagGuard(bool &flag)
+    : flag_(&flag)
+  {
+    *flag_ = true;
+  }
+
+  ~FlagGuard()
+  {
+    *flag_ = false;
+  }
+
+private:
+  bool *flag_;
+};
+
 auto to_string(const pascc::ast::BinOp &op) -> std::string
 {
   switch (op) {
@@ -48,10 +66,15 @@ auto to_string(const pascc::ast::BinOp &op) -> std::string
   return "";
 }
 
-auto to_string(const pascc::ast::UnaryOp &op) -> std::string
+auto to_string(const pascc::ast::UnaryOp &op, const pascc::util::BasicType &type) -> std::string
 {
   switch (op) {
-    case pascc::ast::UnaryOp::NOT: return "!";
+    case pascc::ast::UnaryOp::NOT:
+      if (type == pascc::util::BasicType::BOOLEAN) {
+        return "!";
+      }
+      return "~";
+
     case pascc::ast::UnaryOp::MINUS: return "-";
     case pascc::ast::UnaryOp::PLUS: return "+";
   }
@@ -288,9 +311,15 @@ void CodegenVisitor::visit(ast::BinaryExpr &node)
     return;
   }
 
+  print('(');
+  if (node.op() == ast::BinOp::FDIV) {
+    print("(double) ");
+  }
+
   node.lhs().accept(*this);
   print(" " + to_string(node.op()) + " ");
   node.rhs().accept(*this);
+  print(')');
 }
 
 void CodegenVisitor::visit(ast::UnaryExpr &node)
@@ -304,8 +333,10 @@ void CodegenVisitor::visit(ast::UnaryExpr &node)
     return;
   }
 
-  print(to_string(node.op()) + " ");
+  print('(');
+  print(to_string(node.op(), node.type().builtInType().type()));
   node.expr().accept(*this);
+  print(')');
 }
 
 void CodegenVisitor::visit(ast::FuncCall &node)
@@ -335,10 +366,10 @@ void CodegenVisitor::visit(ast::FuncCall &node)
     }
     actuals[i]->accept(*this);
   }
-  print(");\n");
+  print(')');
 }
 
-void CodegenVisitor::visit(ast::AssignableId &node)
+void CodegenVisitor::visit(ast::VarId &node)
 {
   /*
     1. 从符号表查找id_，判断是否是函数名。
@@ -374,9 +405,9 @@ void CodegenVisitor::visit(ast::IndexedVar &node)
     return;
   }
 
-  node.assignable().accept(*this);
+  node.varAccess().accept(*this);
   const auto &indices = node.indices();
-  const auto &periods = node.assignable().type().arrayType().periods();
+  const auto &periods = node.varAccess().type().arrayType().periods();
   auto size           = indices.size();
   for (unsigned i = 0; i < size; i++) {
     print("[");
@@ -406,7 +437,7 @@ void CodegenVisitor::visit(ast::FieldDesignator &node)
 
   context_.in_field_designator_ = true;
   context_.field_is_ref_        = false;
-  node.assignable().accept(*this);
+  node.varAccess().accept(*this);
   if (context_.field_is_ref_) {
     print("->");
   } else {
@@ -426,7 +457,7 @@ void CodegenVisitor::visit(ast::ConstDecl &node)
   printIndent();
   print("const ");
   if (node.constant().type() == "string") {
-    print("char * ");
+    print("char *");
     context_.consttab_.insert(node.constId(), "char *");
   } else if (node.constant().type() == "integer") {
     print("int");
@@ -444,6 +475,7 @@ void CodegenVisitor::visit(ast::ConstDecl &node)
   } else {
     throw std::runtime_error("Unexpected type");
   }
+  print(' ');
   print(node.constId());
   print(" = ");
   node.constant().accept(*this);
@@ -593,6 +625,7 @@ void CodegenVisitor::visit(ast::VarDecl &node)
     1. 先对type denoter做代码生成。print type denoter（判断是否是基本类，如果不是，需要从类型符号表里面找）
     2. 遍历id_list，print每一个id，用','隔开
   */
+  printIndent();
   context_.array_bounds_.clear();
   node.type().accept(*this);
   print(" ");
@@ -749,9 +782,17 @@ void CodegenVisitor::visit(ast::FuncBlock &node)
     if (node.hasVarDeclPart()) {
       node.varDeclPart().accept(*this);
     }
+
+    // 声明函数返回值
+    printIndent();
     print(context_.current_subprog_type_->returnType());
     print(" __" + context_.current_subprog_ + ";\n");
+
     node.stmtPart().accept(*this);
+
+    // 返回函数返回值
+    printIndent();
+    print("return __" + context_.current_subprog_ + ";\n");
   }
   println("}");
   context_.exitScope();
@@ -790,14 +831,24 @@ void CodegenVisitor::visit(ast::IfStmt &node)
     4. 对then_stmt_做代码生成
     5. 如果有else_stmt_，对else_stmt_做代码生成
   */
+
+  // cond
   printIndent();
   print("if (");
   node.cond().accept(*this);
-  print(") ");
-  node.then().accept(*this);
+  print(")\n");
+
+  {
+    FlagGuard fg(context_.in_structure_stmt_);
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    node.then().accept(*this);
+  }
+
   if (node.hasElse()) {
     printIndent();
-    print("else ");
+    print("else\n");
+    FlagGuard fg(context_.in_structure_stmt_);
+    IndentGuard ig(&indent_, INDENT_SIZE);
     node.Else().accept(*this);
   }
 }
@@ -903,8 +954,13 @@ void CodegenVisitor::visit(ast::ForStmt &node)
   } else {
     print("--");
   }
-  print(") ");
-  node.body().accept(*this);
+  print(")\n");
+
+  {
+    FlagGuard fg(context_.in_structure_stmt_);
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    node.body().accept(*this);
+  }
 }
 
 void CodegenVisitor::visit(ast::AssignStmt &node)
@@ -1045,23 +1101,29 @@ void CodegenVisitor::visit(ast::CompoundStmt &node)
     2. 遍历语句列表，调用accept，对每一个stmt做代码生成。每一个stmt需要缩进。
     2. print '}'
   */
-  println("{");
-  {
-    IndentGuard ig(&indent_, INDENT_SIZE);
-    for (const auto &stmt : node.stmts()) {
-      stmt->accept(*this);
+  auto printCompound = [&]() {
+    println("{");
+    {
+      IndentGuard ig(&indent_, INDENT_SIZE);
+      for (const auto &stmt : node.stmts()) {
+        stmt->accept(*this);
+      }
     }
+    println("}");
+  };
+
+  if (context_.in_structure_stmt_) {
+    IndentGuard ig(&indent_, -INDENT_SIZE);
+    printCompound();
+  } else {
+    printCompound();
   }
-  println("}");
 }
 
 void CodegenVisitor::visit(ast::StmtPart &node)
 {
-  {
-    IndentGuard ig(&indent_, INDENT_SIZE);
-    for (const auto &stmt : node.stmts()) {
-      stmt->accept(*this);
-    }
+  for (const auto &stmt : node.stmts()) {
+    stmt->accept(*this);
   }
 }
 
@@ -1087,7 +1149,10 @@ void CodegenVisitor::visit(ast::ProgramBlock &node)
     node.subprogDeclPart().accept(*this);
   }
   println("int main() {");
-  node.stmtPart().accept(*this);
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    node.stmtPart().accept(*this);
+  }
   println("}");
 }
 
@@ -1098,6 +1163,8 @@ void CodegenVisitor::visit(ast::ProgramHead &node)
   println(" * Program name: " + node.programName());
   println(" */");
   println("#include <stdio.h>");
+  println("#include <stdlib.h>");
+  println("#include <stdbool.h>");
 }
 
 void CodegenVisitor::visit(ast::Program &node)

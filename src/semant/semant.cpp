@@ -164,11 +164,7 @@ void SemantVisitor::visitIntOpBinaryExpr(ast::BinaryExpr &node)
             node.rhs().type(),
             SymType::IntegerType()
         )) {  // 两侧都是整数
-      if (node.op() == ast::BinOp::MOD) {
-        node.setType(SymType::IntegerType().clone());
-      } else {
-        node.setType(SymType::RealType().clone());
-      }
+      node.setType(SymType::IntegerType().clone());
     } else {  // 至少有一个是实数
       context_.genErrorMsg(node.location(), "integer type expected");
       node.setType(SymType::NoType().clone());
@@ -259,36 +255,51 @@ void SemantVisitor::visit(ast::FuncCall &node)
    type = FuncCall的return value
    isAssignable = 0
    */
-  const auto *decl = context_.subprogtab_.probe(node.funcid());
-  if (decl == nullptr) {
+  const auto *prototype = context_.subprogtab_.probe(node.funcid());
+  if (prototype == nullptr) {
     context_.genErrorMsg(node.location(), "undefined identifier ", node.funcid());
     return;
   }
-  if (node.actuals().size() != decl->formalParams().size()) {
+  if (node.actuals().size() != prototype->formalParams().size()) {
     context_.genErrorMsg(node.location(), "count of actuals doesn't match.");
   }
+
   for (unsigned i = 0; i < node.actuals().size(); i++) {
-    const auto &actual  = node.actuals()[i];
-    const auto &actual2 = decl->formalParams()[i].second;
+    const auto &actual = node.actuals()[i];
+    const auto &formal = prototype->formalParams()[i].second;
     actual->accept(*this);
-    if (actual2->isRef() && !actual->isLvalue()) {
+    if (formal->isRef() && !actual->isChangeable()) {
       context_.genErrorMsg(actual->location(), "This actual must be modifiable.");
-    } else if (!context_.cmp_(actual2->symType(), actual->type()) && util::TypeComparator::cast(actual->type(), actual2->symType())) {
+    } else if (!context_.cmp_(formal->symType(), actual->type()) && util::TypeComparator::cast(actual->type(), formal->symType())) {
       context_.genErrorMsg(actual->location(), "actual does not match.");
     }
   }
+
+  node.setType(prototype->returnType().clone());
 }
 
-void SemantVisitor::visit(ast::AssignableId &node)
+void SemantVisitor::visit(ast::VarId &node)
 {
-  /*
-   在符号表中查找声明，若找不到，则返回错误，程序终止。
-  */
+  // TODO(张新博): 如果在类型表或者子过程表中查到了, 那么报错
+
+  // 如果在常量表中找到了，那么它的值是不可被修改的
+  const auto *consttype = context_.consttab_.lookup(node.id());
+  if (consttype != nullptr) {
+    node.setType(consttype->clone());
+    node.setChangeable(false);
+    return;
+  }
+
+  // 如果在变量表中找到了，那么它的值是可以被修改的
   const auto *vartype = context_.vartab_.lookup(node.id());
   if (vartype == nullptr) {
+    // 如果在变量表中找不到，那么报错
     context_.genErrorMsg(node.location(), "undefined identifier ", node.id());
+    node.setType(SymType::NoType().clone());
+    return;
   }
   node.setType(vartype->symType().clone());
+  node.setChangeable(true);
 }
 
 void SemantVisitor::visit(ast::IndexedVar &node)
@@ -304,9 +315,9 @@ void SemantVisitor::visit(ast::IndexedVar &node)
           则返回错误，程序终止。
     2. 获取 assignable 数组元素的类型表达式，记录在父类 Expr 的 type 中。
    */
-  node.assignable().accept(*this);
-  const auto &periods = node.assignable().type().arrayType().periods();
-  if (node.assignable().type().eType() != SymType::Type::ARRAY) {
+  node.varAccess().accept(*this);
+  const auto &periods = node.varAccess().type().arrayType().periods();
+  if (node.varAccess().type().eType() != SymType::Type::ARRAY) {
     context_.genErrorMsg(node.location(), "array type expected.");
     return;
   }
@@ -320,7 +331,7 @@ void SemantVisitor::visit(ast::IndexedVar &node)
       return;
     }
   }
-  node.setType(node.assignable().type().arrayType().baseType().clone());
+  node.setType(node.varAccess().type().arrayType().baseType().clone());
 }
 
 void SemantVisitor::visit(ast::FieldDesignator &node)
@@ -332,16 +343,16 @@ void SemantVisitor::visit(ast::FieldDesignator &node)
     3. 获取 field_ 的类型表达式并记录在父类 Expr 的 type 中。
       (这表示整个表达式的类型，将会用在后续的类型检查中)。
    */
-  node.assignable().accept(*this);
-  if (node.assignable().type().eType() != SymType::Type::RECORD) {
+  node.varAccess().accept(*this);
+  if (node.varAccess().type().eType() != SymType::Type::RECORD) {
     context_.genErrorMsg(node.location(), "should be a record type");
     return;
   }
-  if (!node.assignable().type().recordType().fields().contains(node.field())) {
+  if (!node.varAccess().type().recordType().fields().contains(node.field())) {
     context_.genErrorMsg(node.location(), "record does not have this field.");
     return;
   }
-  node.setType(node.assignable().type().recordType().fields().at(node.field())->clone());
+  node.setType(node.varAccess().type().recordType().fields().at(node.field())->clone());
 }
 
 void SemantVisitor::visit(ast::ConstDecl &node)
@@ -502,13 +513,14 @@ void SemantVisitor::visit(ast::ValueParamSpec &node)
   // node.type 更新
   node.type().accept(*this);
   // node.varType 更新
-  node.setVarType(std::make_unique<VarType>(true, &node.type().symType()));
+  node.setVarType(std::make_unique<VarType>(false, &node.type().symType()));
   for (auto &id : node.idList()) {
     if (context_.vartab_.probe(id) != nullptr) {
       context_.genErrorMsg(node.location(), "duplicated identifier ", id);
       continue;
     }
     context_.vartab_.insert(id, &node.varType());
+    context_.formal_params_.emplace_back(id, &node.varType());
   }
 }
 
@@ -524,6 +536,7 @@ void SemantVisitor::visit(ast::VarParamSpec &node)
       continue;
     }
     context_.vartab_.insert(id, &node.varType());
+    context_.formal_params_.emplace_back(id, &node.varType());
   }
 }
 
@@ -646,6 +659,7 @@ void SemantVisitor::visit(ast::FuncHead &node)
     context_.genErrorMsg(node.location(), "dupilcated identify function", node.funcId());
     return;
   }
+
   node.returnType().accept(*this);
   node.setFuncIdType(
       std::make_unique<VarType>(
@@ -733,7 +747,9 @@ void SemantVisitor::visit(ast::IfStmt &node)
   /**
     访问 then, 访问 else
    */
-  if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
+  
+  node.cond().accept(*this);
+  if (!context_.cmp_(node.cond().type(), SymType::BooleanType())) {
     std::stringstream sstr;
     sstr << node.location() << ": "
          << "boolean type expected.";
@@ -854,7 +870,7 @@ void SemantVisitor::visit(ast::AssignStmt &node)
   //左侧可以赋值
   node.lhs().accept(*this);
   node.rhs().accept(*this);
-  if (!node.lhs().isLvalue()) {
+  if (!node.lhs().isChangeable()) {
     context_.genErrorMsg(node.location(), "Variable identifier expected.");
     return;
   }
@@ -888,7 +904,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
 
   for (int i = 0; i < static_cast<int>(node.actuals().size()); i++) {
     node.actuals()[i]->accept(*this);
-    if (!node.actuals()[i]->isLvalue() && actuals_expected[i].second->isRef()) {
+    if (!node.actuals()[i]->isChangeable() && actuals_expected[i].second->isRef()) {
       context_.genErrorMsg(node.location(), "actual list do not match.");
       return;
     }
@@ -907,7 +923,7 @@ void SemantVisitor::visit(ast::ReadStmt &node)
   */
   for (const auto &actual : node.actuals()) {
     actual->accept(*this);
-    if (!actual->isLvalue()) {
+    if (!actual->isChangeable()) {
       context_.genErrorMsg(node.location(), "Assignable actual expected.");
     }
   }
@@ -927,7 +943,7 @@ void SemantVisitor::visit(ast::ReadlnStmt &node)
   */
   for (const auto &actual : node.actuals()) {
     actual->accept(*this);
-    if (!actual->isLvalue()) {
+    if (!actual->isChangeable()) {
       std::stringstream sstr;
       sstr << node.location() << ": "
            << "Assignable actual expected.";

@@ -214,23 +214,23 @@ public:
   void setType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
 
   /**
-   * @brief 是否是左值
+   * @brief 是否能被改变
    * 
-   * @return true 是左值
-   * @return false 不是左值
+   * @return true 能被改变
+   * @return false 不能被改变
    */
-  [[nodiscard]] auto isLvalue() const -> bool { return is_lvalue_; }
+  [[nodiscard]] auto isChangeable() const -> bool { return changeable_; }
 
   /**
-   * @brief 设置是否是左值
+   * @brief 设置是否是可以被改变
    * 
-   * @param is_lvalue 是否是左值
+   * @param changeable 是否可以被改变
    */
-  void setIsLvalue(bool is_lvalue) { is_lvalue_ = is_lvalue; }
+  void setChangeable(bool changeable) { changeable_ = changeable; }
 
 private:
   std::unique_ptr<util::SymType> type_;  ///< 表达式的类型
-  bool is_lvalue_{false};                ///< 是否是左值
+  bool changeable_{false};                ///< 是否是左值
 };
 
 /**
@@ -249,7 +249,7 @@ public:
   explicit BoolExpr(std::unique_ptr<Expr> expr)
     : expr_(std::move(expr))
   {
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   /**
@@ -314,7 +314,7 @@ public:
     , lhs_(std::move(lhs))
     , rhs_(std::move(rhs))
   {
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   /**
@@ -377,7 +377,7 @@ public:
     : op_(op)
     , expr_(std::move(expr))
   {
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   /**
@@ -447,7 +447,7 @@ public:
     : value_(std::move(string))
   {
     setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::STRING}));
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   /**
@@ -495,21 +495,21 @@ public:
         throw std::runtime_error("Number is neither a integer nor a real");
         break;
     }
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   explicit UnsignedConstant(char value)
     : value_(value)
   {
     setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::CHAR}));
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   explicit UnsignedConstant(bool value)
     : value_(value)
   {
     setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::BOOLEAN}));
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   /**
@@ -538,14 +538,14 @@ public:
   explicit FuncCall(std::string funcid)
     : funcid_(std::move(funcid))
   {
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   FuncCall(std::string funcid, std::vector<std::unique_ptr<Expr>> actuals)
     : funcid_(std::move(funcid))
     , actuals_(std::move(actuals))
   {
-    setIsLvalue(false);
+    setChangeable(false);
   }
 
   /**
@@ -564,31 +564,26 @@ private:
 
 /**
  * @brief 表示可赋值的表达式
- * @anchor Assignable
- * @see AssignableId IndexedVar FieldDesignator
- * @note assignable -> ID \n
+ * @anchor VarAccess
+ * @see VarId IndexedVar FieldDesignator
+ * @note var_access -> ID \n
   *        | indexed_variable \n
   *        | field_designator
  */
-class Assignable: public Expr
+class VarAccess: public Expr
 {
-public:
-  Assignable()
-  {
-    setIsLvalue(true);
-  }
 };
 
 /**
  * @brief 表示一个可以赋值的标识符，如变量名与函数名
- * @anchor AssignableId
- * @see Assignable
- * @note assignable -> ID \n
+ * @anchor VarId
+ * @see VarAccess
+ * @note var_access -> ID \n
  */
-class AssignableId: public Assignable
+class VarId: public VarAccess
 {
 public:
-  explicit AssignableId(std::string id)
+  explicit VarId(std::string id)
     : id_(std::move(id))
   {}
 
@@ -606,62 +601,66 @@ private:
 /**
  * @brief 表示索引变量，如 a[10]
  * @anchor IndexedVar
- * @see Assignable
- * @note indexed_variable -> assignable LSB expr_list RSB
+ * @see VarAccess
+ * @note indexed_variable -> var_access LSB expr_list RSB
  */
-class IndexedVar: public Assignable
+class IndexedVar: public VarAccess
 {
 public:
   IndexedVar(
-      std::unique_ptr<Expr> assignable,
+      std::unique_ptr<Expr> var_access,
       std::vector<std::unique_ptr<Expr>> indices
   )
-    : assignable_(std::move(assignable))
+    : var_access_(std::move(var_access))
     , indices_(std::move(indices))
-  {}
+  {
+    setChangeable(true);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto assignable() -> Expr & { return *assignable_; }
+  [[nodiscard]] auto varAccess() -> Expr & { return *var_access_; }
 
   [[nodiscard]] auto indices() -> std::vector<std::unique_ptr<Expr>> & { return indices_; }
 
 private:
-  std::unique_ptr<Expr> assignable_;
+  std::unique_ptr<Expr> var_access_;
   std::vector<std::unique_ptr<Expr>> indices_;
 };
 
 /**
  * @brief 结构体成员访问，point.x
  * @anchor FieldDesignator
- * @see Assignable
- * @note field_designator -> assignable PERIOD ID
+ * @see VarAccess
+ * @note field_designator -> var_access PERIOD ID
  */
-class FieldDesignator: public Assignable
+class FieldDesignator: public VarAccess
 {
 public:
   FieldDesignator(
-      std::unique_ptr<Expr> assignable,
+      std::unique_ptr<Expr> var_access,
       std::string field
   )
-    : assignable_(std::move(assignable))
+    : var_access_(std::move(var_access))
     , field_(std::move(field))
-  {}
+  {
+    setChangeable(true);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto assignable() -> Expr & { return *assignable_; }
+  [[nodiscard]] auto varAccess() -> Expr & { return *var_access_; }
 
   [[nodiscard]] auto field() -> std::string & { return field_; }
 
 private:
-  std::unique_ptr<Expr> assignable_;
+  std::unique_ptr<Expr> var_access_;
   std::string field_;
 };
 
@@ -1481,7 +1480,7 @@ class SimpleStmt: public Stmt
  * @brief 表示一个赋值语句
  * @anchor AssignStmt
  * @see SimpleStmt
- * @note assignment_statement -> assignable ASSIGN expression
+ * @note assignment_statement -> var_access ASSIGN expression
  */
 class AssignStmt: public SimpleStmt
 {
@@ -1555,7 +1554,7 @@ private:
  * @brief 表示特殊过程调用 Read
  * @anchor ReadStmt
  * @see ProcCallStmt
- * @note read_statement -> READ LPAREN assignable_list RPAREN
+ * @note read_statement -> READ LPAREN var_access_list RPAREN
  */
 class ReadStmt: public ProcCallStmt
 {
@@ -1564,8 +1563,8 @@ public:
     : ProcCallStmt("read")
   {}
 
-  explicit ReadStmt(std::vector<std::unique_ptr<Expr>> assignables)
-    : ProcCallStmt("read", std::move(assignables))
+  explicit ReadStmt(std::vector<std::unique_ptr<Expr>> var_access_list)
+    : ProcCallStmt("read", std::move(var_access_list))
   {}
 
   /**
@@ -1601,7 +1600,7 @@ public:
  * @brief 表示特殊过程调用 Readln
  * @anchor ReadlnStmt
  * @see ProcCallStmt
- * @note readln_statement -> READLN LPAREN assignable_list RPAREN
+ * @note readln_statement -> READLN LPAREN var_access_list RPAREN
  */
 class ReadlnStmt: public ProcCallStmt
 {
@@ -1610,8 +1609,8 @@ public:
     : ProcCallStmt("readln")
   {}
 
-  explicit ReadlnStmt(std::vector<std::unique_ptr<Expr>> assignables)
-    : ProcCallStmt("readln", std::move(assignables))
+  explicit ReadlnStmt(std::vector<std::unique_ptr<Expr>> var_access_list)
+    : ProcCallStmt("readln", std::move(var_access_list))
   {}
 
   /**

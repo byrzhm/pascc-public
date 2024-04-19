@@ -129,7 +129,7 @@ void PaintVisitor::visit(ast::FuncCall &node)
   }
 }
 
-void PaintVisitor::visit(ast::AssignableId &node)
+void PaintVisitor::visit(ast::VarId &node)
 {
   auto assignable_id = reinterpret_cast<uint64_t>(&node);
 
@@ -139,11 +139,11 @@ void PaintVisitor::visit(ast::AssignableId &node)
 void PaintVisitor::visit(ast::IndexedVar &node)
 {
   auto indexed_var = reinterpret_cast<uint64_t>(&node);
-  auto assignable  = reinterpret_cast<uint64_t>(&node.assignable());
+  auto assignable  = reinterpret_cast<uint64_t>(&node.varAccess());
 
   out_ << "   " << indexed_var << " [label=\"IndexedVar\"]\n";
   out_ << "   " << indexed_var << " -> " << assignable << "\n";
-  node.assignable().accept(*this);
+  node.varAccess().accept(*this);
 
   for (const auto &index : node.indices()) {
     auto index_ptr = reinterpret_cast<uint64_t>(index.get());
@@ -155,12 +155,12 @@ void PaintVisitor::visit(ast::IndexedVar &node)
 void PaintVisitor::visit(ast::FieldDesignator &node)
 {
   auto field_designator = reinterpret_cast<uint64_t>(&node);
-  auto assignable       = reinterpret_cast<uint64_t>(&node.assignable());
+  auto assignable       = reinterpret_cast<uint64_t>(&node.varAccess());
 
   out_ << "   " << field_designator << " [label=\"FieldDesignator: " << node.field() << "\"]\n";
   out_ << "   " << field_designator << " -> " << assignable << "\n";
 
-  node.assignable().accept(*this);
+  node.varAccess().accept(*this);
 }
 
 

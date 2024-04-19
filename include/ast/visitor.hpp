@@ -31,7 +31,7 @@ public:
   virtual void visit(ast::BinaryExpr &node)       = 0;
   virtual void visit(ast::UnaryExpr &node)        = 0;
   virtual void visit(ast::FuncCall &node)         = 0;
-  virtual void visit(ast::AssignableId &node)     = 0;
+  virtual void visit(ast::VarId &node)     = 0;
   virtual void visit(ast::IndexedVar &node)       = 0;
   virtual void visit(ast::FieldDesignator &node)  = 0;
 
@@ -109,7 +109,7 @@ public:
   void visit(ast::BinaryExpr &node) override;       \
   void visit(ast::UnaryExpr &node) override;        \
   void visit(ast::FuncCall &node) override;         \
-  void visit(ast::AssignableId &node) override;     \
+  void visit(ast::VarId &node) override;     \
   void visit(ast::IndexedVar &node) override;       \
   void visit(ast::FieldDesignator &node) override;  \
                                                     \
