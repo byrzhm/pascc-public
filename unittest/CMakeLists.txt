@@ -9,7 +9,11 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
     get_filename_component(pascc_test_filename ${pascc_test_source} NAME)
     string(REPLACE ".cpp" "" pascc_test_name ${pascc_test_filename})
     add_executable(${pascc_test_name} ${pascc_test_source})
-    gtest_discover_tests(${pascc_test_name})
+
+    gtest_discover_tests(${pascc_test_name}
+        DISCOVER_TIMEOUT 600
+    )
+
     target_link_libraries(
         ${pascc_test_name} 
         gtest_main 

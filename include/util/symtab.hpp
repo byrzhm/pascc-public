@@ -14,17 +14,17 @@ public:
   /**
    * @brief 在当前作用域中查找符号
    */
-  [[nodiscard]] auto probe(SYM name) const -> const DAT *;
+  [[nodiscard]] auto probe(const SYM &name) const -> DAT;
 
   /**
    * @brief 在栈中存在的所有作用域中查找符号
    */
-  [[nodiscard]] auto lookup(SYM name) const -> const DAT *;
+  [[nodiscard]] auto lookup(const SYM &name) const -> DAT;
 
   /**
    * @brief 在当前作用域中插入符号
    */
-  void insert(SYM name, DAT data);
+  void insert(const SYM &name, const DAT &data);
 
   /**
    * @brief 进入新的作用域

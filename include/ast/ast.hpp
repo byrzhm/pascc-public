@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "location.hh"
+#include "util/type/type.hpp"
 
 namespace pascc {
 
@@ -77,7 +78,7 @@ public:
    * @param subprog_decl_part 子程序声明部分，不存在时为 nullptr
    * @param stmt_part 语句部分，不存在时为 nullptr
    *
-   * @attention 如果 stmt_part 为空，那么源程序一定是错误的
+   * @attention 如果 stmt_part 为空，那么源程序语法一定是错误的，会卡在语法分析阶段
    */
   Block(
       std::unique_ptr<ConstDeclPart> const_decl_part,
@@ -203,7 +204,14 @@ public:
    *
    * @return std::string 表达式的类型
    */
-  [[nodiscard]] auto type() -> std::string & { return type_; }
+  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
+
+  /**
+   * @brief 设置 type
+   * 
+   * @param type 设置的类型
+   */
+  void setType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
 
   /**
    * @brief 是否是左值
@@ -221,8 +229,8 @@ public:
   void setIsLvalue(bool is_lvalue) { is_lvalue_ = is_lvalue; }
 
 private:
-  std::string type_{"no_type"};  ///< 表达式的类型
-  bool is_lvalue_{false};        ///< 是否是左值
+  std::unique_ptr<util::SymType> type_;  ///< 表达式的类型
+  bool is_lvalue_{false};                ///< 是否是左值
 };
 
 /**
@@ -240,7 +248,9 @@ public:
    */
   explicit BoolExpr(std::unique_ptr<Expr> expr)
     : expr_(std::move(expr))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -303,7 +313,9 @@ public:
     : binop_(binop)
     , lhs_(std::move(lhs))
     , rhs_(std::move(rhs))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -364,7 +376,9 @@ public:
   UnaryExpr(UnaryOp op, std::unique_ptr<Expr> expr)
     : op_(op)
     , expr_(std::move(expr))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -398,12 +412,12 @@ class Number: public ASTNode
 {
 public:
   explicit Number(int value)
-    : type_("integer")
+    : type_(&util::SymType::IntegerType())
     , value_(value)
   {}
 
   explicit Number(double value)
-    : type_("real")
+    : type_(&util::SymType::RealType())
     , value_(value)
   {}
 
@@ -412,12 +426,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto type() -> std::string & { return type_; }
+  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
 
   [[nodiscard]] auto value() -> std::variant<int, double> { return value_; }
 
 private:
-  std::string type_;                 ///< real 或 integer
+  util::SymType *type_;              ///< real 或 integer
   std::variant<int, double> value_;  ///< 使用 std::get<int>(value_) 或 std::get<double>(value_) 获取值
 };
 
@@ -432,7 +446,7 @@ public:
   explicit StringLiteral(std::string string)
     : value_(std::move(string))
   {
-    type() = "string";
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::STRING}));
     setIsLvalue(false);
   }
 
@@ -461,12 +475,25 @@ class UnsignedConstant: public Expr
 public:
   explicit UnsignedConstant(std::unique_ptr<Number> number)
   {
-    if (number->type() == "integer") {
-      type() = "integer";
-      value_ = std::get<int>(number->value());
-    } else {
-      type() = "real";
-      value_ = std::get<double>(number->value());
+    if (number->type().eType() != util::SymType::Type::BUILT_IN) {
+      throw std::runtime_error("Number type should be built-in type");
+    }
+
+    auto built_in_type = number->type().builtInType();
+    switch (built_in_type.type()) {
+      case util::BasicType::INTEGER:
+        setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::INTEGER}));
+        value_ = std::get<int>(number->value());
+        break;
+
+      case util::BasicType::REAL:
+        setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::REAL}));
+        value_ = std::get<double>(number->value());
+        break;
+
+      default:
+        throw std::runtime_error("Number is neither a integer nor a real");
+        break;
     }
     setIsLvalue(false);
   }
@@ -474,14 +501,14 @@ public:
   explicit UnsignedConstant(char value)
     : value_(value)
   {
-    type() = "char";
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::CHAR}));
     setIsLvalue(false);
   }
 
   explicit UnsignedConstant(bool value)
     : value_(value)
   {
-    type() = "boolean";
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::BOOLEAN}));
     setIsLvalue(false);
   }
 
@@ -510,12 +537,16 @@ class FuncCall: public Expr
 public:
   explicit FuncCall(std::string funcid)
     : funcid_(std::move(funcid))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   FuncCall(std::string funcid, std::vector<std::unique_ptr<Expr>> actuals)
     : funcid_(std::move(funcid))
     , actuals_(std::move(actuals))
-  {}
+  {
+    setIsLvalue(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -674,12 +705,26 @@ public:
    */
   explicit Constant(std::unique_ptr<Number> number, int sign = 1)
     : sign_(sign)
-    , type_(number->type())
   {
-    if (number->type() == "integer") {
-      value_ = std::get<int>(number->value());
-    } else {
-      value_ = std::get<double>(number->value());
+    if (number->type().eType() != util::SymType::Type::BUILT_IN) {
+      throw std::runtime_error("Number type should be built-in type");
+    }
+
+    auto built_in_type = number->type().builtInType();
+    switch (built_in_type.type()) {
+      case util::BasicType::INTEGER:
+        type_  = "integer";
+        value_ = std::get<int>(number->value());
+        break;
+
+      case util::BasicType::REAL:
+        type_  = "real";
+        value_ = std::get<double>(number->value());
+        break;
+
+      default:
+        throw std::runtime_error("Number is neither a integer nor a real");
+        break;
     }
   }
 
@@ -826,6 +871,24 @@ private:
  */
 class TypeDenoter: public ASTNode
 {
+public:
+  /**
+   * @brief 返回类型
+   * 
+   * @return util::SymType& 类型
+   */
+  [[nodiscard]] auto symType() -> util::SymType & { return *type_; }
+
+  /**
+   * @brief 设置类型
+   * 
+   * @param type 类型
+   */
+  void setSymType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
+
+private:
+  // TODO(): 语义分析时，将 type_ 设置为具体的类型
+  std::unique_ptr<util::SymType> type_;  ///< 类型
 };
 
 /**
@@ -892,7 +955,7 @@ public:
       std::unique_ptr<TypeDenoter> type,
       std::vector<std::unique_ptr<Period>> periods
   )
-    : type_(std::move(type))
+    : of_type_(std::move(type))
     , periods_(std::move(periods))
   {}
 
@@ -901,12 +964,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
+  [[nodiscard]] auto ofType() -> TypeDenoter & { return *of_type_; }
 
   [[nodiscard]] auto periods() -> std::vector<std::unique_ptr<Period>> & { return periods_; }
 
 private:
-  std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<TypeDenoter> of_type_;
   std::vector<std::unique_ptr<Period>> periods_;
 };
 
@@ -1014,9 +1077,17 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
+  [[nodiscard]] auto varType() -> util::VarType & { return *var_type_; };
+
+  void setVarType(std::unique_ptr<util::VarType> var_type)
+  {
+    var_type_ = std::move(var_type);
+  }
+
 private:
   std::vector<std::string> id_list_;
   std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<util::VarType> var_type_;
 };
 
 /**
@@ -1065,6 +1136,22 @@ class SubprogDecl: public ASTNode
  */
 class FormalParam: public ASTNode
 {
+public:
+  /**
+   * @brief 返回参数的类型
+   * 
+   * @return util::VarType& 参数的类型
+   */
+  [[nodiscard]] auto varType() -> util::VarType & { return *var_type_; }
+
+  void setVarType(std::unique_ptr<util::VarType> var_type)
+  {
+    var_type_ = std::move(var_type);
+  }
+
+private:
+  // TODO(夏博焕): 语义分析时，将 var_type_ 设置为具体的类型
+  std::unique_ptr<util::VarType> var_type_;
 };
 
 /**
@@ -1124,9 +1211,12 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
+  [[nodiscard]] auto varType() -> util::VarType & { return *vartype_; }
+
 private:
   std::vector<std::string> id_list_;
   std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<util::VarType> vartype_;
 };
 
 /**
@@ -1159,9 +1249,14 @@ public:
 
   [[nodiscard]] auto formalParams() -> std::vector<std::unique_ptr<FormalParam>> & { return formal_params_; }
 
+  [[nodiscard]] auto procType() -> util::SubprogType & { return *proc_type_; }
+
+  void setProcType(std::unique_ptr<util::SubprogType> proc_type) { proc_type_ = std::move(proc_type); }
+
 private:
   std::string proc_id_;
   std::vector<std::unique_ptr<FormalParam>> formal_params_;
+  std::unique_ptr<util::SubprogType> proc_type_;
 };
 
 /**
@@ -1256,10 +1351,21 @@ public:
 
   [[nodiscard]] auto returnType() -> TypeDenoter & { return *return_type_; }
 
+  [[nodiscard]] auto funcType() -> util::SubprogType & { return *func_type_; }
+
+  void setFuncType(std::unique_ptr<util::SubprogType> func_type) { func_type_ = std::move(func_type); }
+
+  [[nodiscard]] auto funcIdType() -> util::VarType & { return *func_id_type_; }
+
+  void setFuncIdType(std::unique_ptr<util::VarType> func_id_type) { func_id_type_ = std::move(func_id_type); }
+
 private:
   std::string func_id_;
   std::vector<std::unique_ptr<FormalParam>> formal_params_;
   std::unique_ptr<TypeDenoter> return_type_;
+
+  std::unique_ptr<util::VarType> func_id_type_;
+  std::unique_ptr<util::SubprogType> func_type_;
 };
 
 /**
@@ -1803,7 +1909,7 @@ private:
   std::unique_ptr<Expr> init_val_;
   std::unique_ptr<Expr> end_val_;
   std::unique_ptr<Stmt> body_;
-  bool updown_;
+  bool updown_;  ///< to: true, downto: false
 };
 
 /**
