@@ -378,8 +378,6 @@ type_declarations:
 type_denoter:
   type_identifier {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | ARRAY LSB periods RSB OF type_denoter {
     $$ = std::make_unique<ArrayType>(std::move($6), std::move($3));
@@ -473,13 +471,9 @@ subprogram_declarations:
 subprogram_declaration:
   procedure_declaration {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | function_declaration {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
@@ -499,9 +493,8 @@ procedure_head:
   }
   | PROCEDURE ID LPAREN RPAREN SEMICOLON {
     $$ = std::make_unique<ProcHead>(std::move($2));
-  }
-  | PROCEDURE ID LPAREN RPAREN SEMICOLON {
-    $$ = std::make_unique<ProcHead>(std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @5.end;
   }
   | PROCEDURE ID LPAREN formal_parameter_list RPAREN SEMICOLON {
     $$ = std::make_unique<ProcHead>(std::move($2), std::move($4));
@@ -523,13 +516,9 @@ formal_parameter_list:
 formal_parameter:
   value_parameter_specification {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | variable_parameter_specification {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
@@ -624,31 +613,21 @@ statement_list:
 statement:
   simple_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | structured_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
 simple_statement:
   empty_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | assignment_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | procedure_call_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
@@ -679,13 +658,9 @@ var_access:
   }
   | indexed_variable {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | field_designator {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
                      
@@ -723,28 +698,18 @@ procedure_call_statement:
   }
   | write_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | writeln_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | read_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | readln_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | exit_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
                           
@@ -821,31 +786,21 @@ var_access_list:
 structured_statement:
   compound_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | conditional_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | repetitive_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
 conditional_statement:
   if_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | case_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
@@ -924,18 +879,12 @@ opt_semicolon:
 repetitive_statement:
   repeat_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | while_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | for_statement {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
 
@@ -991,8 +940,6 @@ expr_list:
 expr:
   simple_expr {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | simple_expr relop simple_expr {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
@@ -1001,8 +948,6 @@ expr:
   }
   | string_expr {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   ;
       
@@ -1020,14 +965,14 @@ simple_expr:
   }
   | simple_expr addop term {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
+    $$->location().begin = @1.begin;
+    $$->location().end = @3.end;
   }
   ;
              
 term:
   signed_factor {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | term mulop signed_factor {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
@@ -1039,13 +984,9 @@ term:
 factor:
   var_access {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | function_designator {
     $$ = std::move($1);
-    $$->location().begin = @1.begin;
-    $$->location().end = @1.end;
   }
   | LPAREN expr RPAREN  {
     $$ = std::move($2);
@@ -1068,9 +1009,13 @@ signed_factor:
   }
   | PLUS signed_factor {
     $$ = std::make_unique<UnaryExpr>(UnaryOp::PLUS, std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   | MINUS signed_factor {
     $$ = std::make_unique<UnaryExpr>(UnaryOp::MINUS, std::move($2));
+    $$->location().begin = @1.begin;
+    $$->location().end = @2.end;
   }
   ;
 
