@@ -11,7 +11,7 @@ foreach(pascc_test_source ${PASCC_TEST_SOURCES})
     add_executable(${pascc_test_name} ${pascc_test_source})
 
     gtest_discover_tests(${pascc_test_name}
-        DISCOVER_TIMEOUT 120
+        DISCOVER_TIMEOUT 600
     )
 
     target_link_libraries(
