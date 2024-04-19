@@ -3,6 +3,7 @@
 #include "semant/semant.hpp"
 #include "util/type/type_comparator.hpp"
 
+using pascc::util::ArrayType;
 using pascc::util::BasicType;
 using pascc::util::BuiltInType;
 using pascc::util::SubprogType;
@@ -41,7 +42,7 @@ void SemantVisitor::visit(ast::Constant &node)
   }
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::StringLiteral &node)
+void SemantVisitor::visit(ast::StringLiteral &node)
 {
   node.setType(SymType::StringType().clone());
 }
@@ -227,21 +228,30 @@ void SemantVisitor::visit(ast::BinaryExpr &node)
   }
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::UnaryExpr &node)
+void SemantVisitor::visit(ast::UnaryExpr &node)
 {
-  // TODO(): implement this
   /**
    当一元运算符为 '-' 或 '+'，则 expr_ 必然是 integer 或 real 类型，否则返回错误，程序终止。
    当一元运算符为 'not' 时，则 expr_ 必然是 bool 类型，否则返回错误，程序终止。
    isAssignable = 0;
    按照运算规则处理value。
    */
-  throw std::runtime_error("Not implemented");
+  node.expr().accept(*this);
+  if (node.op() == ast::UnaryOp::MINUS || node.op() == ast::UnaryOp::PLUS) {
+    if (context_.cmp_(node.expr().type(), SymType::IntegerType()) && context_.cmp_(node.expr().type(), SymType::RealType())) {
+      context_.genErrorMsg(node.location(), "integer or real type expected.");
+    }
+  }
+  if (node.op() == ast::UnaryOp::NOT) {
+    if (context_.cmp_(node.expr().type(), SymType::BooleanType())) {
+      context_.genErrorMsg(node.location(), "boolean type expected.");
+    }
+  }
+  node.setType(node.expr().type().clone());
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
+void SemantVisitor::visit(ast::FuncCall &node)
 {
-  // TODO(): implement this
   /**
    在符号表中查找声明，若找不到，则返回错误，程序终止。
    获取FuncCall类型表达式。
@@ -249,25 +259,40 @@ void SemantVisitor::visit([[maybe_unused]] ast::FuncCall &node)
    type = FuncCall的return value
    isAssignable = 0
    */
-  throw std::runtime_error("Not implemented");
+  const auto *decl = context_.subprogtab_.probe(node.funcid());
+  if (decl == nullptr) {
+    context_.genErrorMsg(node.location(), "undefined identifier ", node.funcid());
+    return;
+  }
+  if (node.actuals().size() != decl->formalParams().size()) {
+    context_.genErrorMsg(node.location(), "count of actuals doesn't match.");
+  }
+  for (unsigned i = 0; i < node.actuals().size(); i++) {
+    const auto &actual  = node.actuals()[i];
+    const auto &actual2 = decl->formalParams()[i].second;
+    actual->accept(*this);
+    if (actual2->isRef() && !actual->isLvalue()) {
+      context_.genErrorMsg(actual->location(), "This actual must be modifiable.");
+    } else if (!context_.cmp_(actual2->symType(), actual->type()) && util::TypeComparator::cast(actual->type(), actual2->symType())) {
+      context_.genErrorMsg(actual->location(), "actual does not match.");
+    }
+  }
 }
 
 void SemantVisitor::visit(ast::AssignableId &node)
 {
-  // TODO(): implement this
   /*
    在符号表中查找声明，若找不到，则返回错误，程序终止。
   */
   const auto *vartype = context_.vartab_.lookup(node.id());
   if (vartype == nullptr) {
-    context_.genErrorMsg(node.location(), "undefined identifier");
+    context_.genErrorMsg(node.location(), "undefined identifier ", node.id());
   }
   node.setType(vartype->symType().clone());
 }
 
 void SemantVisitor::visit(ast::IndexedVar &node)
 {
-  // TODO(): implement this
   /**
     1. 获取 assignable 的类型表达式。
     2. 获取每一个维度上的上下界
@@ -300,7 +325,6 @@ void SemantVisitor::visit(ast::IndexedVar &node)
 
 void SemantVisitor::visit(ast::FieldDesignator &node)
 {
-  // TODO(): implement this
   /**
     1. 获取 assignable_ 的类型表达式。
     2. 在符号表中匹配 field_
@@ -369,42 +393,68 @@ void SemantVisitor::visit(ast::ConstDeclPart &node)
   }
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::TypeId &node)
+void SemantVisitor::visit(ast::TypeId &node)
 {
   /**
    * 检测 type 是否在符号表中
    * 赋值给父类 TypeDenoter 的 type
    */
-  auto *found = context_.typetab_.probe(node.id());
-  if (found == nullptr) {
-    context_.genErrorMsg(node.location(), "undefined type identifier ", node.id());
+  const auto &symType = context_.typetab_.lookup(node.id());
+  if (symType == nullptr) {
+    context_.genErrorMsg(node.location(), "undefined Type ", node.id());
     return;
   }
-  node.setSymType(found->clone());
+  node.setType(symType->clone());
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::Period &node)
+void SemantVisitor::visit(ast::Period &node)
 {
   /**
    检测上界是否大于下界。 
    */
-  throw std::runtime_error("Not implemented");
+  node.low().accept(*this);
+  node.high().accept(*this);
+  if (node.low().type() != "integer" || node.high().type() != "integer") {
+    context_.genErrorMsg(node.location(), "bound must be integer.");
+    return;
+  }
+  if (std::get<int>(node.low().value()) > std::get<int>(node.high().value())) {
+    context_.genErrorMsg(node.location(), "low bound can't be larger than high bound.");
+  }
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::ArrayType &node)
+void SemantVisitor::visit(ast::ArrayType &node)
 {
   /**
    组装 type 和 periods 打包赋值给父类 TypeDenoter 的 type
    */
-  throw std::runtime_error("Not implemented");
+  node.ofType().accept(*this);
+  ArrayType arrayType;
+  for (const auto &period : node.periods()) {
+    period->accept(*this);
+    arrayType.addPeriod(std::get<int>(period->low().value()), std::get<int>(period->high().value()));
+  }
+  arrayType.setBaseType(&node.ofType().symType());
+  SymType symType(arrayType);
+  node.setSymType(std::make_unique<SymType>(symType));
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::RecordType &node)
+void SemantVisitor::visit(ast::RecordType &node)
 {
   /**
     将fields中的所有field的 TypeDenoter,id_list_ 打包赋值给父类 TypeDenoter 的type
    */
-  throw std::runtime_error("Not implemented");
+  util::RecordType recordType;
+  context_.enterScope();
+  for (const auto &field : node.fields()) {
+    field->accept(*this);
+    for (const auto &name : field->idList()) {
+      recordType.addField(name, &field->type().symType());
+    }
+  }
+  context_.exitScope();
+  SymType symType(recordType);
+  node.setSymType(std::make_unique<SymType>(symType));
 }
 
 void SemantVisitor::visit(ast::TypeDecl &node)
@@ -863,7 +913,7 @@ void SemantVisitor::visit(ast::ReadStmt &node)
   }
 }
 
-void SemantVisitor::visit([[maybe_unused]] ast::WriteStmt &node)
+void SemantVisitor::visit(ast::WriteStmt &node)
 {
   for (const auto &actual : node.actuals()) {
     actual->accept(*this);
@@ -953,6 +1003,7 @@ void SemantVisitor::visit(ast::ProgramBlock &node)
   if (node.hasStmtPart()) {
     node.stmtPart().accept(*this);
   }
+  context_.exitScope();
 }
 
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node)

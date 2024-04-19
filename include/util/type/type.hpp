@@ -45,6 +45,11 @@ public:
 
   [[nodiscard]] auto baseType() const -> const SymType & { return *base_type_; }
 
+  void setBaseType(SymType *base_type)
+  {
+    base_type_ = base_type;
+  }
+
 private:
   std::vector<std::pair<int, int>> periods_;
   SymType *base_type_;

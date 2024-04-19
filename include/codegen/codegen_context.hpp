@@ -22,13 +22,15 @@ private:
   util::SymTab<std::string, util::VarType *> vartab_;
   util::SymTab<std::string, util::SubprogType *> subprogtab_;
 
-  bool build_format_string_;
+  bool build_format_string_{false};
 
-  bool in_field_designator_;
-  bool field_is_ref_;
+  bool in_field_designator_{false};
+  bool field_is_ref_{false};
 
   std::string current_subprog_;
-  util::SubprogType *current_subprog_type_;
+  util::SubprogType *current_subprog_type_{nullptr};
+
+  std::vector<int> array_bounds_;
 };
 
 }  // namespace pascc::codegen

@@ -886,6 +886,11 @@ public:
    */
   void setSymType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
 
+  void setType(std::unique_ptr<util::SymType> type)
+  {
+    type_ = std::move(type);
+  }
+
 private:
   // TODO(): 语义分析时，将 type_ 设置为具体的类型
   std::unique_ptr<util::SymType> type_;  ///< 类型

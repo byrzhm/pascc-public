@@ -112,7 +112,6 @@ template<>
 void CodegenVisitor::print(const util::SymType &t)
 {
   std::stringstream sstr;
-  (file_output_ ? fout_ : std::cout) << sstr.str();
   switch (t.eType()) {
     case util::SymType::Type::BUILT_IN:
       switch (t.builtInType().type()) {
@@ -132,6 +131,8 @@ void CodegenVisitor::print(const util::SymType &t)
           // 暂不支持 字符串 类型
           throw std::runtime_error("Unexpected type");
       }
+      break;
+
     case util::SymType::Type::USER_DEFINED:
       sstr << t.userDefinedType();
       break;
@@ -139,6 +140,7 @@ void CodegenVisitor::print(const util::SymType &t)
       // 暂不支持 数组 记录 类型
       throw std::runtime_error("Not implemented");
   }
+  (file_output_ ? fout_ : std::cout) << sstr.str();
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::Block &node)
@@ -367,6 +369,11 @@ void CodegenVisitor::visit(ast::IndexedVar &node)
     3. print expr，如果是expr是变量名，语义检查中会检查是否在符号表中。
     4. print ']'
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   node.assignable().accept(*this);
   const auto &indices = node.indices();
   const auto &periods = node.assignable().type().arrayType().periods();
@@ -374,8 +381,10 @@ void CodegenVisitor::visit(ast::IndexedVar &node)
   for (unsigned i = 0; i < size; i++) {
     print("[");
     indices[i]->accept(*this);
-    print(" - ");
-    print(periods[i].first);
+    if (periods[i].first != 0) {
+      print(" - ");
+      print(periods[i].first);
+    }
     print("]");
   }
 }
@@ -390,6 +399,11 @@ void CodegenVisitor::visit(ast::FieldDesignator &node)
           然后print field_id_
     3. print '=' (和Funcion的返回值的Assignable情况区分开)
   */
+  if (context_.build_format_string_) {
+    print(placeholder(node));
+    return;
+  }
+
   context_.in_field_designator_ = true;
   context_.field_is_ref_        = false;
   node.assignable().accept(*this);
@@ -489,6 +503,13 @@ void CodegenVisitor::visit([[maybe_unused]] ast::ArrayType &node)
     1. print typedenoter（目前只能是typeid）
     2. 调用periods_的accept，做代码生成
   */
+  print(node.symType().arrayType().baseType());
+
+  const auto &periods = node.symType().arrayType().periods();
+  for (const auto &[lb, ub] : periods) {
+    // print [upper_bound1 - lower_bound1 + 1][upper_bound2 - lower_bound2 + 1]...
+    context_.array_bounds_.emplace_back(ub - lb + 1);
+  }
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::RecordType &node)
@@ -572,11 +593,26 @@ void CodegenVisitor::visit(ast::VarDecl &node)
     1. 先对type denoter做代码生成。print type denoter（判断是否是基本类，如果不是，需要从类型符号表里面找）
     2. 遍历id_list，print每一个id，用','隔开
   */
+  context_.array_bounds_.clear();
   node.type().accept(*this);
   print(" ");
   print(node.idList().front());
+  if (!context_.array_bounds_.empty()) {
+    for (const auto &bound : context_.array_bounds_) {
+      print('[');
+      print(bound);
+      print(']');
+    }
+  }
   for (auto iter = node.idList().begin() + 1; iter != node.idList().end(); ++iter) {
     print(", " + *iter);
+    if (!context_.array_bounds_.empty()) {
+      for (const auto &bound : context_.array_bounds_) {
+        print('[');
+        print(bound);
+        print(']');
+      }
+    }
   }
   print(";\n");
 }
