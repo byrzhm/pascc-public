@@ -17,11 +17,39 @@ auto TypeComparator::operator()(
       return lhs.builtInType().type() == rhs.builtInType().type();
 
     case SymType::Type::ARRAY:
-      // TODO(): Implement this
+    {
+      if (rhs.eType() != SymType::Type::ARRAY) {
+        return false;
+      }
+      if (lhs.arrayType().periods().size() != rhs.arrayType().periods().size()) {
+        return false;
+      }
+      for (unsigned i = 0; i < lhs.arrayType().periods().size(); i++) {
+        const auto &lperiod = lhs.arrayType().periods()[i];
+        const auto &rperiod = rhs.arrayType().periods()[i];
+        if (lperiod.second - lperiod.first != rperiod.second - rperiod.first) {
+          return false;
+        }
+      }
+      return (*this)(rhs.arrayType().baseType(), lhs.arrayType().baseType());
+    }
     case SymType::Type::RECORD:
-      // TODO(): Implement this
-      return false;
-
+    {
+      if (rhs.eType() != SymType::Type::RECORD) {
+        return false;
+      }
+      if (lhs.recordType().fields().size() != rhs.recordType().fields().size()) {
+        return false;
+      }
+      const auto &ll = lhs.recordType().fields();
+      const auto &rr = rhs.recordType().fields();
+      for (const auto &[field, type] : ll) {
+        if (rr.at(field) != type) {
+          return false;
+        }
+      }
+      return true;
+    }
     case SymType::Type::USER_DEFINED:
       return lhs.userDefinedType() == rhs.userDefinedType();
 
