@@ -353,7 +353,7 @@ void CodegenVisitor::visit(ast::FuncCall &node)
   }
 
   print(node.funcid() + "(");
-  auto *subprog_type  = context_.subprogtab_.probe(node.funcid());
+  auto *subprog_type  = context_.subprogtab_.lookup(node.funcid());
   const auto &formals = subprog_type->formalParams();
   const auto &actuals = node.actuals();
   auto size           = actuals.size();
@@ -381,7 +381,7 @@ void CodegenVisitor::visit(ast::VarId &node)
     return;
   }
 
-  auto *found = context_.vartab_.probe(node.id());
+  auto *found = context_.vartab_.lookup(node.id());
   if (found != nullptr && !context_.in_field_designator_) {
     print("*");
   } else if (found != nullptr && context_.in_field_designator_) {
@@ -841,7 +841,11 @@ void CodegenVisitor::visit(ast::IfStmt &node)
   {
     FlagGuard fg(context_.in_structure_stmt_);
     IndentGuard ig(&indent_, INDENT_SIZE);
-    node.then().accept(*this);
+    if (node.hasThen()) {
+      node.then().accept(*this);
+    } else {
+      println(";");
+    }
   }
 
   if (node.hasElse()) {
@@ -986,8 +990,9 @@ void CodegenVisitor::visit(ast::ProcCallStmt &node)
     3. 遍历actuals_，对每一个actual调用accept，做代码生成（由语义检查检查函数传参与函数定义的匹配）
     4. print ')'
   */
+  printIndent();
   print(node.procId() + "(");
-  auto *subprog_type  = context_.subprogtab_.probe(node.procId());
+  auto *subprog_type  = context_.subprogtab_.lookup(node.procId());
   const auto &formals = subprog_type->formalParams();
   const auto &actuals = node.actuals();
   auto size           = actuals.size();
@@ -1006,6 +1011,7 @@ void CodegenVisitor::visit(ast::ProcCallStmt &node)
 void CodegenVisitor::visit(ast::ReadStmt &node)
 {
   /* 和ReadlnStmt一样 */
+  printIndent();
   print("scanf(\"");
   context_.build_format_string_ = true;
   for (const auto &actual : node.actuals()) {
@@ -1044,6 +1050,7 @@ void CodegenVisitor::visit(ast::ReadlnStmt &node)
   // 2. 遍历上述的类型vector, 输出scanf("%1%2%3\n", 其中%1%2%3是根据类型来的，例如%1是%d，%2是%f，%3是%c)
   // 3. 然后对每一个actual，先print '&'， 然后对该actual做codegen，并用','隔开
   // 4. 最后print ');'
+  printIndent();
   print("scanf(\"");
   context_.build_format_string_ = true;
   for (const auto &actual : node.actuals()) {

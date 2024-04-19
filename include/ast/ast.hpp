@@ -1215,12 +1215,9 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
-  [[nodiscard]] auto varType() -> util::VarType & { return *vartype_; }
-
 private:
   std::vector<std::string> id_list_;
   std::unique_ptr<TypeDenoter> type_;
-  std::unique_ptr<util::VarType> vartype_;
 };
 
 /**
@@ -1721,6 +1718,8 @@ public:
   void accept(Visitor &v) override;
 
   [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+
+  [[nodiscard]] auto hasThen() -> bool { return then_ != nullptr; }
 
   [[nodiscard]] auto then() -> Stmt & { return *then_; }
 

@@ -193,6 +193,7 @@
 %nterm <std::unique_ptr<Expr>> simple_expr
 %nterm <std::unique_ptr<Expr>> term
 %nterm <std::unique_ptr<Expr>> factor
+%nterm <std::unique_ptr<Expr>> signed_factor
 %nterm <std::unique_ptr<FuncCall>> function_designator
 %nterm <std::unique_ptr<UnsignedConstant>> unsigned_constant
 %nterm <BinOp> relop
@@ -435,6 +436,9 @@ procedure_declaration:
 
 procedure_head:
   PROCEDURE ID SEMICOLON {
+    $$ = std::make_unique<ProcHead>(std::move($2));
+  }
+  | PROCEDURE ID LPAREN RPAREN SEMICOLON {
     $$ = std::make_unique<ProcHead>(std::move($2));
   }
   | PROCEDURE ID LPAREN formal_parameter_list RPAREN SEMICOLON {
@@ -832,22 +836,16 @@ simple_expr:
   term {
     $$ = std::move($1);
   }
- | PLUS term {
-    $$ = std::make_unique<UnaryExpr>(UnaryOp::PLUS, std::move($2));
- }
- | MINUS term {
-    $$ = std::make_unique<UnaryExpr>(UnaryOp::MINUS, std::move($2));
- }
- | simple_expr addop term {
+  | simple_expr addop term {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
- }
- ;
+  }
+  ;
              
 term:
-  factor {
+  signed_factor {
     $$ = std::move($1);
   }
-  | term mulop factor {
+  | term mulop signed_factor {
     $$ = std::make_unique<BinaryExpr>($2, std::move($1), std::move($3));
   }
   ;
@@ -867,6 +865,18 @@ factor:
   }
   | unsigned_constant {
     $$ = std::move($1);
+  }
+  ;
+
+signed_factor:
+  factor {
+    $$ = std::move($1);
+  }
+  | PLUS signed_factor {
+    $$ = std::make_unique<UnaryExpr>(UnaryOp::PLUS, std::move($2));
+  }
+  | MINUS signed_factor {
+    $$ = std::make_unique<UnaryExpr>(UnaryOp::MINUS, std::move($2));
   }
   ;
 
