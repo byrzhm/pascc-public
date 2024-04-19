@@ -78,3 +78,7 @@ considered to be token separators.
 添加的功能:
 
 - break
+
+## c语言实现pascal的过程嵌套定义
+
+为内层的 过程/函数 名添加外层的过程名前缀。

@@ -1,0 +1,2 @@
+add_subdirectory(pascc)
+add_subdirectory(painter)

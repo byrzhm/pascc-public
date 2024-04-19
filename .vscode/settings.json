@@ -9,4 +9,14 @@
     "clangd.arguments": [
         "--header-insertion=never"
     ],
+    "code-runner.runInTerminal": true,
+    "code-runner.executorMap": {
+        "pascal": "cd $dir && fpc $fileName && $dir$fileNameWithoutExt && rm $dir$fileNameWithoutExt.o $dir$fileNameWithoutExt",
+    },
+    "cmake.debugConfig": {
+        "args": [
+            "-i",
+            "test.pas"
+        ]
+    },
 }

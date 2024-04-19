@@ -1,4 +1,4 @@
-program PassByReferenceExample;
+program PassByValueExample;
 
 var
   a, b: integer;

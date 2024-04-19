@@ -13,6 +13,10 @@ Checks: '
   -cppcoreguidelines-pro-type-const-cast,
   -cppcoreguidelines-avoid-magic-numbers,
   -readability-magic-numbers,
+  -cppcoreguidelines-special-member-functions,
+  -bugprone-easily-swappable-parameters,
+  -modernize-return-braced-init-list,
+  -cppcoreguidelines-pro-type-reinterpret-cast
   '
 
 WarningsAsErrors: ''
@@ -23,3 +27,6 @@ CheckOptions:
   - { key: readability-identifier-naming.GlobalConstantCase,  value: UPPER_CASE }
   - { key: readability-identifier-naming.MemberCase,          value: lower_case }
   - { key: readability-identifier-naming.MemberSuffix,        value: _          }
+
+# modernize-return-braced-init-list
+# std::string(2, 's') is not equivalent to std::string{2, 's'}
