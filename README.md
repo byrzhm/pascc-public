@@ -47,6 +47,13 @@ git config pull.rebase false
 - better comments
 - doxygen documentation generator
 
+### 构建
+
+``` sh
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+cmake --build build --config Release --target all -j 4 --
+```
+
 ## 小组成员
 
 <!--
