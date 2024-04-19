@@ -14,7 +14,34 @@ public:
 
   auto isOk() -> bool;
 
+  [[nodiscard]] auto error_msgs() const -> const std::vector<std::string> &;
+
 private:
+  /**
+   * @brief and or
+   */
+  void visitLogicBinaryExpr(ast::BinaryExpr &node);
+
+  /**
+   * @brief = <> < > <= >=
+   */
+  void visitComparisonBinaryExpr(ast::BinaryExpr &node);
+
+  /**
+   * @brief + - *
+   */
+  void visitArithmeticBinaryExpr(ast::BinaryExpr &node);
+
+  /**
+   * @brief /
+   */
+  void visitFDivBinaryExpr(ast::BinaryExpr &node);
+
+  /**
+   * @brief div mod
+   */
+  void visitIntOpBinaryExpr(ast::BinaryExpr &node);
+
   SemantContext context_;
 };
 

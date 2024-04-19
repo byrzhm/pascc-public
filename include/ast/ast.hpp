@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "location.hh"
+#include "util/type/type.hpp"
 
 namespace pascc {
 
@@ -77,7 +78,7 @@ public:
    * @param subprog_decl_part 子程序声明部分，不存在时为 nullptr
    * @param stmt_part 语句部分，不存在时为 nullptr
    *
-   * @attention 如果 stmt_part 为空，那么源程序一定是错误的
+   * @attention 如果 stmt_part 为空，那么源程序语法一定是错误的，会卡在语法分析阶段
    */
   Block(
       std::unique_ptr<ConstDeclPart> const_decl_part,
@@ -203,26 +204,33 @@ public:
    *
    * @return std::string 表达式的类型
    */
-  [[nodiscard]] auto type() -> std::string & { return type_; }
+  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
 
   /**
-   * @brief 是否是左值
+   * @brief 设置 type
    * 
-   * @return true 是左值
-   * @return false 不是左值
+   * @param type 设置的类型
    */
-  [[nodiscard]] auto isLvalue() const -> bool { return is_lvalue_; }
+  void setType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
 
   /**
-   * @brief 设置是否是左值
+   * @brief 是否能被改变
    * 
-   * @param is_lvalue 是否是左值
+   * @return true 能被改变
+   * @return false 不能被改变
    */
-  void setIsLvalue(bool is_lvalue) { is_lvalue_ = is_lvalue; }
+  [[nodiscard]] auto isChangeable() const -> bool { return changeable_; }
+
+  /**
+   * @brief 设置是否是可以被改变
+   * 
+   * @param changeable 是否可以被改变
+   */
+  void setChangeable(bool changeable) { changeable_ = changeable; }
 
 private:
-  std::string type_{"no_type"};  ///< 表达式的类型
-  bool is_lvalue_{false};        ///< 是否是左值
+  std::unique_ptr<util::SymType> type_;  ///< 表达式的类型
+  bool changeable_{false};                ///< 是否是左值
 };
 
 /**
@@ -240,7 +248,9 @@ public:
    */
   explicit BoolExpr(std::unique_ptr<Expr> expr)
     : expr_(std::move(expr))
-  {}
+  {
+    setChangeable(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -303,7 +313,9 @@ public:
     : binop_(binop)
     , lhs_(std::move(lhs))
     , rhs_(std::move(rhs))
-  {}
+  {
+    setChangeable(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -364,7 +376,9 @@ public:
   UnaryExpr(UnaryOp op, std::unique_ptr<Expr> expr)
     : op_(op)
     , expr_(std::move(expr))
-  {}
+  {
+    setChangeable(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -398,12 +412,12 @@ class Number: public ASTNode
 {
 public:
   explicit Number(int value)
-    : type_("integer")
+    : type_(&util::SymType::IntegerType())
     , value_(value)
   {}
 
   explicit Number(double value)
-    : type_("real")
+    : type_(&util::SymType::RealType())
     , value_(value)
   {}
 
@@ -412,12 +426,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto type() -> std::string & { return type_; }
+  [[nodiscard]] auto type() -> util::SymType & { return *type_; }
 
   [[nodiscard]] auto value() -> std::variant<int, double> { return value_; }
 
 private:
-  std::string type_;                 ///< real 或 integer
+  util::SymType *type_;              ///< real 或 integer
   std::variant<int, double> value_;  ///< 使用 std::get<int>(value_) 或 std::get<double>(value_) 获取值
 };
 
@@ -432,8 +446,8 @@ public:
   explicit StringLiteral(std::string string)
     : value_(std::move(string))
   {
-    type() = "string";
-    setIsLvalue(false);
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::STRING}));
+    setChangeable(false);
   }
 
   /**
@@ -461,28 +475,41 @@ class UnsignedConstant: public Expr
 public:
   explicit UnsignedConstant(std::unique_ptr<Number> number)
   {
-    if (number->type() == "integer") {
-      type() = "integer";
-      value_ = std::get<int>(number->value());
-    } else {
-      type() = "real";
-      value_ = std::get<double>(number->value());
+    if (number->type().eType() != util::SymType::Type::BUILT_IN) {
+      throw std::runtime_error("Number type should be built-in type");
     }
-    setIsLvalue(false);
+
+    auto built_in_type = number->type().builtInType();
+    switch (built_in_type.type()) {
+      case util::BasicType::INTEGER:
+        setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::INTEGER}));
+        value_ = std::get<int>(number->value());
+        break;
+
+      case util::BasicType::REAL:
+        setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::REAL}));
+        value_ = std::get<double>(number->value());
+        break;
+
+      default:
+        throw std::runtime_error("Number is neither a integer nor a real");
+        break;
+    }
+    setChangeable(false);
   }
 
   explicit UnsignedConstant(char value)
     : value_(value)
   {
-    type() = "char";
-    setIsLvalue(false);
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::CHAR}));
+    setChangeable(false);
   }
 
   explicit UnsignedConstant(bool value)
     : value_(value)
   {
-    type() = "boolean";
-    setIsLvalue(false);
+    setType(std::make_unique<util::SymType>(util::BuiltInType{util::BasicType::BOOLEAN}));
+    setChangeable(false);
   }
 
   /**
@@ -510,12 +537,16 @@ class FuncCall: public Expr
 public:
   explicit FuncCall(std::string funcid)
     : funcid_(std::move(funcid))
-  {}
+  {
+    setChangeable(false);
+  }
 
   FuncCall(std::string funcid, std::vector<std::unique_ptr<Expr>> actuals)
     : funcid_(std::move(funcid))
     , actuals_(std::move(actuals))
-  {}
+  {
+    setChangeable(false);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
@@ -533,31 +564,26 @@ private:
 
 /**
  * @brief 表示可赋值的表达式
- * @anchor Assignable
- * @see AssignableId IndexedVar FieldDesignator
- * @note assignable -> ID \n
+ * @anchor VarAccess
+ * @see VarId IndexedVar FieldDesignator
+ * @note var_access -> ID \n
   *        | indexed_variable \n
   *        | field_designator
  */
-class Assignable: public Expr
+class VarAccess: public Expr
 {
-public:
-  Assignable()
-  {
-    setIsLvalue(true);
-  }
 };
 
 /**
  * @brief 表示一个可以赋值的标识符，如变量名与函数名
- * @anchor AssignableId
- * @see Assignable
- * @note assignable -> ID \n
+ * @anchor VarId
+ * @see VarAccess
+ * @note var_access -> ID \n
  */
-class AssignableId: public Assignable
+class VarId: public VarAccess
 {
 public:
-  explicit AssignableId(std::string id)
+  explicit VarId(std::string id)
     : id_(std::move(id))
   {}
 
@@ -575,62 +601,66 @@ private:
 /**
  * @brief 表示索引变量，如 a[10]
  * @anchor IndexedVar
- * @see Assignable
- * @note indexed_variable -> assignable LSB expr_list RSB
+ * @see VarAccess
+ * @note indexed_variable -> var_access LSB expr_list RSB
  */
-class IndexedVar: public Assignable
+class IndexedVar: public VarAccess
 {
 public:
   IndexedVar(
-      std::unique_ptr<Expr> assignable,
+      std::unique_ptr<Expr> var_access,
       std::vector<std::unique_ptr<Expr>> indices
   )
-    : assignable_(std::move(assignable))
+    : var_access_(std::move(var_access))
     , indices_(std::move(indices))
-  {}
+  {
+    setChangeable(true);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto assignable() -> Expr & { return *assignable_; }
+  [[nodiscard]] auto varAccess() -> Expr & { return *var_access_; }
 
   [[nodiscard]] auto indices() -> std::vector<std::unique_ptr<Expr>> & { return indices_; }
 
 private:
-  std::unique_ptr<Expr> assignable_;
+  std::unique_ptr<Expr> var_access_;
   std::vector<std::unique_ptr<Expr>> indices_;
 };
 
 /**
  * @brief 结构体成员访问，point.x
  * @anchor FieldDesignator
- * @see Assignable
- * @note field_designator -> assignable PERIOD ID
+ * @see VarAccess
+ * @note field_designator -> var_access PERIOD ID
  */
-class FieldDesignator: public Assignable
+class FieldDesignator: public VarAccess
 {
 public:
   FieldDesignator(
-      std::unique_ptr<Expr> assignable,
+      std::unique_ptr<Expr> var_access,
       std::string field
   )
-    : assignable_(std::move(assignable))
+    : var_access_(std::move(var_access))
     , field_(std::move(field))
-  {}
+  {
+    setChangeable(true);
+  }
 
   /**
    * @ref accept "ASTNode::accept"
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto assignable() -> Expr & { return *assignable_; }
+  [[nodiscard]] auto varAccess() -> Expr & { return *var_access_; }
 
   [[nodiscard]] auto field() -> std::string & { return field_; }
 
 private:
-  std::unique_ptr<Expr> assignable_;
+  std::unique_ptr<Expr> var_access_;
   std::string field_;
 };
 
@@ -674,12 +704,26 @@ public:
    */
   explicit Constant(std::unique_ptr<Number> number, int sign = 1)
     : sign_(sign)
-    , type_(number->type())
   {
-    if (number->type() == "integer") {
-      value_ = std::get<int>(number->value());
-    } else {
-      value_ = std::get<double>(number->value());
+    if (number->type().eType() != util::SymType::Type::BUILT_IN) {
+      throw std::runtime_error("Number type should be built-in type");
+    }
+
+    auto built_in_type = number->type().builtInType();
+    switch (built_in_type.type()) {
+      case util::BasicType::INTEGER:
+        type_  = "integer";
+        value_ = std::get<int>(number->value());
+        break;
+
+      case util::BasicType::REAL:
+        type_  = "real";
+        value_ = std::get<double>(number->value());
+        break;
+
+      default:
+        throw std::runtime_error("Number is neither a integer nor a real");
+        break;
     }
   }
 
@@ -826,6 +870,29 @@ private:
  */
 class TypeDenoter: public ASTNode
 {
+public:
+  /**
+   * @brief 返回类型
+   * 
+   * @return util::SymType& 类型
+   */
+  [[nodiscard]] auto symType() -> util::SymType & { return *type_; }
+
+  /**
+   * @brief 设置类型
+   * 
+   * @param type 类型
+   */
+  void setSymType(std::unique_ptr<util::SymType> type) { type_ = std::move(type); }
+
+  void setType(std::unique_ptr<util::SymType> type)
+  {
+    type_ = std::move(type);
+  }
+
+private:
+  // TODO(): 语义分析时，将 type_ 设置为具体的类型
+  std::unique_ptr<util::SymType> type_;  ///< 类型
 };
 
 /**
@@ -892,7 +959,7 @@ public:
       std::unique_ptr<TypeDenoter> type,
       std::vector<std::unique_ptr<Period>> periods
   )
-    : type_(std::move(type))
+    : of_type_(std::move(type))
     , periods_(std::move(periods))
   {}
 
@@ -901,12 +968,12 @@ public:
    */
   void accept(Visitor &v) override;
 
-  [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
+  [[nodiscard]] auto ofType() -> TypeDenoter & { return *of_type_; }
 
   [[nodiscard]] auto periods() -> std::vector<std::unique_ptr<Period>> & { return periods_; }
 
 private:
-  std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<TypeDenoter> of_type_;
   std::vector<std::unique_ptr<Period>> periods_;
 };
 
@@ -1014,9 +1081,17 @@ public:
 
   [[nodiscard]] auto type() -> TypeDenoter & { return *type_; }
 
+  [[nodiscard]] auto varType() -> util::VarType & { return *var_type_; };
+
+  void setVarType(std::unique_ptr<util::VarType> var_type)
+  {
+    var_type_ = std::move(var_type);
+  }
+
 private:
   std::vector<std::string> id_list_;
   std::unique_ptr<TypeDenoter> type_;
+  std::unique_ptr<util::VarType> var_type_;
 };
 
 /**
@@ -1065,6 +1140,22 @@ class SubprogDecl: public ASTNode
  */
 class FormalParam: public ASTNode
 {
+public:
+  /**
+   * @brief 返回参数的类型
+   * 
+   * @return util::VarType& 参数的类型
+   */
+  [[nodiscard]] auto varType() -> util::VarType & { return *var_type_; }
+
+  void setVarType(std::unique_ptr<util::VarType> var_type)
+  {
+    var_type_ = std::move(var_type);
+  }
+
+private:
+  // TODO(夏博焕): 语义分析时，将 var_type_ 设置为具体的类型
+  std::unique_ptr<util::VarType> var_type_;
 };
 
 /**
@@ -1159,9 +1250,14 @@ public:
 
   [[nodiscard]] auto formalParams() -> std::vector<std::unique_ptr<FormalParam>> & { return formal_params_; }
 
+  [[nodiscard]] auto procType() -> util::SubprogType & { return *proc_type_; }
+
+  void setProcType(std::unique_ptr<util::SubprogType> proc_type) { proc_type_ = std::move(proc_type); }
+
 private:
   std::string proc_id_;
   std::vector<std::unique_ptr<FormalParam>> formal_params_;
+  std::unique_ptr<util::SubprogType> proc_type_;
 };
 
 /**
@@ -1256,10 +1352,21 @@ public:
 
   [[nodiscard]] auto returnType() -> TypeDenoter & { return *return_type_; }
 
+  [[nodiscard]] auto funcType() -> util::SubprogType & { return *func_type_; }
+
+  void setFuncType(std::unique_ptr<util::SubprogType> func_type) { func_type_ = std::move(func_type); }
+
+  [[nodiscard]] auto funcIdType() -> util::VarType & { return *func_id_type_; }
+
+  void setFuncIdType(std::unique_ptr<util::VarType> func_id_type) { func_id_type_ = std::move(func_id_type); }
+
 private:
   std::string func_id_;
   std::vector<std::unique_ptr<FormalParam>> formal_params_;
   std::unique_ptr<TypeDenoter> return_type_;
+
+  std::unique_ptr<util::VarType> func_id_type_;
+  std::unique_ptr<util::SubprogType> func_type_;
 };
 
 /**
@@ -1370,7 +1477,7 @@ class SimpleStmt: public Stmt
  * @brief 表示一个赋值语句
  * @anchor AssignStmt
  * @see SimpleStmt
- * @note assignment_statement -> assignable ASSIGN expression
+ * @note assignment_statement -> var_access ASSIGN expression
  */
 class AssignStmt: public SimpleStmt
 {
@@ -1444,7 +1551,7 @@ private:
  * @brief 表示特殊过程调用 Read
  * @anchor ReadStmt
  * @see ProcCallStmt
- * @note read_statement -> READ LPAREN assignable_list RPAREN
+ * @note read_statement -> READ LPAREN var_access_list RPAREN
  */
 class ReadStmt: public ProcCallStmt
 {
@@ -1453,8 +1560,8 @@ public:
     : ProcCallStmt("read")
   {}
 
-  explicit ReadStmt(std::vector<std::unique_ptr<Expr>> assignables)
-    : ProcCallStmt("read", std::move(assignables))
+  explicit ReadStmt(std::vector<std::unique_ptr<Expr>> var_access_list)
+    : ProcCallStmt("read", std::move(var_access_list))
   {}
 
   /**
@@ -1490,7 +1597,7 @@ public:
  * @brief 表示特殊过程调用 Readln
  * @anchor ReadlnStmt
  * @see ProcCallStmt
- * @note readln_statement -> READLN LPAREN assignable_list RPAREN
+ * @note readln_statement -> READLN LPAREN var_access_list RPAREN
  */
 class ReadlnStmt: public ProcCallStmt
 {
@@ -1499,8 +1606,8 @@ public:
     : ProcCallStmt("readln")
   {}
 
-  explicit ReadlnStmt(std::vector<std::unique_ptr<Expr>> assignables)
-    : ProcCallStmt("readln", std::move(assignables))
+  explicit ReadlnStmt(std::vector<std::unique_ptr<Expr>> var_access_list)
+    : ProcCallStmt("readln", std::move(var_access_list))
   {}
 
   /**
@@ -1611,6 +1718,8 @@ public:
   void accept(Visitor &v) override;
 
   [[nodiscard]] auto cond() -> Expr & { return *cond_; }
+
+  [[nodiscard]] auto hasThen() -> bool { return then_ != nullptr; }
 
   [[nodiscard]] auto then() -> Stmt & { return *then_; }
 
@@ -1803,7 +1912,7 @@ private:
   std::unique_ptr<Expr> init_val_;
   std::unique_ptr<Expr> end_val_;
   std::unique_ptr<Stmt> body_;
-  bool updown_;
+  bool updown_;  ///< to: true, downto: false
 };
 
 /**

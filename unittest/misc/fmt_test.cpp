@@ -77,7 +77,7 @@ TEST(FMTTest, sstream)
   Point p(1, 2);
   std::stringstream ss;
   ss << p;
-  
+
   fmt::println(
       stderr,
       "this is {}!",

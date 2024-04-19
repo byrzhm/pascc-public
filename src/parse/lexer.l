@@ -27,7 +27,7 @@ char get_char();
 NON_NEWLINE             [^\n]
 DIGIT		                [0-9]
 DIGITS		              {DIGIT}+
-NUMERIC			            (({DIGITS}\.{DIGITS}?)|(\.{DIGITS}))
+NUMERIC			            ({DIGITS}\.{DIGITS}+)
 
 BLANK                   [ \t\r]
 ID                      [A-Za-z_][A-Za-z0-9_]*

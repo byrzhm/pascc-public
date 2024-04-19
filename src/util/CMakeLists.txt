@@ -3,6 +3,8 @@ add_library(
     OBJECT
     symtab.cpp
     painter.cpp
+    type/type_comparator.cpp
+    type/type.cpp
 )
 
 set(ALL_OBJECT_FILES
