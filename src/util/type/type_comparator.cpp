@@ -56,6 +56,7 @@ auto TypeComparator::operator()(
     case SymType::Type::NO_TYPE:
       return false;
   }
+  return false;
 }
 
 auto TypeComparator::cast(

@@ -27,9 +27,17 @@ auto Driver::parse(const std::string &filepath) -> Driver &
 auto Driver::check() -> Driver &
 {
   semant::SemantVisitor visitor;
-  program_->accept(visitor);
-  for (const auto &msg : visitor.error_msgs()) {
-    LOG_ERROR("{}", msg);
+  bool success = true;
+  try {
+    program_->accept(visitor);
+  } catch (const std::exception &e) {
+    success = false;
+  }
+  if (!success || !visitor.error_msgs().empty()) {
+    for (const auto &msg : visitor.error_msgs()) {
+      LOG_ERROR("{}", msg);
+    }
+    exit(EXIT_FAILURE);
   }
   return *this;
 }
