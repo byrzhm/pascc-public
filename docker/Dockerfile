@@ -13,8 +13,13 @@ RUN apt-get update && apt-get install -y \
     git \
     flex \
     bison \
-    && rm -rf /var/lib/apt/lists/*
+    cmake
 
-RUN git clone https://github.com/byrzhm/pascc-private.git --recursive
+RUN mkdir /root/.ssh/
+ADD id_rsa /root/.ssh/id_rsa
+RUN touch /root/.ssh/known_hosts
+RUN ssh-keyscan -T 60 github.com >> /root/.ssh/known_hosts
+
+RUN git clone git@github.com:byrzhm/pascc-public.git --recursive
 
 CMD ["/bin/bash"]
