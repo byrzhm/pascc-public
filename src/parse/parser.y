@@ -562,6 +562,13 @@ function_head:
     $$->location().begin = @1.begin;
     $$->location().end = @5.end;
   }
+  | FUNCTION ID LPAREN RPAREN COLON type_denoter SEMICOLON {
+    drv.addFunction($2);
+    drv.pushCurrentFunction($2);
+    $$ = std::make_unique<FuncHead>(std::move($2), std::move($6));
+    $$->location().begin = @1.begin;
+    $$->location().end = @7.end;
+  }
   | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON {
     drv.addFunction($2);
     drv.pushCurrentFunction($2);

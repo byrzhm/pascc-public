@@ -96,6 +96,17 @@ message("${PASCC_SANITIZER} will be enabled in debug mode.")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wpedantic -Werror -fsanitize=${PASCC_SANITIZER} -fno-omit-frame-pointer -O0 -g")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+#
+# 如果想要编译的程序在旧的glibc版本上运行, 需要添加
+#       -static-libstdc++ -static-libgcc
+# 在相关联的 targets 上使用 target_link_libraries
+# 例如 target_link_libraries(pascc -static-libstdc++ -static-libgcc)
+# 
+# 或者使用全局的配置
+#       -static
+# 在这个位置添加 set(CMAKE_EXE_LINKER_FLAGS "-static")
+# 
+
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CMAKE_EXE_LINKER_FLAGS: ${CMAKE_EXE_LINKER_FLAGS}")
