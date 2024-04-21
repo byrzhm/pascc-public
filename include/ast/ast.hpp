@@ -1467,7 +1467,10 @@ class Stmt: public ASTNode
  * @brief 表示一个简单语句
  * @anchor SimpleStmt
  * @see AssignStmt ProcCallStmt
- * @note simple_statement -> empty_statement | assignment_statement | procedure_call_statement
+ * @note simple_statement -> empty_statement \n
+ *                         | assignment_statement \n 
+ *                         | procedure_call_statement \n 
+ *                         | break_statement
  */
 class SimpleStmt: public Stmt
 {
@@ -1502,6 +1505,20 @@ public:
 private:
   std::unique_ptr<Expr> lhs_;
   std::unique_ptr<Expr> rhs_;
+};
+
+/**
+ * @brief 表示break语句
+ * @anchor BreakStmt
+ * @see SimpleStmt
+ * @note break_statement -> BREAK
+ */
+class BreakStmt: public SimpleStmt
+{
+public:
+  BreakStmt() = default;
+
+  void accept(Visitor &v) override;
 };
 
 /**

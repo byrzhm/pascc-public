@@ -1004,6 +1004,15 @@ void CodegenVisitor::visit(ast::AssignStmt &node)
   print(";\n");
 }
 
+void CodegenVisitor::visit([[maybe_unused]] ast::BreakStmt &node)
+{
+  /*
+    print 'break;'
+  */
+  printIndent();
+  print("break;\n");
+}
+
 void CodegenVisitor::visit(ast::ProcCallStmt &node)
 {
   /*
