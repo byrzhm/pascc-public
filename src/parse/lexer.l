@@ -131,6 +131,7 @@ UNTIL            return Parser::make_UNTIL(loc);
 VAR              return Parser::make_VAR(loc);
 WHILE            return Parser::make_WHILE(loc);
 WITH             return Parser::make_WITH(loc);
+BREAK            return Parser::make_BREAK(loc);
 
 READ             return Parser::make_READ(loc);
 READLN           return Parser::make_READLN(loc);

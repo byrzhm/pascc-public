@@ -916,6 +916,11 @@ void SemantVisitor::visit(ast::AssignStmt &node)
   context_.genErrorMsg(node.location(), "type error");
 }
 
+void SemantVisitor::visit([[maybe_unused]] ast::BreakStmt &node)
+{
+  // TODO(夏博焕): implement this
+}
+
 void SemantVisitor::visit(ast::ProcCallStmt &node)
 {
   /**

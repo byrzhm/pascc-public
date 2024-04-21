@@ -599,6 +599,12 @@ void PaintVisitor::visit(ast::AssignStmt &node)
   node.rhs().accept(*this);
 }
 
+void PaintVisitor::visit(ast::BreakStmt &node)
+{
+  auto break_stmt = reinterpret_cast<uint64_t>(&node);
+  out_ << "   " << break_stmt << " [label=\"BreakStmt\"]\n";
+}
+
 void PaintVisitor::visit(ast::ProcCallStmt &node)
 {
   auto proc_call_stmt = reinterpret_cast<uint64_t>(&node);

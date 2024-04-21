@@ -194,6 +194,11 @@ void AssignStmt::accept(Visitor &visitor)
   visitor.visit(*this);
 }
 
+void BreakStmt::accept(Visitor &visitor)
+{
+  visitor.visit(*this);
+}
+
 void ProcCallStmt::accept(Visitor &visitor)
 {
   visitor.visit(*this);
