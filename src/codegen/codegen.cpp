@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -129,6 +130,12 @@ template<typename T>
 void CodegenVisitor::print(const T &t)
 {
   (file_output_ ? fout_ : std::cout) << t;
+}
+
+template<>
+void CodegenVisitor::print(const double &t)
+{
+  (file_output_ ? fout_ : std::cout) << std::setprecision(16) << t;
 }
 
 template<>
