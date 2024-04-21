@@ -289,7 +289,7 @@ void SemantVisitor::visit(ast::FuncCall &node)
     actual->accept(*this);
     if (formal->isRef() && !actual->isChangeable()) {
       context_.genErrorMsg(actual->location(), "This actual must be modifiable.");
-    } else if (!context_.cmp_(formal->symType(), actual->type()) && util::TypeComparator::cast(actual->type(), formal->symType())) {
+    } else if (!context_.cmp_(formal->symType(), actual->type()) && !util::TypeComparator::cast(actual->type(), formal->symType())) {
       context_.genErrorMsg(actual->location(), "actual does not match.");
     }
   }
