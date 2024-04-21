@@ -868,7 +868,20 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseStmt &node)
     6. 我们的pascal-S到C语言暂不支持case中的default语法
   */
   // TODO (fpy & dly): implement this
-  throw std::runtime_error("Not implemented");
+  printIndent();
+  print("switch(");
+  node.expr().accept(*this);
+  print(")  {\n");
+
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    for (const auto &caseItem : node.caseList()) {
+      caseItem->accept(*this);
+    }
+  }
+
+  printIndent();
+  print("}\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
@@ -878,7 +891,16 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
     2. 缩进，对stmt_做代码生成
   */
   // TODO (fpy & dly): implement this
-  throw std::runtime_error("Not implemented");
+  for (const auto &constant : node.constants()) {
+    printIndent();
+    print("case ");
+    constant->accept(*this);
+    print(": ");
+    if (constant != node.constants().back()) {
+      print("\n");
+    }
+  }
+  node.stmt().accept(*this);
 }
 
 void CodegenVisitor::visit(ast::RepeatStmt &node)
