@@ -93,7 +93,7 @@ auto placeholder(pascc::ast::Expr &expr) -> std::string
     case pascc::util::BasicType::INTEGER:
       return "%d";
     case pascc::util::BasicType::REAL:
-      return "%lf";
+      return "%f";
     case pascc::util::BasicType::BOOLEAN:
       return "%d";
     case pascc::util::BasicType::CHAR:
