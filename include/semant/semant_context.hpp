@@ -42,6 +42,7 @@ private:
   util::SymType *case_stmt_type_{nullptr};
 
   util::TypeComparator cmp_;
+  bool inloop_ = false;
 };
 
 }  // namespace pascc::semant
