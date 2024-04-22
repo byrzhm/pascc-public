@@ -73,6 +73,7 @@
   VAR       "var"
   WHILE     "while"
   WITH      "with"
+  BREAK     "break"
 
   READ      "read"
   READLN    "readln"
@@ -163,6 +164,7 @@
 %nterm <std::unique_ptr<Stmt>> simple_statement
 %nterm <std::unique_ptr<Stmt>> empty_statement
 %nterm <std::unique_ptr<Stmt>> assignment_statement
+%nterm <std::unique_ptr<Stmt>> break_statement
 %nterm <std::unique_ptr<Expr>> var_access
 %nterm <std::unique_ptr<Expr>> indexed_variable
 %nterm <std::unique_ptr<Expr>> field_designator
@@ -562,6 +564,13 @@ function_head:
     $$->location().begin = @1.begin;
     $$->location().end = @5.end;
   }
+  | FUNCTION ID LPAREN RPAREN COLON type_denoter SEMICOLON {
+    drv.addFunction($2);
+    drv.pushCurrentFunction($2);
+    $$ = std::make_unique<FuncHead>(std::move($2), std::move($6));
+    $$->location().begin = @1.begin;
+    $$->location().end = @7.end;
+  }
   | FUNCTION ID LPAREN formal_parameter_list RPAREN COLON type_denoter SEMICOLON {
     drv.addFunction($2);
     drv.pushCurrentFunction($2);
@@ -626,6 +635,9 @@ simple_statement:
   | assignment_statement {
     $$ = std::move($1);
   }
+  | break_statement {
+    $$ = std::move($1);
+  }
   | procedure_call_statement {
     $$ = std::move($1);
   }
@@ -642,6 +654,13 @@ assignment_statement:
     $$ = std::make_unique<AssignStmt>(std::move($1), std::move($3));
     $$->location().begin = @1.begin;
     $$->location().end = @3.end;
+  }
+  ;
+
+break_statement:
+  BREAK {
+    $$ = std::make_unique<BreakStmt>();
+    $$->location() = @1;
   }
   ;
 
