@@ -78,6 +78,7 @@ public:
   virtual void visit(ast::ForStmt &node)    = 0;
   // simple statement
   virtual void visit(ast::AssignStmt &node)   = 0;
+  virtual void visit(ast::BreakStmt &node)    = 0;
   virtual void visit(ast::ProcCallStmt &node) = 0;
   virtual void visit(ast::ReadStmt &node)     = 0;
   virtual void visit(ast::WriteStmt &node)    = 0;
@@ -109,7 +110,7 @@ public:
   void visit(ast::BinaryExpr &node) override;       \
   void visit(ast::UnaryExpr &node) override;        \
   void visit(ast::FuncCall &node) override;         \
-  void visit(ast::VarId &node) override;     \
+  void visit(ast::VarId &node) override;            \
   void visit(ast::IndexedVar &node) override;       \
   void visit(ast::FieldDesignator &node) override;  \
                                                     \
@@ -150,6 +151,7 @@ public:
   void visit(ast::ForStmt &node) override;          \
                                                     \
   void visit(ast::AssignStmt &node) override;       \
+  void visit(ast::BreakStmt &node) override;        \
   void visit(ast::ProcCallStmt &node) override;     \
   void visit(ast::ReadStmt &node) override;         \
   void visit(ast::WriteStmt &node) override;        \

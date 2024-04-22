@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -92,7 +93,7 @@ auto placeholder(pascc::ast::Expr &expr) -> std::string
     case pascc::util::BasicType::INTEGER:
       return "%d";
     case pascc::util::BasicType::REAL:
-      return "%lf";
+      return "%f";
     case pascc::util::BasicType::BOOLEAN:
       return "%d";
     case pascc::util::BasicType::CHAR:
@@ -132,6 +133,12 @@ void CodegenVisitor::print(const T &t)
 }
 
 template<>
+void CodegenVisitor::print(const double &t)
+{
+  (file_output_ ? fout_ : std::cout) << std::setprecision(16) << t;
+}
+
+template<>
 void CodegenVisitor::print(const util::SymType &t)
 {
   std::stringstream sstr;
@@ -142,7 +149,7 @@ void CodegenVisitor::print(const util::SymType &t)
           sstr << "int";
           break;
         case util::BasicType::REAL:
-          sstr << "double";
+          sstr << "float";
           break;
         case util::BasicType::BOOLEAN:
           sstr << "bool";
@@ -199,7 +206,7 @@ void CodegenVisitor::visit(ast::Constant &node)
     * else if (type == "integer")
     *      val = std::get<int>(value_);
     * else if (type == "real")
-    *      val = std::get<double>(value_);
+    *      val = std::get<float>(value_);
     * else if (type == "char")
     *      val = std::get<char>(value_);
     * else
@@ -313,7 +320,7 @@ void CodegenVisitor::visit(ast::BinaryExpr &node)
 
   print('(');
   if (node.op() == ast::BinOp::FDIV) {
-    print("(double) ");
+    print("(float) ");
   }
 
   node.lhs().accept(*this);
@@ -463,8 +470,8 @@ void CodegenVisitor::visit(ast::ConstDecl &node)
     print("int");
     context_.consttab_.insert(node.constId(), "int");
   } else if (node.constant().type() == "real") {
-    print("double");
-    context_.consttab_.insert(node.constId(), "double");
+    print("float");
+    context_.consttab_.insert(node.constId(), "float");
   } else if (node.constant().type() == "char") {
     print("char");
     context_.consttab_.insert(node.constId(), "char");
@@ -498,7 +505,7 @@ void CodegenVisitor::visit(ast::TypeId &node)
   /*
     1. 如果是基本类型
       1.1 如果是integer，print 'int'
-      1.2 如果是real，print 'double'
+      1.2 如果是real，print 'float'
       1.3 如果是char，print 'char'
       1.4 如果是boolean，print 'bool'
     2. 如果是自定义类型，直接print类型符号即可
@@ -506,7 +513,7 @@ void CodegenVisitor::visit(ast::TypeId &node)
   if (node.id() == "integer") {
     print("int");
   } else if (node.id() == "real") {
-    print("double");
+    print("float");
   } else if (node.id() == "char") {
     print("char");
   } else if (node.id() == "boolean") {
@@ -868,7 +875,20 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseStmt &node)
     6. 我们的pascal-S到C语言暂不支持case中的default语法
   */
   // TODO (fpy & dly): implement this
-  throw std::runtime_error("Not implemented");
+  printIndent();
+  print("switch(");
+  node.expr().accept(*this);
+  print(")  {\n");
+
+  {
+    IndentGuard ig(&indent_, INDENT_SIZE);
+    for (const auto &caseItem : node.caseList()) {
+      caseItem->accept(*this);
+    }
+  }
+
+  printIndent();
+  print("}\n");
 }
 
 void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
@@ -878,7 +898,16 @@ void CodegenVisitor::visit([[maybe_unused]] ast::CaseListElement &node)
     2. 缩进，对stmt_做代码生成
   */
   // TODO (fpy & dly): implement this
-  throw std::runtime_error("Not implemented");
+  for (const auto &constant : node.constants()) {
+    printIndent();
+    print("case ");
+    constant->accept(*this);
+    print(": ");
+    if (constant != node.constants().back()) {
+      print("\n");
+    }
+  }
+  node.stmt().accept(*this);
 }
 
 void CodegenVisitor::visit(ast::RepeatStmt &node)
@@ -980,6 +1009,15 @@ void CodegenVisitor::visit(ast::AssignStmt &node)
   print(" = ");
   node.rhs().accept(*this);
   print(";\n");
+}
+
+void CodegenVisitor::visit([[maybe_unused]] ast::BreakStmt &node)
+{
+  /*
+    print 'break;'
+  */
+  printIndent();
+  print("break;\n");
 }
 
 void CodegenVisitor::visit(ast::ProcCallStmt &node)

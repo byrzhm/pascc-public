@@ -140,7 +140,13 @@ public:
 
   [[nodiscard]] auto isRef() const -> bool { return is_ref_; }
 
-  [[nodiscard]] auto symType() const -> const SymType & { return *type_; }
+  [[nodiscard]] auto symType() const -> const SymType &
+  {
+    if (type_ == nullptr) {
+      throw std::runtime_error("VarType::symType: type is nullptr");
+    }
+    return *type_;
+  }
 
 private:
   bool is_ref_;
@@ -156,15 +162,16 @@ public:
     , return_type_(return_type)
     , formal_params_(std::move(formal_params))
   {}
-  SubprogType(bool is_func, SymType *return_type)
-    : is_func_(is_func)
-    , return_type_(return_type)
-  {
-    formal_params_ = {{}};
-  }
+
   [[nodiscard]] auto isFunc() const -> bool { return is_func_; }
 
-  [[nodiscard]] auto returnType() const -> const SymType & { return *return_type_; }
+  [[nodiscard]] auto returnType() const -> const SymType &
+  {
+    if (return_type_ == nullptr) {
+      throw std::runtime_error("SubprogType::returnType: type is nullptr");
+    }
+    return *return_type_;
+  }
 
   [[nodiscard]] auto formalParams() const -> const FormalVector & { return formal_params_; }
 

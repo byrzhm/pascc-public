@@ -289,7 +289,7 @@ void SemantVisitor::visit(ast::FuncCall &node)
     actual->accept(*this);
     if (formal->isRef() && !actual->isChangeable()) {
       context_.genErrorMsg(actual->location(), "This actual must be modifiable.");
-    } else if (!context_.cmp_(formal->symType(), actual->type()) && util::TypeComparator::cast(actual->type(), formal->symType())) {
+    } else if (!context_.cmp_(formal->symType(), actual->type()) && !util::TypeComparator::cast(actual->type(), formal->symType())) {
       context_.genErrorMsg(actual->location(), "actual does not match.");
     }
   }
@@ -838,6 +838,7 @@ void SemantVisitor::visit(ast::RepeatStmt &node)
   /** 
   访问body
   */
+  context_.inloop_ = true;
   node.cond().accept(*this);
   if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
@@ -845,6 +846,7 @@ void SemantVisitor::visit(ast::RepeatStmt &node)
   for (const auto &stmt : node.body()) {
     stmt->accept(*this);
   }
+  context_.inloop_ = false;
 }
 
 void SemantVisitor::visit(ast::WhileStmt &node)
@@ -852,12 +854,14 @@ void SemantVisitor::visit(ast::WhileStmt &node)
   /** 
   访问body
   */
+  context_.inloop_ = true;
   node.cond().accept(*this);
   if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     // 条件不是bool
     context_.genErrorMsg(node.location(), "boolean type expected.");
   }
   node.body().accept(*this);
+  context_.inloop_ = false;
 }
 
 void SemantVisitor::visit(ast::ForStmt &node)
@@ -866,6 +870,7 @@ void SemantVisitor::visit(ast::ForStmt &node)
   如果ctrl_var和init_val类型不一致则返回错误，程序终止。
   访问body
   */
+  context_.inloop_ = true;
   node.ctrlVar().accept(*this);
   node.initVal().accept(*this);
   node.endVal().accept(*this);
@@ -892,6 +897,7 @@ void SemantVisitor::visit(ast::ForStmt &node)
     context_.genErrorMsg(node.location(), "ctrlVal type doesn't match initVal or endVal");
   }
   node.body().accept(*this);
+  context_.inloop_ = false;
 }
 
 void SemantVisitor::visit(ast::AssignStmt &node)
@@ -914,6 +920,13 @@ void SemantVisitor::visit(ast::AssignStmt &node)
   }
   // TODO(): 重载type的流运算符
   context_.genErrorMsg(node.location(), "type error");
+}
+
+void SemantVisitor::visit(ast::BreakStmt &node)
+{
+  if (!context_.inloop_) {
+    context_.genErrorMsg(node.location(), "Unexpected break.");
+  }
 }
 
 void SemantVisitor::visit(ast::ProcCallStmt &node)
