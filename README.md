@@ -10,7 +10,8 @@
   - [codegen 模块](docs/codegen.md)
   
 
-- 环境搭建和项目构建
+- 项目搭建
+  - [环境依赖](#环境依赖)
   - [配置项目](docs/quick-configure.md)
   - [构建项目](#构建项目)
 
@@ -18,6 +19,20 @@
 
 - [小组成员](#小组成员)
 
+
+## 环境依赖
+
+- OS: ubuntu 22.04 / MacOS
+- Compiler: gcc 11.4.0 / clang 14
+- bison: 3.8.2
+- flex: 2.6.4
+- cmake 3.10+
+- [graphviz 10.0.1](https://graphviz.org/)
+- [doxygen 1.10.0](https://www.doxygen.nl/)
+- 3rdparty libraries:
+  - [argparse](https://github.com/p-ranav/argparse)
+  - [fmt](https://github.com/fmtlib/fmt)
+  - [googletest](https://github.com/google/googletest)
 
 ## 构建项目
 
