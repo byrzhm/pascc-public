@@ -1,5 +1,19 @@
 # pascc
 
+## 环境依赖
+
+- OS: ubuntu 22.04 / MacOS
+- Compiler: gcc 11.4.0 / clang 14
+- bison: 3.8.2
+- flex: 2.6.4
+- cmake 3.10+
+- [graphviz 10.0.1](https://graphviz.org/)
+- [doxygen 1.10.0](https://www.doxygen.nl/)
+- 3rdparty libraries:
+  - [argparse](https://github.com/p-ranav/argparse)
+  - [fmt](https://github.com/fmtlib/fmt)
+  - [googletest](https://github.com/google/googletest)
+
 ## 快速配置
 
 ### 虚拟机配置
@@ -33,10 +47,11 @@ git submodule update --init --recursive
 # 配置 git user.name 和 user.email
 git config user.name "youername" # --global
 git config user.email "youremail" # --global
+# pull.rebase 设置为 false
 git config pull.rebase false
 ```
 
-### vscode 安装插件:
+### vscode 插件推荐:
 
 - clangd
 - c/c++ extension pack
@@ -50,7 +65,7 @@ git config pull.rebase false
 ### 构建
 
 ``` sh
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build --config Release --target all -j 4 --
 ```
 
