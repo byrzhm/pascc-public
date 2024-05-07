@@ -36,17 +36,6 @@ git config user.email "youremail" # --global
 git config pull.rebase false
 ```
 
-### vscode 安装插件:
-
-- clangd
-- c/c++ extension pack
-- cmake tools
-- C++ TestMate
-- git graph
-- code-runner
-- better comments
-- doxygen documentation generator
-
 ### 构建
 
 ``` sh
