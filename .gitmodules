@@ -7,3 +7,6 @@
 [submodule "3rdparty/argparse"]
 	path = 3rdparty/argparse
 	url = git@github.com:p-ranav/argparse.git
+[submodule "test-examples"]
+	path = test-examples
+	url = git@github.com:byrzhm/pascc-test-examples.git

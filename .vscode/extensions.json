@@ -11,7 +11,8 @@
 		"mhutchie.git-graph",
 		"formulahendry.code-runner",
 		"cschlosser.doxdocgen",
-		"aaron-bond.better-comments"
+		"aaron-bond.better-comments",
+		"ms-python.flake8",
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [
