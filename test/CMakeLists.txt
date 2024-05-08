@@ -8,6 +8,3 @@ foreach(pascc_pytest_source ${PASCC_PYTEST_SOURCES})
         WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     )
 endforeach()
-
-# copy test data to build directory
-file(COPY data/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data/)
