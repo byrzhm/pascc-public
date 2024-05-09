@@ -35,6 +35,7 @@ auto SemantContext::topFunc() -> std::string
   }
   return functions_.top();
 }
+
 void SemantContext::pushFunc(const std::string &func_name)
 {
   functions_.emplace(func_name);
@@ -45,11 +46,10 @@ void SemantContext::popFunc()
   functions_.pop();
 }
 
-void SemantContext::genErrorMsg(const parse::location &loc, const std::string &error_msg, const std::string &id)
+void SemantContext::genErrorMsg(const parse::location &loc, const std::string &error_msg)
 {
   std::stringstream sstr;
-  sstr << loc << ": "
-       << error_msg << " " << id;
+  sstr << loc << ": " << error_msg;
   error_msgs_.emplace_back(sstr.str());
 }
 

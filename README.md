@@ -1,58 +1,50 @@
 # pascc
 
-## 快速配置
+- 预备知识
+  - [pascal](docs/pascal.md)
+  - [C++](docs/c++.md)
 
-### 虚拟机配置
+- pascc 三大模块
+  - [parse 模块](docs/parse.md)
+  - [semant 模块](docs/semant.md)
+  - [codegen 模块](docs/codegen.md)
+  
 
-``` shell
-sudo apt-get -y update && sudo apt-get -y install openssh-server net-tools # 下载ssh服务器和ifconfig工具(在net-tools中)
-ifconfig # 查看虚拟机服务器ip
-```
+- 项目搭建
+  - [环境依赖](#环境依赖)
+  - [配置项目](docs/quick-configure.md)
+  - [构建项目](#构建项目)
 
-> 在本机`cmd/terminal`中使用`ssh-keygen`生成ssh密钥，在服务器的`~/.ssh/`下添加`authorized_keys`文件，将公钥(`id_rsa.pub`)的内容复制粘贴于其中。（完成了免密登录）
+- [参考资料](#参考资料)
 
-### 拉取代码
+- [小组成员](#小组成员)
 
-在虚拟机服务器中使用`ssh-keygen`生成密钥，将公钥放在github上。
-使用下面的指令拉取代码：
 
-```shell
-git clone git@github.com:byrzhm/pascc-private.git
-```
+## 环境依赖
 
-### 搭建环境
+- OS: ubuntu 22.04 / MacOS
+- Compiler: gcc 11.4.0 / clang 14
+- bison: 3.8.2
+- flex: 2.6.4
+- cmake 3.10+
+- [graphviz 10.0.1](https://graphviz.org/)
+- [doxygen 1.10.0](https://www.doxygen.nl/)
+- 3rdparty libraries:
+  - [argparse](https://github.com/p-ranav/argparse)
+  - [fmt](https://github.com/fmtlib/fmt)
+  - [googletest](https://github.com/google/googletest)
 
-``` shell
-sudo apt-get -y update && sudo apt-get -y install build-essential clang flex bison cmake git fp-compiler graphviz doxygen
-git submodule update --init --recursive
-```
-
-### 配置git
-
-``` shell
-# 配置 git user.name 和 user.email
-git config user.name "youername" # --global
-git config user.email "youremail" # --global
-git config pull.rebase false
-```
-
-### vscode 安装插件:
-
-- clangd
-- c/c++ extension pack
-- cmake tools
-- C++ TestMate
-- git graph
-- code-runner
-- better comments
-- doxygen documentation generator
-
-### 构建
+## 构建项目
 
 ``` sh
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 cmake --build build --config Release --target all -j 4 --
 ```
+
+## 参考资料
+
+- [postgres](https://github.com/postgres/postgres/blob/master/src/backend/parser/scan.l#L409)
+- [graphviz dotguide](https://graphviz.org/pdf/dotguide.pdf)
 
 ## 小组成员
 
@@ -126,8 +118,3 @@ cmake --build build --config Release --target all -j 4 --
     </td>
   </tr>
 </table>
-
-## References
-
-- [postgres](https://github.com/postgres/postgres/blob/master/src/backend/parser/scan.l#L409)
-- [graphviz dotguide](https://graphviz.org/pdf/dotguide.pdf)

@@ -32,26 +32,30 @@ void SemantVisitor::visit([[maybe_unused]] ast::Block &node)
 // do nothing
 void SemantVisitor::visit([[maybe_unused]] ast::Number &node) {}
 
+/**
+ * 当sign为-1且该常量的类型不为整型或者实型时，输出错误信息：违法的常量类型
+ */
 void SemantVisitor::visit(ast::Constant &node)
 {
-  /**
-    当 type == "reference" 且 sign = -1 时查符号表(找不到则返回未定义的错误)，若为字符串类型，则返回错误，程序终止。
-   */
   if (node.sign() == -1 && (node.type() != "integer" && node.type() != "real")) {
     context_.genErrorMsg(node.location(), "invaild constant type.");
   }
 }
 
+/**
+ * @brief 设置字符串类型 
+ */
 void SemantVisitor::visit(ast::StringLiteral &node)
 {
   node.setType(SymType::StringType().clone());
 }
 
+/**
+ * 如果子表达式的类型和内置的布尔类型不相同，输出错误信息：期待的是布尔类型。并退出
+ * 如果子表达式的类型与内置的布尔类型相同，将当前节点类型设置为布尔类型
+ */
 void SemantVisitor::visit(ast::BoolExpr &node)
 {
-  /**
-   * 表示式应当为 bool 类型
-   */
   node.expr().accept(*this);
   if (!context_.cmp_(node.expr().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
@@ -63,6 +67,12 @@ void SemantVisitor::visit(ast::BoolExpr &node)
 // do nothing
 void SemantVisitor::visit([[maybe_unused]] ast::UnsignedConstant &node) {}
 
+/**
+ * 如果有任何一侧操作数不为布尔类型，输出错误信息：期待布尔类型。将当前节点类型设置为无类型
+ * 如果两侧操作数都为布尔类型，将当前节点类型设置为布尔类型
+ * 
+ * @attention 这里进行的是LogicBinaryExpr，也就是与运算(AND),或运算(OR),非运算(NOT)
+ */
 void SemantVisitor::visitLogicBinaryExpr(ast::BinaryExpr &node)
 {
   if (!context_.cmp_(node.lhs().type(), SymType::BooleanType()) || !context_.cmp_(node.rhs().type(), SymType::BooleanType())) {
@@ -73,6 +83,15 @@ void SemantVisitor::visitLogicBinaryExpr(ast::BinaryExpr &node)
   }
 }
 
+/**
+ * 如果二元运算符为'='或者'<>'时，如果两侧操作数的类型相同OR
+ *                               左侧操作数的类型可以转换为右侧操作数的类型OR
+ *                               右侧操作数的类型可以转换为左侧操作数的类型
+ * 将当前节点的类型设置为布尔类型，否则输出错误信息：类型不匹配。并退出
+ * 如果二元运算符不为'='或者'<>'时，如果两侧操作数类型都不为整型||实型，输出错误信息：希望得到的是整型和实型
+ * 
+ * @attention 这里进行的是ComparisonBinaryExpr，也就是等于(=),不等于(<>),大于(>),小于(<),大于等于(>=),小于等于(<=)
+ */
 void SemantVisitor::visitComparisonBinaryExpr(ast::BinaryExpr &node)
 {
   // 等号或不等号需要特殊处理
@@ -112,6 +131,13 @@ void SemantVisitor::visitComparisonBinaryExpr(ast::BinaryExpr &node)
   }
 }
 
+/**
+ * 如果两侧操作数的类型有任意一侧不为整型或者实型，输出错误信息：希望得到的是整型和实型。将当前节点类型设置为无类型
+ * 否则，如果两侧操作数的类型两侧均为整型，将当前节点类型设置为整型
+ *       如果两侧操作数的类型至少有一侧为实型，将当前节点类型设置为实型
+ *
+ * @attention 这里进行的是ArithmeticBinaryExpr，也就是加法运算符(+),减法运算符(-),乘法运算符(*)
+ */
 void SemantVisitor::visitArithmeticBinaryExpr(ast::BinaryExpr &node)
 {
   if (
@@ -142,6 +168,12 @@ void SemantVisitor::visitArithmeticBinaryExpr(ast::BinaryExpr &node)
   }
 }
 
+/**
+ * 如果两侧操作数的类型有任意一侧不为整型或者实型，输出错误信息：希望得到的是整型或者实型。将当前节点类型设置为无类型
+ * 否则，将当前节点的类型设置为实型
+ *
+ * @attention 这里进行的是FDivBinaryExpr，也就是浮点数除法运算符(/)
+ */
 void SemantVisitor::visitFDivBinaryExpr(ast::BinaryExpr &node)
 {
   if (
@@ -161,6 +193,13 @@ void SemantVisitor::visitFDivBinaryExpr(ast::BinaryExpr &node)
   }
 }
 
+/**
+ * 如果两侧操作数的类型有任意一侧不为整型或者实型，输出错误信息：希望得到的是整型或者实型。将当前节点类型设置为无类型
+ * 否则，如果两侧操作数的类型均为整型，将当前节点类型设置为整型
+ * 否则，如果两侧操作数的类型至少有一侧为实型，输出错误消息：希望得到的是实型。将当前节点类型设置为无类型
+ *
+ * @attention 这里进行的是IntOpBinaryExpr，也就是整数除法运算符(DIV)和取模运算符(MOD)
+ */
 void SemantVisitor::visitIntOpBinaryExpr(ast::BinaryExpr &node)
 {
   if (
@@ -192,23 +231,16 @@ void SemantVisitor::visitIntOpBinaryExpr(ast::BinaryExpr &node)
   }
 }
 
+/**
+ * @brief 根据二元运算符判断采用何种函数进行分析
+ * 
+ * @attention    只有全为 integer 时，type 赋值为 integer，其余情况均为real。 \n 
+ *               当二元运算符为 ‘div' 或 'mod' , 右侧的 expr 若在编译时可求得其值，则其值不应为0，否则错误 \n 
+ *               若为 'mod'，则左右两侧必须为 integer \n 
+ *               若为 'div'，则左右两侧必须为 integer
+ */
 void SemantVisitor::visit(ast::BinaryExpr &node)
 {
-  /**
-   * * 当二元运算符为 'and' 或 'or'， 
-   * * 左右两侧必然同时为 bool，否则错误， type 赋值为 bool
-   * 
-   * * 当二元运算符为 '<' 、'>' 、'<=' 、'>=' 、'=' 、'<>'，
-   * * 左右两侧必然为 integer 或 real，否则错误，type 赋值为 bool
-   * 
-   * * 当二元运算符为 ‘/’、'div' 、'mod' 、 '+' 、'-'、'*'，
-   * * 左右两侧必须为 integer 或 real，否则返回错误，程序终止。
-   * ! 只有全为 integer 时，type 赋值为 integer，其余情况均为real。
-   * ! 当二元运算符为 ‘div' 或 'mod' , 右侧的 expr 若在编译时可求得其值，则其值不应为0，否则错误
-   * ! 若为 'mod'，则左右两侧必须为 integer
-   * ! 若为 'div'，则左右两侧必须为 integer
-   */
-
   node.lhs().accept(*this);
   node.rhs().accept(*this);
 
@@ -244,39 +276,39 @@ void SemantVisitor::visit(ast::BinaryExpr &node)
   }
 }
 
+/**
+ * 如果当前一元运算符为'+'或者'-'时，如果表达式的类型不为整型或者实型，输出错误信息：希望得到的是整型和实型
+ * 如果当前一元运算符为'NOT'时，如果表达式的类型不为布尔类型或者整型，输出错误信息：希望得到的是布尔类型和整型
+ * 当前节点类型保持不变
+ */
 void SemantVisitor::visit(ast::UnaryExpr &node)
 {
-  /**
-   当一元运算符为 '-' 或 '+'，则 expr_ 必然是 integer 或 real 类型，否则返回错误，程序终止。
-   当一元运算符为 'not' 时，则 expr_ 必然是 bool 类型，否则返回错误，程序终止。
-   isAssignable = 0;
-   按照运算规则处理value。
-   */
   node.expr().accept(*this);
   if (node.op() == ast::UnaryOp::MINUS || node.op() == ast::UnaryOp::PLUS) {
-    if (context_.cmp_(node.expr().type(), SymType::IntegerType()) && context_.cmp_(node.expr().type(), SymType::RealType())) {
+    if (!context_.cmp_(node.expr().type(), SymType::IntegerType()) && !context_.cmp_(node.expr().type(), SymType::RealType())) {
       context_.genErrorMsg(node.location(), "integer or real type expected.");
     }
-  }
-  if (node.op() == ast::UnaryOp::NOT) {
+  } else if (node.op() == ast::UnaryOp::NOT) {
     if (!context_.cmp_(node.expr().type(), SymType::BooleanType()) && !context_.cmp_(node.expr().type(), SymType::IntegerType())) {
       context_.genErrorMsg(node.location(), "expected boolean or integer.");
     }
+  } else {
+    context_.genErrorMsg(node.location(), "unexpected unary operator.");
   }
   node.setType(node.expr().type().clone());
 }
 
+/**
+ * 如果在当前作用域中查找不到函数声明，输出错误信息：未定义的标识符。并退出
+ * 如果当前节点的实参个数不等于函数声明中形参个数，输出错误信息：参数个数不匹配
+ * 如果函数声明中的形参是按引用传递的，但是当前节点的实参是不可修改量，输出错误信息：实参必须可以修改
+ * 否则，如果当前节点实参和函数声明中的形参类型不能一一匹配并且对于不匹配的参数来说实参的类型无法转换为形参的类型，输出错误信息：参数类型不匹配
+ */
 void SemantVisitor::visit(ast::FuncCall &node)
 {
-  /**
-   在符号表中查找声明，若找不到，则返回错误，程序终止。
-   获取FuncCall类型表达式。
-   对actuals_中的每一个参数进行类型检查，若存在不相等的情况，则返回错误，程序终止。
-   type = FuncCall的return value
-   */
   const auto *prototype = context_.subprogtab_.lookup(node.funcid());
   if (prototype == nullptr) {
-    context_.genErrorMsg(node.location(), "undefined identifier ", node.funcid());
+    context_.genErrorMsg(node.location(), "undefined identifier " + node.funcid());
     return;
   }
   if (node.actuals().size() != prototype->formalParams().size()) {
@@ -297,10 +329,13 @@ void SemantVisitor::visit(ast::FuncCall &node)
   node.setType(prototype->returnType().clone());
 }
 
+/**
+ * 如果引用变量的名字在常量表中找到了，将节点类型设置为常量表中已有声明的类型，并且设置为值不可修改
+ * 如果引用变量的名字在变量表中找到了，将节点类型设置为变量表中已有声明的类型，并且设置为值可以修改
+ * 若引用变量的名字在两张表中都找不到，输出错误信息：标识符未定义。将节点类型设置为无类型
+ */
 void SemantVisitor::visit(ast::VarId &node)
 {
-  // TODO(张新博): 如果在类型表或者子过程表中查到了, 那么报错
-
   // 如果在常量表中找到了，那么它的值是不可被修改的
   const auto *consttype = context_.consttab_.lookup(node.id());
   if (consttype != nullptr) {
@@ -312,8 +347,8 @@ void SemantVisitor::visit(ast::VarId &node)
   // 如果在变量表中找到了，那么它的值是可以被修改的
   const auto *vartype = context_.vartab_.lookup(node.id());
   if (vartype == nullptr) {
-    // 如果在变量表中找不到，那么报错
-    context_.genErrorMsg(node.location(), "undefined identifier ", node.id());
+    // 如果在变量表和常量表中都找不到，那么报错
+    context_.genErrorMsg(node.location(), "undefined identifier " + node.id());
     node.setType(SymType::NoType().clone());
     return;
   }
@@ -321,19 +356,14 @@ void SemantVisitor::visit(ast::VarId &node)
   node.setChangeable(true);
 }
 
+/**
+ * 如果节点类型不为数组类型，输出错误信息：希望得到数组类型。并退出
+ * 如果节点的索引数量大于数组维度，输出错误信息：索引数量不匹配。并退出
+ * 如果节点的索引类型有不为整型的，输出错误信息：索引类型必须是整型。并退出
+ * 如果节点的索引数量小于数组维度，设置节点类型为数组元素的类型
+ */
 void SemantVisitor::visit(ast::IndexedVar &node)
 {
-  /**
-    1. 获取 assignable 的类型表达式。
-    2. 获取每一个维度上的上下界
-      2.1 若无法获取上下界，说明这个变量不是数组，返回错误，程序终止。
-      2.2 若对于第 i 个 indices 
-          * 没有它对应的上下界，
-          * 或它为常量，且超出了第 i 个 indices 对应的上下界，
-          * 或它不为整数类型。
-          则返回错误，程序终止。
-    2. 获取 assignable 数组元素的类型表达式，记录在父类 Expr 的 type 中。
-   */
   node.varAccess().accept(*this);
   const auto &periods = node.varAccess().type().arrayType().periods();
   if (node.varAccess().type().eType() != SymType::Type::ARRAY) {
@@ -366,15 +396,13 @@ void SemantVisitor::visit(ast::IndexedVar &node)
   node.setType(node.varAccess().type().arrayType().baseType().clone());
 }
 
+/**
+ * 如果节点类型不为记录类型，输出错误信息：此处应当是一条记录类型。并退出
+ * 如果节点字段不存在于结构体中，输出错误信息：记录中不存在该字段。并退出
+ * 将节点类型设置为结构体字段类型
+ */
 void SemantVisitor::visit(ast::FieldDesignator &node)
 {
-  /**
-    1. 获取 assignable_ 的类型表达式。
-    2. 在符号表中匹配 field_
-      2.1 若结构体中不包含 field_ 打印错误，程序终止。
-    3. 获取 field_ 的类型表达式并记录在父类 Expr 的 type 中。
-      (这表示整个表达式的类型，将会用在后续的类型检查中)。
-   */
   node.varAccess().accept(*this);
   if (node.varAccess().type().eType() != SymType::Type::RECORD) {
     context_.genErrorMsg(node.location(), "should be a record type");
@@ -387,16 +415,18 @@ void SemantVisitor::visit(ast::FieldDesignator &node)
   node.setType(node.varAccess().type().recordType().fields().at(node.field())->clone());
 }
 
+/**
+ * 如果节点已经在常量符号表中出现，输出错误信息：标识符重定义。并退出
+ * 如果节点的类型为引用类型，如果在常量符号表找不到节点引用的对象，输出错误信息：未定义的常量标识符。并退出
+ * 如果节点的类型为引用类型，并且在常量符号表找到了节点引用的对象，将节点类型设置为引用的对象的类型
+ * 如果节点不是引用类型，向常量符号表中插入该节点
+ */
 void SemantVisitor::visit(ast::ConstDecl &node)
 {
-  /**
-   * 判断有无重定义。
-   * 向符号表中插入 <id , constant->type()>
-   */
   node.constant().accept(*this);
   const auto *found = context_.consttab_.probe(node.constId());
   if (found != nullptr) {
-    context_.genErrorMsg(node.location(), "duplicate identifier ", node.constId());
+    context_.genErrorMsg(node.location(), "duplicate identifier " + node.constId());
     return;
   }
   const SymType *type = nullptr;
@@ -404,7 +434,7 @@ void SemantVisitor::visit(ast::ConstDecl &node)
   if (node.constant().type() == "reference") {
     found = context_.consttab_.lookup(std::get<std::string>(node.constant().value()));
     if (found == nullptr) {
-      context_.genErrorMsg(node.location(), "undefined constant identifier ", std::get<std::string>(node.constant().value()));
+      context_.genErrorMsg(node.location(), "undefined constant identifier " + std::get<std::string>(node.constant().value()));
       return;
     }
     type = found;
@@ -426,35 +456,36 @@ void SemantVisitor::visit(ast::ConstDecl &node)
   context_.consttab_.insert(node.constId(), const_cast<SymType *>(type));
 }
 
+/**
+ * @brief 访问各个 ConstDecl
+ */
 void SemantVisitor::visit(ast::ConstDeclPart &node)
 {
-  /**
-   * 访问各个 ConstDecl
-   */
   for (auto &constDecl : node.constDecls()) {
     constDecl->accept(*this);
   }
 }
 
+/**
+ * 如果节点没有出现在类型符号表中，输出错误信息：未定义的类型。并退出
+ * 将节点类型设置为在类型符号表中找到的类型
+ */
 void SemantVisitor::visit(ast::TypeId &node)
 {
-  /**
-   * 检测 type 是否在符号表中
-   * 赋值给父类 TypeDenoter 的 type
-   */
   const auto &symType = context_.typetab_.lookup(node.id());
   if (symType == nullptr) {
-    context_.genErrorMsg(node.location(), "undefined Type ", node.id());
+    context_.genErrorMsg(node.location(), "undefined Type " + node.id());
     return;
   }
   node.setType(symType->clone());
 }
 
+/**
+ * 检测节点上下界的类型，如果有一方不为整型，输出错误信息：边界必须是整数。并退出
+ * 如果节点下界的值大于节点上界的值，输出错误信息：下界值不能大于上界值
+ */
 void SemantVisitor::visit(ast::Period &node)
 {
-  /**
-   检测上界是否大于下界。 
-   */
   node.low().accept(*this);
   node.high().accept(*this);
   if (node.low().type() != "integer" || node.high().type() != "integer") {
@@ -466,11 +497,12 @@ void SemantVisitor::visit(ast::Period &node)
   }
 }
 
+/**
+ * 对每一维度的数组维度信息进行记录，包括下界值和上界值
+ * 将数组基本类型和数组维度信息打包赋值给节点类型
+ */
 void SemantVisitor::visit(ast::ArrayType &node)
 {
-  /**
-   组装 type 和 periods 打包赋值给父类 TypeDenoter 的 type
-   */
   node.ofType().accept(*this);
   ArrayType arrayType;
   for (const auto &period : node.periods()) {
@@ -482,11 +514,12 @@ void SemantVisitor::visit(ast::ArrayType &node)
   node.setSymType(std::make_unique<SymType>(symType));
 }
 
+/**
+ * 对记录类型的每个字段进行记录，其中每个字段可能包含多个标识符
+ * 将每一字段类型和字段包含的标识符信息打包赋值给节点类型
+ */
 void SemantVisitor::visit(ast::RecordType &node)
 {
-  /**
-    将fields中的所有field的 TypeDenoter,id_list_ 打包赋值给父类 TypeDenoter 的type
-   */
   util::RecordType recordType;
   context_.enterScope();
   for (const auto &field : node.fields()) {
@@ -500,117 +533,124 @@ void SemantVisitor::visit(ast::RecordType &node)
   node.setSymType(std::make_unique<SymType>(symType));
 }
 
+/**
+ * 如果节点符号已经在当前类型符号表中存在，输出错误信息：标识符重定义。并退出
+ * 如果节点符号已经在当前常量符号表中存在，输出错误信息：标识符重定义。并退出
+ * 将节点的类型标识符和类型表达式打包添加到类型符号表中
+ */
 void SemantVisitor::visit(ast::TypeDecl &node)
 {
-  /**
-   * 符号表重定义检测。
-   * 符号表中新增一项<type_id_, type_denoter_.type()>
-   */
   const auto *tmp = context_.typetab_.probe(node.typeId());
   if (tmp != nullptr) {
-    context_.genErrorMsg(node.location(), "duplicated identifier ", node.typeId());
+    context_.genErrorMsg(node.location(), "duplicated identifier " + node.typeId());
     return;
   }
   tmp = context_.consttab_.probe(node.typeId());
   if (tmp != nullptr) {
-    context_.genErrorMsg(node.location(), "duplicated identifier ", node.typeId());
+    context_.genErrorMsg(node.location(), "duplicated identifier " + node.typeId());
     return;
   }
   node.typeDenoter().accept(*this);
   context_.typetab_.insert(node.typeId(), &node.typeDenoter().symType());
 }
 
+/**
+   * @brief 访问各个类型声明
+   */
 void SemantVisitor::visit(ast::TypeDeclPart &node)
 {
-  /**
-   * 访问各个TypeDecl
-   */
   for (auto &typeDecl : node.typeDecls()) {
     typeDecl->accept(*this);
   }
 }
 
+/**
+ * @brief 访问各个 VarDecl
+ */
 void SemantVisitor::visit(ast::VarDeclPart &node)
 {
-  /**
-   访问各个 VarDecl 
-   */
   for (auto &varDecl : node.varDecls()) {
     varDecl->accept(*this);
   }
 }
 
+/**
+ * @brief node.type 和node.varType 更新
+ * 
+ * @attention 这里不要检查符号表，填充到 context_.formal_params_ 中，交由上层检查
+ */
 void SemantVisitor::visit(ast::ValueParamSpec &node)
 {
-  // node.type 更新
   node.type().accept(*this);
-  // node.varType 更新
   node.setVarType(
       std::make_unique<VarType>(false, &node.type().symType())
   );
 
-  // !这里不要检查符号表，填充到 context_.formal_params_ 中，交由上层检查
   for (auto &id : node.idList()) {
     context_.formal_params_.emplace_back(id, &node.varType());
   }
 }
 
+/**
+ * @brief node.type 和 node.varType 更新
+ * 
+ * @attention 这里不要检查符号表，填充到 context_.formal_params_ 中，交由上层检查
+ */
 void SemantVisitor::visit(ast::VarParamSpec &node)
 {
-  // node.type 更新
   node.type().accept(*this);
-  // node.varType 更新
   node.setVarType(
       std::make_unique<VarType>(true, &node.type().symType())
   );
 
-  // !这里不要检查符号表，填充到 context_.formal_params_ 中，交由上层检查
   for (auto &id : node.idList()) {
     context_.formal_params_.emplace_back(id, &node.varType());
   }
 }
 
+/**
+ * 如果节点符号已经在当前类型符号表中存在，输出错误信息：标识符重定义。并退出
+ * 如果节点符号已经在当前常量符号表中存在，输出错误信息：标识符重定义。并退出
+ * 如果节点符号已经在当前变量符号表中存在，输出错误信息：标识符重定义。并退出
+ * 节点id和节点变量信息打包向变量符号表中插入
+ */
 void SemantVisitor::visit(ast::VarDecl &node)
 {
-  /*
-    查找符号表，检测重定义
-    插入符号表
-  */
-  // node.type 更新
   node.type().accept(*this);
-  // node.varType 更新
   node.setVarType(std::make_unique<VarType>(false, &node.type().symType()));
   for (const auto &id : node.idList()) {
     const auto *tmp = context_.typetab_.probe(id);
     if (tmp != nullptr) {
-      context_.genErrorMsg(node.location(), "duplicated identifier ", id);
+      context_.genErrorMsg(node.location(), "duplicated identifier " + id);
       return;
     }
     tmp = context_.consttab_.probe(id);
     if (tmp != nullptr) {
-      context_.genErrorMsg(node.location(), "duplicated identifier ", id);
+      context_.genErrorMsg(node.location(), "duplicated identifier " + id);
       return;
     }
     const auto *tmp1 = context_.vartab_.probe(id);
     if (tmp1 != nullptr) {
-      context_.genErrorMsg(node.location(), "duplicated identifier ", id);
+      context_.genErrorMsg(node.location(), "duplicated identifier " + id);
       return;
     }
     context_.vartab_.insert(id, &node.varType());
   }
 }
 
+/**
+ * 如果节点符号已经在当前子程序符号表或者变量符号表或者常量符号表中存在，输出错误信息：重复定义的过程。并退出
+ * 对于每个节点参数，填充到形参列表中，参考这个列表进行初始化proc_type_
+ * 向子程序符号表中插入本节点信息(包括id和data)
+ * 在进行形式参数的插入前，进入新的作用域，遍历形参列表中的每个参数是否存在与变量符号表中，存在则输出错误：标识符重定义
+ * 向变量符号表中插入每个形参信息(name和data)
+ */
 void SemantVisitor::visit(ast::ProcHead &node)
 {
-  /**
-   * 把每一个 FormalParam 组装起来，再和id组装，插入符号表
-   * 符号表进入下一级。
-   * 对于每一个FormalParam 符号表判断重定义，再加入<id_list, typedenoter>
-   */
   if (
       context_.subprogtab_.probe(node.procId()) != nullptr || context_.vartab_.probe(node.procId()) != nullptr || context_.consttab_.probe(node.procId()) != nullptr
   ) {
-    context_.genErrorMsg(node.location(), "dupilcated identify procedure", node.procId());
+    context_.genErrorMsg(node.location(), "dupilcated identify procedure" + node.procId());
     return;
   }
   context_.formal_params_.clear();
@@ -636,20 +676,19 @@ void SemantVisitor::visit(ast::ProcHead &node)
   // 遍历 context_.formal_params_ 插入到 vartab_
   for (const auto &[varid, vartype] : node.procType().formalParams()) {
     if (context_.vartab_.probe(varid) != nullptr) {
-      context_.genErrorMsg(node.location(), "duplicated identifier ", varid);
+      context_.genErrorMsg(node.location(), "duplicated identifier " + varid);
     } else {
       context_.vartab_.insert(varid, vartype);
     }
   }
 }
 
+/**
+ * 顺序访问过程块的各个部分，按顺序访问过程块中的常量声明部分、类型声明部分、变量声明部分、子过程声明部分和语句部分
+ * 访问全部完成后，从函数调用栈中弹出过程，退出当前作用域
+ */
 void SemantVisitor::visit(ast::ProcBlock &node)
 {
-  /**
-   顺次访问 各个part
-   如果 stmt_part 为空，返回错误，程序终止。
-   符号表返回上一级
-  */
   if (node.hasConstDeclPart()) {
     node.constDeclPart().accept(*this);
   }
@@ -669,27 +708,29 @@ void SemantVisitor::visit(ast::ProcBlock &node)
   context_.exitScope();
 }
 
+/**
+ * @brief 访问过程头部和过程块
+ */
 void SemantVisitor::visit(ast::ProcDecl &node)
 {
-  /*
-  访问 head block
-  */
   node.head().accept(*this);
   node.block().accept(*this);
 }
 
+/**
+ * 如果节点符号已经在当前子程序符号表或者变量符号表或者常量符号表中存在，输出错误信息：重复定义的过程。并退出
+ * 对于每个节点参数，填充到形参列表中，参考这个列表进行初始化func_type_
+ * 向子程序符号表中插入本节点信息(包括id和data)
+ * 在进行形式参数的插入前，进入新的作用域，遍历形参列表中的每个参数是否存在与变量符号表中，存在则输出错误：标识符重定义
+ * 向变量符号表中插入每个形参信息(name和data)
+ */
 void SemantVisitor::visit(ast::FuncHead &node)
 {
-  /**
-   符号表进入下一级。
-   对于每一个FormalParam 符号表判断重定义，再加入<id_list, typedenoter>
-   把每一个 FormalParam 组装起来，再和id、return组装，插入符号表
-   */
   if (
       context_.subprogtab_.probe(node.funcId()) != nullptr || context_.vartab_.probe(node.funcId()) != nullptr || context_.consttab_.probe(node.funcId()) != nullptr
   )
   {
-    context_.genErrorMsg(node.location(), "dupilcated identify function", node.funcId());
+    context_.genErrorMsg(node.location(), "dupilcated identify function " + node.funcId());
     return;
   }
 
@@ -724,13 +765,17 @@ void SemantVisitor::visit(ast::FuncHead &node)
   // 遍历 context_.formal_params_ 插入到 vartab_
   for (const auto &[varid, vartype] : node.funcType().formalParams()) {
     if (context_.vartab_.probe(varid) != nullptr) {
-      context_.genErrorMsg(node.location(), "dupilcated identify", varid);
+      context_.genErrorMsg(node.location(), "dupilcated identify " + varid);
     } else {
       context_.vartab_.insert(varid, vartype);
     }
   }
 }
 
+/**
+ * 顺序访问函数块的各个部分，按顺序访问过程块中的常量声明部分、类型声明部分、变量声明部分、子过程声明部分和语句部分
+ * 访问全部完成后，从函数调用栈中弹出函数，退出当前作用域
+ */
 void SemantVisitor::visit(ast::FuncBlock &node)
 {
   /**
@@ -756,31 +801,31 @@ void SemantVisitor::visit(ast::FuncBlock &node)
   context_.popFunc();
 }
 
+/**
+ * @brief 访问函数头部和函数块
+ */
 void SemantVisitor::visit(ast::FuncDecl &node)
 {
-  /**
-   * 访问 head block
-   */
   node.head().accept(*this);
   node.block().accept(*this);
 }
 
+/**
+ * @brief 访问子程序声明
+ */
 void SemantVisitor::visit(ast::SubprogDeclPart &node)
 {
-  /*
-    访问各个 subprog_decl
-  */
   for (const auto &subprog_decl : node.subprogDecls()) {
     subprog_decl->accept(*this);
   }
 }
 
+/**
+ * 如果条件表达式类型不为布尔类型，输出错误信息：这里希望得到布尔类型
+ * 访问then和else模块
+ */
 void SemantVisitor::visit(ast::IfStmt &node)
 {
-  /**
-    访问 then, 访问 else
-   */
-
   node.cond().accept(*this);
   if (!context_.cmp_(node.cond().type(), SymType::BooleanType())) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
@@ -794,12 +839,12 @@ void SemantVisitor::visit(ast::IfStmt &node)
   }
 }
 
+/**
+ * 访问case语句中的表达式
+ * 访问caselist列表中各个情况分支
+ */
 void SemantVisitor::visit(ast::CaseStmt &node)
 {
-  /** 
-    访问各个 CaseListElement
-    如果 Expr 类型和标识条件常量的类型不一致则返回错误，程序退出。
-  */
   node.expr().accept(*this);
   context_.case_stmt_type_ = &node.expr().type();
   for (const auto &eachcase : node.caseList()) {
@@ -807,11 +852,12 @@ void SemantVisitor::visit(ast::CaseStmt &node)
   }
 }
 
+/**
+ * 访问情况分支中的每个常量
+ * 如果情况分支中的常量类型和case语句类型不匹配并且不能转换为case语句类型，输出错误信息：情况分支类型不能匹配case表达式类型
+ */
 void SemantVisitor::visit(ast::CaseListElement &node)
 {
-  /**
-  访问Stmt
-  */
   for (const auto &cons : node.constants()) {
     cons->accept(*this);
     std::unique_ptr<SymType> type;
@@ -833,11 +879,12 @@ void SemantVisitor::visit(ast::CaseListElement &node)
   node.stmt().accept(*this);
 }
 
+/**
+ * 如果循环条件表达式类型不为布尔类型，输出错误信息：希望得到布尔类型
+ * 访问重复语句中的循环体部分
+ */
 void SemantVisitor::visit(ast::RepeatStmt &node)
 {
-  /** 
-  访问body
-  */
   context_.inloop_ = true;
   node.cond().accept(*this);
   if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
@@ -849,11 +896,12 @@ void SemantVisitor::visit(ast::RepeatStmt &node)
   context_.inloop_ = false;
 }
 
+/**
+ * 如果循环条件表达式类型不为布尔类型，输出错误信息：希望得到布尔类型
+ * 访问while语句body部分
+ */
 void SemantVisitor::visit(ast::WhileStmt &node)
 {
-  /** 
-  访问body
-  */
   context_.inloop_ = true;
   node.cond().accept(*this);
   if (!context_.cmp_(node.cond().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
@@ -864,12 +912,12 @@ void SemantVisitor::visit(ast::WhileStmt &node)
   context_.inloop_ = false;
 }
 
+/**
+ * 如果控制变量和初始值类型不匹配或者控制变量和结束值类型不匹配，输出错误信息：控制变量类型与初始值或结束值类型不匹配
+ * 访问for语句body部分
+ */
 void SemantVisitor::visit(ast::ForStmt &node)
 {
-  /** 
-  如果ctrl_var和init_val类型不一致则返回错误，程序终止。
-  访问body
-  */
   context_.inloop_ = true;
   node.ctrlVar().accept(*this);
   node.initVal().accept(*this);
@@ -900,12 +948,11 @@ void SemantVisitor::visit(ast::ForStmt &node)
   context_.inloop_ = false;
 }
 
+/**
+ * 如果表达式左侧的可赋值属性为false，输出错误信息：希望得到的是变量标识符。并退出
+ */
 void SemantVisitor::visit(ast::AssignStmt &node)
 {
-  /*
-   如果左右类型不一致则返回错误，程序终止。
-  */
-  //左侧可以赋值
   node.lhs().accept(*this);
   node.rhs().accept(*this);
   if (!node.lhs().isChangeable()) {
@@ -918,10 +965,13 @@ void SemantVisitor::visit(ast::AssignStmt &node)
   if (TypeComparator::cast(node.rhs().type(), node.lhs().type())) {
     return;
   }
-  // TODO(): 重载type的流运算符
+
   context_.genErrorMsg(node.location(), "type error");
 }
 
+/**
+ * 如果遇到break语句时程序处于循环外，输出错误信息：预期之外的中断
+ */
 void SemantVisitor::visit(ast::BreakStmt &node)
 {
   if (!context_.inloop_) {
@@ -929,13 +979,14 @@ void SemantVisitor::visit(ast::BreakStmt &node)
   }
 }
 
+/**
+ * 如果在子程序符号表中找不到节点声明，输出错误信息：未定义的过程调用。并退出
+ * 如果节点实参和声明形参个数不一致，输出错误信息：实参不匹配参数列表。并退出
+ * 如果形参的属性是引用类型并且实参的属性是不可变的，输出错误信息：实参不匹配。并退出
+ * 如果实参和形参类型不匹配并且实参类型不能转换为形参类型，输出错误消息：实参不匹配。并退出
+ */
 void SemantVisitor::visit(ast::ProcCallStmt &node)
 {
-  /**
-   在符号表中查找声明，若找不到，则返回错误，程序终止。
-   获取ProcCall类型表达式。
-   对actuals_中的每一个参数进行类型检查，若存在不相等的情况，则返回错误，程序终止。
-   */
   const auto *proc = context_.subprogtab_.lookup(node.procId());
   if (proc == nullptr) {
     context_.genErrorMsg(node.location(), "undefined procedure call.");
@@ -960,12 +1011,13 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
   }
 }
 
+/**
+ * 对于参数列表中的每个实参，如果实参的属性为不可改变，输出错误信息：希望得到可以赋值的实参
+ * 
+ * @attention 读取的变量必须是 assignable
+ */
 void SemantVisitor::visit(ast::ReadStmt &node)
 {
-  /*
-    对actuals_中的每一个参数进行类型检查。
-    ! 读取的变量必须是 assignable
-  */
   for (const auto &actual : node.actuals()) {
     actual->accept(*this);
     if (!actual->isChangeable()) {
@@ -974,6 +1026,9 @@ void SemantVisitor::visit(ast::ReadStmt &node)
   }
 }
 
+/**
+ * @brief 访问写语句中的每个实参
+ */
 void SemantVisitor::visit(ast::WriteStmt &node)
 {
   for (const auto &actual : node.actuals()) {
@@ -981,11 +1036,11 @@ void SemantVisitor::visit(ast::WriteStmt &node)
   }
 }
 
+/**
+ * 如果读语句中的实参存在属性为不可被修改，输出错误信息：希望得到可以赋值的实参
+ */
 void SemantVisitor::visit(ast::ReadlnStmt &node)
 {
-  /**
-  * 对actuals_中的每一个参数进行类型检查。
-  */
   for (const auto &actual : node.actuals()) {
     actual->accept(*this);
     if (!actual->isChangeable()) {
@@ -998,6 +1053,9 @@ void SemantVisitor::visit(ast::ReadlnStmt &node)
   }
 }
 
+/**
+ * @brief 访问写语句中的每个实参 
+ */
 void SemantVisitor::visit(ast::WritelnStmt &node)
 {
   for (const auto &actual : node.actuals()) {
@@ -1005,6 +1063,11 @@ void SemantVisitor::visit(ast::WritelnStmt &node)
   }
 }
 
+/**
+ * 如果exit没有返回值并且不包括实参，说明合法，退出
+ * 如果exit有一个实参并且没有返回值，如果实参与返回值类型不相同并且实参类型不能转换为返回值类型，输出错误信息：返回值类型不匹配。并退出
+ * 以上都不满足，输出错误信息：非法使用exit
+ */
 void SemantVisitor::visit(ast::ExitStmt &node)
 {
   auto nowfunc              = context_.topFunc();
@@ -1024,31 +1087,31 @@ void SemantVisitor::visit(ast::ExitStmt &node)
   context_.genErrorMsg(node.location(), "invaild use of exit.");
 }
 
+/**
+ * @brief 访问各个复合语句
+ */
 void SemantVisitor::visit(ast::CompoundStmt &node)
 {
-  /*
-    访问各个Stmt
-  */
   for (const auto &stmt : node.stmts()) {
     stmt->accept(*this);
   }
 }
 
+/**
+ * @brief 访问各个语句
+ */
 void SemantVisitor::visit(ast::StmtPart &node)
 {
-  /*
-    访问各个Stmt
-  */
   for (const auto &stmt : node.stmts()) {
     stmt->accept(*this);
   }
 }
 
+/**
+ * @brief 顺序访问程序中各个part
+ */
 void SemantVisitor::visit(ast::ProgramBlock &node)
 {
-  /**
-   顺次访问 各个part
-   */
   if (node.hasConstDeclPart()) {
     node.constDeclPart().accept(*this);
   }
@@ -1070,9 +1133,11 @@ void SemantVisitor::visit(ast::ProgramBlock &node)
 // do nothing
 void SemantVisitor::visit([[maybe_unused]] ast::ProgramHead &node) {}
 
+/**
+ * @brief 访问程序头和程序块
+ */
 void SemantVisitor::visit(ast::Program &node)
 {
-  // Program -> ProgramHead ';' ProgramBlock '.'
   node.head().accept(*this);
   node.block().accept(*this);
 }
