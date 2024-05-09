@@ -10,16 +10,22 @@ namespace pascc::util {
 
 class SymType;
 
+/**
+ * @brief 基本数据类型枚举
+ */
 enum class BasicType
 {
-  NO_TYPE,
-  INTEGER,
-  REAL,
-  BOOLEAN,
-  CHAR,
-  STRING
+  NO_TYPE,  ///< 无类型
+  INTEGER,  ///< 整型
+  REAL,     ///< 浮点类型
+  BOOLEAN,  ///< 布尔类型
+  CHAR,     ///< 字符类型
+  STRING    ///< 字符串类型
 };
 
+/**
+ * @brief 表示内置类型
+ */
 class BuiltInType
 {
 public:
@@ -33,6 +39,9 @@ private:
   BasicType type_;
 };
 
+/**
+ * @brief 表示数组类型
+ */
 class ArrayType
 {
 public:
@@ -45,6 +54,11 @@ public:
 
   [[nodiscard]] auto baseType() const -> const SymType & { return *base_type_; }
 
+  /**
+   * @brief 设置数组基本类型
+   * 
+   * @param base_type 
+   */
   void setBaseType(SymType *base_type)
   {
     base_type_ = base_type;
@@ -55,11 +69,20 @@ private:
   SymType *base_type_;
 };
 
+/**
+ * @brief 表示记录类型
+ */
 class RecordType
 {
 public:
   [[nodiscard]] auto fields() const -> const std::unordered_map<std::string, SymType *> & { return fields_; }
 
+  /**
+   * @brief 设置记录类型内各个类型和名字
+   * 
+   * @param name 
+   * @param type 
+   */
   void addField(std::string name, SymType *type)
   {
     fields_.emplace(std::move(name), type);
@@ -69,6 +92,10 @@ private:
   std::unordered_map<std::string, SymType *> fields_;
 };
 
+/**
+ * @brief 表示符号类型，包含各种类型
+ * 
+ */
 class SymType
 {
 public:
@@ -96,6 +123,9 @@ public:
     , actual_type_(std::move(type))
   {}
 
+  /**
+   * @brief 表示SymTab的不同类型
+   */
   enum class Type
   {
     NO_TYPE,
@@ -130,6 +160,9 @@ private:
   std::variant<BuiltInType, ArrayType, RecordType, std::string> actual_type_;
 };
 
+/**
+ * @brief 表示变量类型
+ */
 class VarType
 {
 public:
@@ -153,6 +186,9 @@ private:
   SymType *type_;
 };
 
+/**
+ * @brief 子程序(函数|过程)类型
+ */
 class SubprogType
 {
 public:
