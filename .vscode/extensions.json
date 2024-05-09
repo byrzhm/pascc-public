@@ -13,6 +13,7 @@
 		"cschlosser.doxdocgen",
 		"aaron-bond.better-comments",
 		"ms-python.flake8",
+		"donjayamanne.githistory"
 	],
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
 	"unwantedRecommendations": [
