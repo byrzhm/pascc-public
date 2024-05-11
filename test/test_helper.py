@@ -54,7 +54,7 @@ def run_cc(c_compiler: str,
         output_exe_path (str): the path to the output exe file
     """
     with subprocess.Popen(
-        [c_compiler, # gcc-x86_64-linux-gnu 11.4.0 不支持 -fbracket-depth=N
+        [c_compiler,  # gcc-x86_64-linux-gnu 11.4.0 不支持 -fbracket-depth=N
          input_c_path, '-o', output_exe_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
