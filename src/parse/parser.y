@@ -443,9 +443,13 @@ variable_declarations:
   variable_declarations SEMICOLON id_list COLON type_denoter {
     $$.swap($1);
     $$.emplace_back(std::make_unique<VarDecl>(std::move($3), std::move($5)));
+    $$.back()->location().begin = @3.begin;
+    $$.back()->location().end = @5.end;
   }
   | id_list COLON type_denoter {
     $$.emplace_back(std::make_unique<VarDecl>(std::move($1), std::move($3)));
+    $$.back()->location().begin = @1.begin;
+    $$.back()->location().end = @3.end;
   }
   ;
                        

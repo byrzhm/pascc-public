@@ -8,7 +8,7 @@ using pascc::parse::ParserDriver;
 TEST(ParserTest, basic)
 {
   std::string filepath = write_basic_test_file();
-  ParserDriver drv(filepath, true, true);
+  ParserDriver drv(&filepath, true, true);
   drv.parse();
   std::unique_ptr<Program> program = drv.program();
   ASSERT_NE(program, nullptr);

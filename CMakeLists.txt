@@ -16,6 +16,30 @@ include(CTest)
 enable_testing()
 
 #########################################################
+#################   submodules update   #################
+######################################################### 
+
+find_package(Git QUIET)
+
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    message(STATUS "Git found, updating submodules")
+
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        RESULT_VARIABLE GIT_SUBMOD_RESULT
+    )
+
+    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+        message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+    endif()
+else()
+    message(WARNING "Git not found or project is not a Git repository. Submodules will not be updated.")
+endif()
+
+
+
+#########################################################
 ################# external dependencies #################
 #########################################################
 

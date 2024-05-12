@@ -1,12 +1,16 @@
 [submodule "3rdparty/googletest"]
 	path = 3rdparty/googletest
 	url = git@github.com:google/googletest.git
+	branch = main
 [submodule "3rdparty/fmt"]
 	path = 3rdparty/fmt
 	url = git@github.com:fmtlib/fmt.git
+	branch = master
 [submodule "3rdparty/argparse"]
 	path = 3rdparty/argparse
 	url = git@github.com:p-ranav/argparse.git
+	branch = master
 [submodule "test-examples"]
 	path = test-examples
 	url = git@github.com:byrzhm/pascc-test-examples.git
+	branch = main

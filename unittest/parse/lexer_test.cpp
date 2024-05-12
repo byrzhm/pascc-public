@@ -330,7 +330,7 @@ TEST(LexerTest, keyword)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -368,7 +368,7 @@ TEST(LexerTest, id)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -399,7 +399,7 @@ TEST(LexerTest, idRandom)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -433,7 +433,7 @@ TEST(LexerTest, string)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -467,7 +467,7 @@ TEST(LexerTest, stringRandom)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -498,7 +498,7 @@ TEST(LexerTest, integerNumber)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -541,7 +541,7 @@ TEST(LexerTest, realNumber)
   create_data(real_nums, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -578,7 +578,7 @@ TEST(LexerTest, integerNumberRandom)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -616,7 +616,7 @@ TEST(LexerTest, realNumberRandom)
   create_data(real_nums, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -661,7 +661,7 @@ TEST(LexerTest, operator)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -704,7 +704,7 @@ TEST(LexerTest, delimiter)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -741,7 +741,7 @@ TEST(LexerTest, lineComment)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -775,7 +775,7 @@ TEST(LexerTest, blockComment1)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -810,7 +810,7 @@ TEST(LexerTest, blockComment2)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -856,7 +856,7 @@ TEST(LexerTest, location)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -924,7 +924,7 @@ TEST(LexerTest, comprehensiveTest)
   create_data(src_data, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
@@ -1035,7 +1035,7 @@ TEST(lexerTest, randomComprehensiveTest)
   create_data(aaa, filename);
 
   // scan file
-  pascc::parse::ParserDriver drv(filename, true, false);
+  pascc::parse::ParserDriver drv(&filename, true, false);
   drv.location().initialize();
   drv.scan_begin();
 
