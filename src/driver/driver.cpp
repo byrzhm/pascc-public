@@ -6,7 +6,7 @@
 
 namespace pascc::driver {
 
-auto Driver::Get() -> Driver &
+auto Driver::get() -> Driver &
 {
   static Driver instance_;
   return instance_;
@@ -14,7 +14,7 @@ auto Driver::Get() -> Driver &
 
 auto Driver::parse(const std::string &filepath) -> Driver &
 {
-  parse::ParserDriver drv(filepath, false, false);
+  parse::ParserDriver drv(&filepath, false, false);
   int result = drv.parse();
   if (result != 0) {
     LOG_ERROR("{}", "Parsing failed");

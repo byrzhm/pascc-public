@@ -21,7 +21,7 @@ class TestPascc(unittest.TestCase):
 
     @classmethod
     def setUpClass(self) -> None:
-        shutil.rmtree(self.tmp_output_dir, ignore_errors=True) # 忽略没有文件夹导致的错误
+        shutil.rmtree(self.tmp_output_dir, ignore_errors=True)  # 忽略没有文件夹导致的错误
         Path(self.tmp_output_dir).mkdir(parents=True, exist_ok=True)
 
     def test_basic(self):

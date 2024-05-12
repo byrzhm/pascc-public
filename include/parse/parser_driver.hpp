@@ -18,8 +18,8 @@ class ParserDriver
 public:
   ParserDriver() = default;
 
-  ParserDriver(std::string filename, bool trace_scanning, bool trace_parsing)
-    : filename_(std::move(filename))
+  ParserDriver(const std::string *filename, bool trace_scanning, bool trace_parsing)
+    : filename_(filename)
     , trace_scanning_(trace_scanning)
     , trace_parsing_(trace_parsing)
   {
@@ -50,7 +50,7 @@ public:
 
 private:
   class location loc_;
-  std::string filename_;
+  const std::string *filename_{nullptr};
   bool trace_scanning_ = false;
   bool trace_parsing_  = false;
 

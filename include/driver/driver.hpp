@@ -10,7 +10,7 @@ public:
   /**
    * @brief 获取 Driver 单例
    */
-  static auto Get() -> Driver &;
+  static auto get() -> Driver &;
 
   /**
    * @brief 解析pascal源文件, 生成抽象语法树

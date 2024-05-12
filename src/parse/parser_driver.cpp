@@ -16,7 +16,7 @@ auto ParserDriver::parse(const std::string &filename) -> int
 
 auto ParserDriver::parse() -> int
 {
-  return parse(filename_);
+  return parse(*filename_);
 }
 
 void ParserDriver::addFunction(std::string funcid)
