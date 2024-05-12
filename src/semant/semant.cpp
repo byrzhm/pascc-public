@@ -59,9 +59,10 @@ void SemantVisitor::visit(ast::BoolExpr &node)
   node.expr().accept(*this);
   if (!context_.cmp_(node.expr().type(), SymType(BuiltInType(BasicType::BOOLEAN)))) {
     context_.genErrorMsg(node.location(), "boolean type expected.");
-    return;
+    node.setType(SymType::NoType().clone());
+  } else {
+    node.setType(SymType::BooleanType().clone());
   }
-  node.setType(SymType::BooleanType().clone());
 }
 
 // do nothing
@@ -731,7 +732,6 @@ void SemantVisitor::visit(ast::FuncHead &node)
   )
   {
     context_.genErrorMsg(node.location(), "dupilcated identify function " + node.funcId());
-    return;
   }
 
   node.returnType().accept(*this);
@@ -827,9 +827,6 @@ void SemantVisitor::visit(ast::SubprogDeclPart &node)
 void SemantVisitor::visit(ast::IfStmt &node)
 {
   node.cond().accept(*this);
-  if (!context_.cmp_(node.cond().type(), SymType::BooleanType())) {
-    context_.genErrorMsg(node.location(), "boolean type expected.");
-  }
   if (node.hasThen()) {
     node.then().accept(*this);
   }
@@ -1001,7 +998,7 @@ void SemantVisitor::visit(ast::ProcCallStmt &node)
   for (int i = 0; i < static_cast<int>(node.actuals().size()); i++) {
     node.actuals()[i]->accept(*this);
     if (!node.actuals()[i]->isChangeable() && actuals_expected[i].second->isRef()) {
-      context_.genErrorMsg(node.location(), "actual list do not match.");
+      context_.genErrorMsg(node.location(), "Variable identifier expected.");
       return;
     }
     if (!context_.cmp_(actuals_expected[i].second->symType(), node.actuals()[i]->type()) && !TypeComparator::cast(node.actuals()[i]->type(), actuals_expected[i].second->symType())) {
