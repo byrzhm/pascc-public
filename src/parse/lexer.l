@@ -223,10 +223,10 @@ void
 ParserDriver::scan_begin()
 {
   yy_flex_debug = trace_scanning_;
-  if (filename_.empty() || filename_ == "-") {
+  if (filename_->empty() || *filename_ == "-") {
     yyin = stdin;
   }
-  else if (!(yyin = fopen(filename_.c_str(), "r")))
+  else if (!(yyin = fopen(filename_->c_str(), "r")))
   {
     std::cerr << "cannot open " << filename_ << ": " << strerror(errno) << '\n';
     exit(EXIT_FAILURE);

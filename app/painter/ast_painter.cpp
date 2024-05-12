@@ -7,7 +7,7 @@ using pascc::util::PaintVisitor;
 auto main() -> int
 {
   PaintVisitor visitor("ast.dot");
-  Driver::Get().parse("test.pas");
-  Driver::Get().program().accept(visitor);
+  Driver::get().parse("test.pas");
+  Driver::get().program().accept(visitor);
   return 0;
 }

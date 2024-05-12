@@ -21,10 +21,14 @@ TEST(SemantTest, example)
 TEST(SemantTest, redeclError)
 {
   {
+    std::string filepath = "../../test-examples/wrong/redecl_error0.pas";
     SemantVisitor visitor;
-    Driver::Get().parse("../../test-examples/wrong/redecl_error0.pas");
-    Driver::Get().program().accept(visitor);
+    Driver::get().parse(filepath);
+    Driver::get().program().accept(visitor);
     EXPECT_FALSE(visitor.isOk());
+    for (const auto &msg : visitor.error_msgs()) {
+      std::cout << msg << '\n';
+    }
   }
 
   // TODO(any): add more test cases
@@ -34,12 +38,16 @@ TEST(SemantTest, redeclError)
 
 // make sure update git submodule
 // using `git submodule update --init --recursive` to update git submodule
-TEST(SemantTest, DISABLED_typeError)
+TEST(SemantTest, typeError)
 {
   {
+    std::string filepath = "../../test-examples/wrong/type_error0.pas";
     SemantVisitor visitor;
-    Driver::Get().parse("../../test-examples/wrong/type_error0.pas");
-    Driver::Get().program().accept(visitor);
+    Driver::get().parse(filepath);
+    Driver::get().program().accept(visitor);
     EXPECT_FALSE(visitor.isOk());
+    for (const auto &msg : visitor.error_msgs()) {
+      std::cout << msg << '\n';
+    }
   }
 }

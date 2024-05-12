@@ -34,7 +34,7 @@ auto main(int argc, char *argv[]) -> int
     output_file = program.get<std::string>("-o");
   }
 
-  Driver::Get()
+  Driver::get()
       .parse(input_file)
       .check()
       .codegen(output_file);
